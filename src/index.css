@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-cream text-ink font-body antialiased;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: #ff6b45;
+  color: #fbf7f0;
+}
+
+/* Custom scrollbar — refined, not default */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(28, 26, 23, 0.18);
+  border-radius: 999px;
+}
+
+.glass-card {
+  background: rgba(251, 247, 240, 0.72);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.input-field {
+  @apply w-full rounded-xl border border-ink/10 bg-white/70 px-4 py-3.5 text-[15px] text-ink placeholder:text-ink/35 outline-none transition-all duration-200;
+}
+.input-field:focus {
+  @apply border-clay-500/60 bg-white ring-4;
+  --tw-ring-color: rgba(255, 107, 69, 0.12);
+}
+.input-field.input-error {
+  @apply border-clay-700/60;
+}
+
+.btn-primary {
+  @apply relative w-full overflow-hidden rounded-xl bg-ink px-5 py-3.5 text-[15px] font-medium text-cream transition-all duration-300 hover:bg-coal active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-google {
+  @apply flex w-full items-center justify-center gap-3 rounded-xl border border-ink/10 bg-white px-5 py-3.5 text-[15px] font-medium text-ink transition-all duration-200 hover:border-ink/25 hover:shadow-soft active:scale-[0.99] disabled:opacity-50;
+}
+
+.label {
+  @apply mb-2 block text-[13px] font-medium tracking-wide text-ink/60;
+}
