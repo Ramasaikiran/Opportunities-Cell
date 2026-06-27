@@ -79,7 +79,7 @@ export default function CheckInbox() {
             <div style={{ background: '#f7f7f7', borderRadius: 14, padding: '18px 20px', marginBottom: 28 }}>
               {[
                 "Open the email from Opportunities Cell",
-                "Click "Verify my email"",
+                'Click "Verify my email"',
                 "You'll be taken straight to your dashboard",
               ].map((s, i) => (
                 <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: i < 2 ? 14 : 0 }}>
