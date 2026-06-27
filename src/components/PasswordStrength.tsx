@@ -9,15 +9,10 @@ function scorePassword(pw: string) {
 }
 
 const LABELS = ['Weak', 'Fair', 'Good', 'Strong', 'Excellent']
-const COLORS = ['bg-clay-700', 'bg-clay-500', 'bg-gold', 'bg-sage', 'bg-sage']
+const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#22c55e']
 
 export function passwordRequirementsMet(pw: string) {
-  return (
-    pw.length >= 8 &&
-    /[A-Z]/.test(pw) &&
-    /[a-z]/.test(pw) &&
-    /\d/.test(pw)
-  )
+  return pw.length >= 8 && /[A-Z]/.test(pw) && /[a-z]/.test(pw) && /\d/.test(pw)
 }
 
 export default function PasswordStrength({ password }: { password: string }) {
@@ -25,19 +20,18 @@ export default function PasswordStrength({ password }: { password: string }) {
   const score = scorePassword(password)
 
   return (
-    <div className="mt-2.5">
-      <div className="flex gap-1.5">
+    <div style={{ marginTop: 10 }}>
+      <div style={{ display: 'flex', gap: 5 }}>
         {[0, 1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-              i <= score ? COLORS[score] : 'bg-ink/10'
-            }`}
-          />
+          <div key={i} style={{
+            height: 3, flex: 1, borderRadius: 99,
+            background: i <= score ? COLORS[score] : '#f0f0f0',
+            transition: 'background 0.3s ease',
+          }} />
         ))}
       </div>
-      <p className="mt-1.5 text-[12px] text-ink/45">
-        {LABELS[score]} · use 8+ characters, a capital letter and a number
+      <p style={{ marginTop: 7, fontSize: 12, color: '#b5b5b5' }}>
+        {LABELS[score]} · 8+ chars, uppercase letter, number
       </p>
     </div>
   )
