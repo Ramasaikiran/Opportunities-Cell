@@ -20,13 +20,10 @@ export default function SignIn() {
     setLoading(true)
     const { error } = await signIn(email.trim().toLowerCase(), password)
     setLoading(false)
-
     if (error) {
-      setError(
-        error.toLowerCase().includes('email not confirmed')
-          ? 'Please verify your email before signing in.'
-          : 'Incorrect email or password.'
-      )
+      setError(error.toLowerCase().includes('email not confirmed')
+        ? 'Please verify your email before signing in.'
+        : 'Incorrect email or password.')
       return
     }
     navigate('/onboarding')
@@ -35,10 +32,7 @@ export default function SignIn() {
   async function handleGoogle() {
     setGoogleLoading(true)
     const { error } = await signInWithGoogle()
-    if (error) {
-      setError(error)
-      setGoogleLoading(false)
-    }
+    if (error) { setError(error); setGoogleLoading(false) }
   }
 
   return (
@@ -48,71 +42,43 @@ export default function SignIn() {
       subtitle="Your applications kept moving while you were away."
       footer={
         <>
-          New to Opportunities Cell?{' '}
-          <Link to="/sign-up" className="font-medium text-ink underline underline-offset-4">
-            Create an account
+          <span style={{ color: '#3D3D52' }}>New here? </span>
+          <Link to="/sign-up" style={{ color: '#6C63FF', fontWeight: 600, textDecoration: 'none' }}>
+            Create an account →
           </Link>
         </>
       }
     >
-      <button
-        type="button"
-        onClick={handleGoogle}
-        disabled={googleLoading}
-        className="btn-google"
-      >
+      <button type="button" onClick={handleGoogle} disabled={googleLoading} className="btn-google">
         <GoogleIcon />
         {googleLoading ? 'Redirecting…' : 'Continue with Google'}
       </button>
 
-      <div className="my-6 flex items-center gap-4">
-        <div className="h-px flex-1 bg-ink/10" />
-        <span className="text-[12px] tracking-wide text-ink/40">OR</span>
-        <div className="h-px flex-1 bg-ink/10" />
-      </div>
+      <div className="divider"><span>OR</span></div>
 
-      {error && (
-        <div className="mb-5 rounded-xl border border-clay-700/20 bg-clay-50 px-4 py-3 text-[13px] text-clay-700">
-          {error}
-        </div>
-      )}
+      {error && <div className="error-box">{error}</div>}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         <div>
           <label className="label">Email address</label>
-          <input
-            className="input-field"
-            type="email"
-            value={email}
+          <input className="input-field" type="email" value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            autoComplete="email"
-            required
-          />
+            placeholder="you@example.com" autoComplete="email" required />
         </div>
 
         <div>
-          <div className="flex items-center justify-between">
-            <label className="label !mb-0">Password</label>
-            <Link
-              to="/forgot-password"
-              className="mb-2 text-[12px] font-medium text-clay-600 hover:text-clay-700"
-            >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <label className="label" style={{ margin: 0 }}>Password</label>
+            <Link to="/forgot-password" style={{ fontSize: 12, color: '#6C63FF', textDecoration: 'none', fontWeight: 500 }}>
               Forgot password?
             </Link>
           </div>
-          <input
-            className="input-field"
-            type="password"
-            value={password}
+          <input className="input-field" type="password" value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-            autoComplete="current-password"
-            required
-          />
+            placeholder="Enter your password" autoComplete="current-password" required />
         </div>
 
-        <button type="submit" disabled={loading} className="btn-primary mt-2">
+        <button type="submit" disabled={loading} className="btn-primary" style={{ marginTop: 4 }}>
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
       </form>

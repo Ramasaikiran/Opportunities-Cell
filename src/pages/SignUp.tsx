@@ -2,9 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout'
 import GoogleIcon from '../components/GoogleIcon'
-import PasswordStrength, {
-  passwordRequirementsMet,
-} from '../components/PasswordStrength'
+import PasswordStrength, { passwordRequirementsMet } from '../components/PasswordStrength'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 
@@ -25,13 +23,10 @@ export default function SignUp() {
 
   function validate() {
     const next: Record<string, string> = {}
-    if (!fullName.trim() || fullName.trim().length < 2)
-      next.fullName = 'Enter your full name.'
+    if (!fullName.trim() || fullName.trim().length < 2) next.fullName = 'Enter your full name.'
     if (!EMAIL_RE.test(email)) next.email = 'Enter a valid email address.'
-    if (!passwordRequirementsMet(password))
-      next.password = '8+ characters, one capital letter, one number.'
-    if (confirmPassword !== password)
-      next.confirmPassword = 'Passwords don\u2019t match.'
+    if (!passwordRequirementsMet(password)) next.password = '8+ chars, one uppercase, one number.'
+    if (confirmPassword !== password) next.confirmPassword = "Passwords don't match."
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -40,156 +35,102 @@ export default function SignUp() {
     e.preventDefault()
     setFormError(null)
     if (!validate()) return
-
     setLoading(true)
 
-    // Duplicate-email detection — Supabase signUp doesn't throw a clean
-    // error for existing+confirmed emails, so we check first.
     const { data: existing } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', email.trim().toLowerCase())
-      .maybeSingle()
+      .from('profiles').select('id')
+      .eq('email', email.trim().toLowerCase()).maybeSingle()
 
     if (existing) {
-      setErrors((p) => ({
-        ...p,
-        email: 'An account already exists with this email.',
-      }))
+      setErrors((p) => ({ ...p, email: 'An account already exists with this email.' }))
       setLoading(false)
       return
     }
 
-    const { error } = await signUp(
-      fullName.trim(),
-      email.trim().toLowerCase(),
-      password
-    )
+    const { error } = await signUp(fullName.trim(), email.trim().toLowerCase(), password)
     setLoading(false)
-
-    if (error) {
-      setFormError(error)
-      return
-    }
+    if (error) { setFormError(error); return }
     navigate('/check-inbox', { state: { email: email.trim().toLowerCase() } })
   }
 
   async function handleGoogle() {
     setGoogleLoading(true)
     const { error } = await signInWithGoogle()
-    if (error) {
-      setFormError(error)
-      setGoogleLoading(false)
-    }
+    if (error) { setFormError(error); setGoogleLoading(false) }
   }
+
+  const fieldStyle = (hasError: boolean) => ({
+    ...{} as object,
+    ...(hasError ? { borderColor: 'rgba(255,80,80,0.5)', boxShadow: '0 0 0 3px rgba(255,80,80,0.08)' } : {}),
+  })
 
   return (
     <AuthLayout
       eyebrow="GET STARTED"
-      title="Create your account"
+      title="Create account"
       subtitle="One profile. We handle the job search from here."
       footer={
         <>
-          Already with us?{' '}
-          <Link to="/sign-in" className="font-medium text-ink underline underline-offset-4">
-            Sign in
+          <span style={{ color: '#3D3D52' }}>Already with us? </span>
+          <Link to="/sign-in" style={{ color: '#6C63FF', fontWeight: 600, textDecoration: 'none' }}>
+            Sign in →
           </Link>
         </>
       }
     >
-      <button
-        type="button"
-        onClick={handleGoogle}
-        disabled={googleLoading}
-        className="btn-google"
-      >
+      <button type="button" onClick={handleGoogle} disabled={googleLoading} className="btn-google">
         <GoogleIcon />
         {googleLoading ? 'Redirecting…' : 'Continue with Google'}
       </button>
 
-      <div className="my-6 flex items-center gap-4">
-        <div className="h-px flex-1 bg-ink/10" />
-        <span className="text-[12px] tracking-wide text-ink/40">OR</span>
-        <div className="h-px flex-1 bg-ink/10" />
-      </div>
+      <div className="divider"><span>OR</span></div>
 
-      {formError && (
-        <div className="mb-5 rounded-xl border border-clay-700/20 bg-clay-50 px-4 py-3 text-[13px] text-clay-700">
-          {formError}
-        </div>
-      )}
+      {formError && <div className="error-box">{formError}</div>}
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+      <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div>
           <label className="label">Full name</label>
-          <input
-            className={`input-field ${errors.fullName ? 'input-error' : ''}`}
-            type="text"
-            value={fullName}
+          <input className="input-field" style={fieldStyle(!!errors.fullName)}
+            type="text" value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="Rama Sai Kiran"
-            autoComplete="name"
-          />
-          {errors.fullName && (
-            <p className="mt-1.5 text-[12px] text-clay-700">{errors.fullName}</p>
-          )}
+            placeholder="Your full name" autoComplete="name" />
+          {errors.fullName && <p style={{ marginTop: 6, fontSize: 12, color: '#FF8080' }}>{errors.fullName}</p>}
         </div>
 
         <div>
           <label className="label">Email address</label>
-          <input
-            className={`input-field ${errors.email ? 'input-error' : ''}`}
-            type="email"
-            value={email}
+          <input className="input-field" style={fieldStyle(!!errors.email)}
+            type="email" value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            autoComplete="email"
-          />
-          {errors.email && (
-            <p className="mt-1.5 text-[12px] text-clay-700">{errors.email}</p>
-          )}
+            placeholder="you@example.com" autoComplete="email" />
+          {errors.email && <p style={{ marginTop: 6, fontSize: 12, color: '#FF8080' }}>{errors.email}</p>}
         </div>
 
         <div>
           <label className="label">Password</label>
-          <input
-            className={`input-field ${errors.password ? 'input-error' : ''}`}
-            type="password"
-            value={password}
+          <input className="input-field" style={fieldStyle(!!errors.password)}
+            type="password" value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Create a strong password"
-            autoComplete="new-password"
-          />
+            placeholder="Create a strong password" autoComplete="new-password" />
           <PasswordStrength password={password} />
-          {errors.password && (
-            <p className="mt-1.5 text-[12px] text-clay-700">{errors.password}</p>
-          )}
+          {errors.password && <p style={{ marginTop: 6, fontSize: 12, color: '#FF8080' }}>{errors.password}</p>}
         </div>
 
         <div>
           <label className="label">Confirm password</label>
-          <input
-            className={`input-field ${errors.confirmPassword ? 'input-error' : ''}`}
-            type="password"
-            value={confirmPassword}
+          <input className="input-field" style={fieldStyle(!!errors.confirmPassword)}
+            type="password" value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Re-enter your password"
-            autoComplete="new-password"
-          />
-          {errors.confirmPassword && (
-            <p className="mt-1.5 text-[12px] text-clay-700">
-              {errors.confirmPassword}
-            </p>
-          )}
+            placeholder="Re-enter your password" autoComplete="new-password" />
+          {errors.confirmPassword && <p style={{ marginTop: 6, fontSize: 12, color: '#FF8080' }}>{errors.confirmPassword}</p>}
         </div>
 
-        <button type="submit" disabled={loading} className="btn-primary mt-2">
+        <button type="submit" disabled={loading} className="btn-primary" style={{ marginTop: 4 }}>
           {loading ? 'Creating account…' : 'Create account'}
         </button>
 
-        <p className="text-center text-[12px] leading-relaxed text-ink/40">
-          By continuing you agree to the Opportunities Cell Terms and
-          acknowledge the Privacy Policy.
+        <p style={{ textAlign: 'center', fontSize: 11, color: '#3D3D52', lineHeight: 1.6 }}>
+          By continuing you agree to Opportunities Cell Terms and Privacy Policy.
         </p>
       </form>
     </AuthLayout>
