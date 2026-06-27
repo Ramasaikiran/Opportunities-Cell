@@ -4,43 +4,76 @@ import AuthLayout from '../components/AuthLayout'
 import GoogleIcon from '../components/GoogleIcon'
 import PasswordStrength, { passwordRequirementsMet } from '../components/PasswordStrength'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../lib/supabase'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function TrustStrip() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 16 }}>
+      {['Free to start', 'No credit card', 'Cancel anytime'].map((t, i) => (
+        <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#b5b5b5' }}>
+          {i > 0 && <span style={{ color: '#e5e5e5' }}>·</span>}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          {t}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function ShowHideToggle({ show, onToggle }: { show: boolean; onToggle: () => void }) {
+  return (
+    <button type="button" onClick={onToggle} style={{
+      position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+      background: 'none', border: 'none', cursor: 'pointer', color: '#b5b5b5', padding: 4,
+    }}>
+      {show
+        ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"/></svg>
+        : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      }
+    </button>
+  )
+}
 
 export default function SignUp() {
   const { signUp, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
-  const [fullName, setFullName]             = useState('')
-  const [email, setEmail]                   = useState('')
-  const [password, setPassword]             = useState('')
-  const [confirmPassword, setConfirmPwd]    = useState('')
-  const [errors, setErrors]                 = useState<Record<string, string>>({})
-  const [loading, setLoading]               = useState(false)
-  const [gLoading, setGLoading]             = useState(false)
-  const [formError, setFormError]           = useState<string | null>(null)
 
-  function validate() {
+  const [step, setStep] = useState<'email' | 'details'>('email')
+  const [email, setEmail]         = useState('')
+  const [fullName, setFullName]   = useState('')
+  const [password, setPassword]   = useState('')
+  const [showPwd, setShowPwd]     = useState(false)
+  const [errors, setErrors]       = useState<Record<string, string>>({})
+  const [loading, setLoading]     = useState(false)
+  const [gLoading, setGLoading]   = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+
+  function validateEmail() {
+    if (!EMAIL_RE.test(email)) { setErrors({ email: 'Enter a valid email address.' }); return false }
+    setErrors({}); return true
+  }
+
+  function validateDetails() {
     const next: Record<string, string> = {}
     if (!fullName.trim() || fullName.trim().length < 2) next.fullName = 'Enter your full name.'
-    if (!EMAIL_RE.test(email)) next.email = 'Enter a valid email address.'
-    if (!passwordRequirementsMet(password)) next.password = '8+ chars, one uppercase letter, one number.'
-    if (confirmPassword !== password) next.confirmPassword = "Passwords don't match."
+    if (!passwordRequirementsMet(password)) next.password = '8+ chars, uppercase, number.'
     setErrors(next)
     return Object.keys(next).length === 0
+  }
+
+  async function handleEmailStep(e: FormEvent) {
+    e.preventDefault()
+    if (!validateEmail()) return
+    setStep('details')
+    setTimeout(() => document.getElementById('fullname-input')?.focus(), 100)
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setFormError(null)
-    if (!validate()) return
+    if (!validateDetails()) return
     setLoading(true)
-    const { data: existing } = await supabase.from('profiles').select('id')
-      .eq('email', email.trim().toLowerCase()).maybeSingle()
-    if (existing) {
-      setErrors((p) => ({ ...p, email: 'An account already exists with this email.' }))
-      setLoading(false); return
-    }
     const { error } = await signUp(fullName.trim(), email.trim().toLowerCase(), password)
     setLoading(false)
     if (error) { setFormError(error); return }
@@ -55,69 +88,120 @@ export default function SignUp() {
 
   return (
     <AuthLayout
-      eyebrow="GET STARTED — FREE"
-      title="Create your account"
-      subtitle="One profile. Applications on autopilot from day one."
+      eyebrow="FREE · 2 MINUTE SETUP"
+      title="Start getting interviews"
+      subtitle="Join 550+ students who stopped applying manually."
       footer={
         <>
           Already have an account?{' '}
-          <Link to="/sign-in" style={{ color: '#0f0f0f', fontWeight: 600, textDecoration: 'none', borderBottom: '1px solid #0f0f0f' }}>
+          <Link to="/sign-in" style={{ color: '#0f0f0f', fontWeight: 600, textDecoration: 'none', borderBottom: '1.5px solid #0f0f0f' }}>
             Sign in
           </Link>
         </>
       }
     >
-      <button type="button" onClick={handleGoogle} disabled={gLoading} className="oc-btn-google">
+      {/* Google — Primary CTA */}
+      <button type="button" onClick={handleGoogle} disabled={gLoading} style={{
+        width: '100%', height: 52,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+        fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 600,
+        color: '#ffffff', background: '#0f0f0f',
+        border: 'none', borderRadius: 12, cursor: 'pointer',
+        transition: 'opacity 0.15s, transform 0.15s',
+        opacity: gLoading ? 0.6 : 1,
+        letterSpacing: '-0.01em',
+      }}>
         <GoogleIcon />
         {gLoading ? 'Redirecting…' : 'Continue with Google'}
       </button>
 
-      <div className="oc-divider"><span>or</span></div>
+      <TrustStrip />
+
+      <div className="oc-divider" style={{ margin: '22px 0' }}><span>or use email</span></div>
 
       {formError && <div className="oc-error">⚠ {formError}</div>}
 
-      <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div>
-          <label className="oc-label">Full name</label>
-          <input className={`oc-input${errors.fullName ? ' error' : ''}`}
-            type="text" value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            placeholder="Rama Sai Kiran" autoComplete="name" />
-          {errors.fullName && <p className="oc-field-error">↑ {errors.fullName}</p>}
-        </div>
+      {/* Step 1 — email only */}
+      {step === 'email' && (
+        <form onSubmit={handleEmailStep} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label className="oc-label">Work or college email</label>
+            <input className={`oc-input${errors.email ? ' error' : ''}`}
+              type="email" value={email}
+              onChange={(e) => { setEmail(e.target.value); setErrors({}) }}
+              placeholder="you@college.edu" autoComplete="email" autoFocus />
+            {errors.email && <p className="oc-field-error">{errors.email}</p>}
+          </div>
+          <button type="submit" style={{
+            width: '100%', height: 50,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 600,
+            color: '#fff', background: '#0f0f0f', border: 'none',
+            borderRadius: 12, cursor: 'pointer', letterSpacing: '-0.01em',
+            transition: 'opacity 0.15s, transform 0.15s',
+          }}>
+            Continue with email →
+          </button>
+        </form>
+      )}
 
-        <div>
-          <label className="oc-label">Email address</label>
-          <input className={`oc-input${errors.email ? ' error' : ''}`}
-            type="email" value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com" autoComplete="email" />
-          {errors.email && <p className="oc-field-error">↑ {errors.email}</p>}
-        </div>
+      {/* Step 2 — name + password */}
+      {step === 'details' && (
+        <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* Email chip — editable */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            background: '#f7f7f7', borderRadius: 10, padding: '10px 14px',
+            marginBottom: 4,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span style={{ fontSize: 13.5, color: '#3f3f3f', fontWeight: 500 }}>{email}</span>
+            </div>
+            <button type="button" onClick={() => { setStep('email'); setErrors({}) }}
+              style={{ fontSize: 12, color: '#9b9b9b', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+              Change
+            </button>
+          </div>
 
-        <div>
-          <label className="oc-label">Password</label>
-          <input className={`oc-input${errors.password ? ' error' : ''}`}
-            type="password" value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Create a strong password" autoComplete="new-password" />
-          <PasswordStrength password={password} />
-          {errors.password && <p className="oc-field-error">↑ {errors.password}</p>}
-        </div>
+          <div>
+            <label className="oc-label">Full name</label>
+            <input id="fullname-input"
+              className={`oc-input${errors.fullName ? ' error' : ''}`}
+              type="text" value={fullName}
+              onChange={(e) => { setFullName(e.target.value); setErrors(p => ({...p, fullName: ''})) }}
+              placeholder="Your full name" autoComplete="name" />
+            {errors.fullName && <p className="oc-field-error">{errors.fullName}</p>}
+          </div>
 
-        <div>
-          <label className="oc-label">Confirm password</label>
-          <input className={`oc-input${errors.confirmPassword ? ' error' : ''}`}
-            type="password" value={confirmPassword}
-            onChange={(e) => setConfirmPwd(e.target.value)}
-            placeholder="Re-enter your password" autoComplete="new-password" />
-          {errors.confirmPassword && <p className="oc-field-error">↑ {errors.confirmPassword}</p>}
-        </div>
+          <div>
+            <label className="oc-label">Create password</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                className={`oc-input${errors.password ? ' error' : ''}`}
+                type={showPwd ? 'text' : 'password'} value={password}
+                onChange={(e) => { setPassword(e.target.value); setErrors(p => ({...p, password: ''})) }}
+                placeholder="Create a strong password" autoComplete="new-password"
+                style={{ paddingRight: 44 }} />
+              <ShowHideToggle show={showPwd} onToggle={() => setShowPwd(p => !p)} />
+            </div>
+            <PasswordStrength password={password} />
+            {errors.password && <p className="oc-field-error">{errors.password}</p>}
+          </div>
 
-        <button type="submit" disabled={loading} className="oc-btn-primary" style={{ marginTop: 4 }}>
-          {loading ? 'Creating account…' : 'Create account →'}
-        </button>
-      </form>
+          <button type="submit" disabled={loading} style={{
+            width: '100%', height: 50, marginTop: 4,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 600,
+            color: '#fff', background: '#0f0f0f', border: 'none',
+            borderRadius: 12, cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.5 : 1, letterSpacing: '-0.01em',
+            transition: 'opacity 0.15s, transform 0.15s',
+          }}>
+            {loading ? 'Creating your account…' : 'Create account & continue →'}
+          </button>
+        </form>
+      )}
     </AuthLayout>
   )
 }
