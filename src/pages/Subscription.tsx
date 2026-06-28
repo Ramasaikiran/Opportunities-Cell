@@ -33,14 +33,6 @@ const PLAN_SAVINGS: Record<SubscriptionPlan, string | null> = {
   monthly: null, quarterly: 'Save ₹50', halfyearly: 'Save ₹200', yearly: 'Save ₹500',
 }
 
-/* ── UPI app icons ─────────────────────────────────────────────── */
-const UPI_APPS = [
-  { name: 'PhonePe',  color: '#5f259f', letter: 'P' },
-  { name: 'GPay',     color: '#1a73e8', letter: 'G' },
-  { name: 'Paytm',    color: '#00b9f1', letter: 'P' },
-  { name: 'BHIM UPI', color: '#006747', letter: 'B' },
-]
-
 export default function Subscription() {
   const { user, profile, subscription, refreshProfile } = useAuth()
   const navigate = useNavigate()
@@ -217,28 +209,7 @@ export default function Subscription() {
           Pick a plan. We match jobs to your skills and apply on your behalf.
         </p>
 
-        {/* UPI badges */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 36 }}>
-          <span style={{ fontSize: 12, color: '#b5b5b5' }}>Pay via</span>
-          {UPI_APPS.map(app => (
-            <div key={app.name} style={{
-              display: 'flex', alignItems: 'center', gap: 5,
-              padding: '4px 10px', borderRadius: 99,
-              background: '#f5f5f5', border: '1px solid #ebebeb',
-            }}>
-              <div style={{
-                width: 16, height: 16, borderRadius: '50%',
-                background: app.color, display: 'flex', alignItems: 'center',
-                justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff',
-              }}>{app.letter}</div>
-              <span style={{ fontSize: 12, color: '#6b6b6b', fontWeight: 500 }}>{app.name}</span>
-            </div>
-          ))}
-          <div style={{ padding: '4px 10px', borderRadius: 99, background: '#f5f5f5',
-            border: '1px solid #ebebeb', fontSize: 12, color: '#6b6b6b' }}>
-            + Cards &amp; Net banking
-          </div>
-        </div>
+
 
         {subscription && (
           <div style={{ marginBottom: 28, padding: '14px 18px', background: '#f0fdf4',
