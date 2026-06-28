@@ -11,30 +11,21 @@ export default function AuthCallback() {
     let cancelled = false
 
     async function run() {
-      // supabase-js (detectSessionInUrl: true) already parses the
-      // magic-link / OAuth tokens from the URL on load. We just need
-      // to wait for the session to land, then make sure a profile
-      // exists before sending the user into onboarding.
       const { data, error } = await supabase.auth.getSession()
-
       if (cancelled) return
 
       if (error || !data.session) {
         setState('error')
-        setMessage(
-          'This link has expired or already been used. Request a new one to continue.'
-        )
+        setMessage('This link has expired or already been used. Request a new one to continue.')
         return
       }
 
       const userId = data.session.user.id
 
-      // Profile is normally created by the DB trigger on signup, but
-      // we defensively upsert here so OAuth-only or edge-case users
-      // are never left without one.
+      // Ensure profile exists (defensive upsert for OAuth users)
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, account_status')
+        .select('id, account_status, user_type')
         .eq('id', userId)
         .maybeSingle()
 
@@ -45,50 +36,81 @@ export default function AuthCallback() {
             data.session.user.user_metadata?.full_name ??
             data.session.user.email?.split('@')[0] ??
             'New member',
-          email: data.session.user.email,
+          email:      data.session.user.email,
           avatar_url: data.session.user.user_metadata?.avatar_url ?? null,
           account_status: 'active',
         })
       }
 
-      navigate('/onboarding', { replace: true })
+      // ── Route by subscription + onboarding status ──────────────
+      // 1. Check for active subscription
+      const { data: sub } = await supabase
+        .from('subscriptions')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .gt('ends_at', new Date().toISOString())
+        .maybeSingle()
+
+      const hasSub      = !!sub
+      const isOnboarded = !!(profile?.user_type)
+
+      if (!hasSub) {
+        // No subscription → pay first
+        navigate('/subscription', { replace: true })
+        return
+      }
+
+      if (!isOnboarded) {
+        // Paid but not onboarded yet
+        navigate('/onboarding', { replace: true })
+        return
+      }
+
+      // Fully set up → dashboard
+      navigate('/dashboard', { replace: true })
     }
 
     run()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [navigate])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-mesh-sunset px-6">
-      <div className="pointer-events-none absolute inset-0 bg-grain mix-blend-overlay" />
-      <div className="glass-card relative z-10 w-full max-w-[420px] rounded-3xl p-10 text-center shadow-glass">
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: '#fff', fontFamily: "'Inter',sans-serif",
+    }}>
+      <div style={{ textAlign: 'center', maxWidth: 400, padding: '0 24px' }}>
         {state === 'verifying' ? (
           <>
-            <div className="mx-auto mb-6 h-9 w-9 animate-spin rounded-full border-2 border-ink/15 border-t-clay-500" />
-            <h1 className="font-display text-[22px] font-light text-ink">
+            <div style={{
+              width: 40, height: 40, borderRadius: '50%',
+              border: '3px solid #f0f0f0', borderTopColor: '#0f0f0f',
+              animation: 'spin 0.8s linear infinite', margin: '0 auto 24px',
+            }} />
+            <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 24,
+              fontWeight: 400, color: '#0f0f0f', marginBottom: 8 }}>
               Verifying your account
             </h1>
-            <p className="mt-2 text-[14px] text-ink/55">
-              One moment — almost in.
-            </p>
+            <p style={{ fontSize: 14, color: '#9b9b9b' }}>One moment — almost in.</p>
           </>
         ) : (
           <>
-            <h1 className="font-display text-[22px] font-light text-ink">
+            <div style={{ fontSize: 40, marginBottom: 20 }}>⚠️</div>
+            <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 24,
+              fontWeight: 400, color: '#0f0f0f', marginBottom: 8 }}>
               Link no longer valid
             </h1>
-            <p className="mt-2 text-[14px] text-ink/55">{message}</p>
-            <a
-              href="/sign-up"
-              className="btn-primary mt-6 inline-flex items-center justify-center"
-            >
-              Back to sign up
-            </a>
+            <p style={{ fontSize: 14, color: '#9b9b9b', marginBottom: 28 }}>{message}</p>
+            <a href="/sign-up" style={{
+              display: 'inline-block', padding: '12px 24px',
+              background: '#0f0f0f', color: '#fff', borderRadius: 10,
+              fontSize: 14, fontWeight: 600, textDecoration: 'none',
+            }}>Back to sign up</a>
           </>
         )}
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }

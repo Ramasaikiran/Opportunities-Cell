@@ -10,7 +10,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 function TrustStrip() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 16 }}>
-      {['Free to start', 'No credit card', 'Cancel anytime'].map((t, i) => (
+      {['Plans from ₹250/mo', 'Cancel anytime', 'Secure payment'].map((t, i) => (
         <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#b5b5b5' }}>
           {i > 0 && <span style={{ color: '#e5e5e5' }}>·</span>}
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -39,7 +39,7 @@ export default function SignUp() {
   const { signUp, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
 
-  const [step, setStep] = useState<'email' | 'details'>('email')
+  const [step, setStep]           = useState<'email' | 'details'>('email')
   const [email, setEmail]         = useState('')
   const [fullName, setFullName]   = useState('')
   const [password, setPassword]   = useState('')
@@ -88,9 +88,9 @@ export default function SignUp() {
 
   return (
     <AuthLayout
-      eyebrow="FREE · 2 MINUTE SETUP"
+      eyebrow="2 MINUTE SETUP"
       title="Start getting interviews"
-      subtitle="Join 550+ students who stopped applying manually."
+      subtitle="Join 550+ students and professionals who stopped applying manually."
       footer={
         <>
           Already have an account?{' '}
@@ -108,8 +108,7 @@ export default function SignUp() {
         color: '#ffffff', background: '#0f0f0f',
         border: 'none', borderRadius: 12, cursor: 'pointer',
         transition: 'opacity 0.15s, transform 0.15s',
-        opacity: gLoading ? 0.6 : 1,
-        letterSpacing: '-0.01em',
+        opacity: gLoading ? 0.6 : 1, letterSpacing: '-0.01em',
       }}>
         <GoogleIcon />
         {gLoading ? 'Redirecting…' : 'Continue with Google'}
@@ -121,15 +120,15 @@ export default function SignUp() {
 
       {formError && <div className="oc-error">⚠ {formError}</div>}
 
-      {/* Step 1 — email only */}
+      {/* Step 1 — email */}
       {step === 'email' && (
         <form onSubmit={handleEmailStep} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
-            <label className="oc-label">Work or college email</label>
+            <label className="oc-label">Email</label>
             <input className={`oc-input${errors.email ? ' error' : ''}`}
               type="email" value={email}
               onChange={(e) => { setEmail(e.target.value); setErrors({}) }}
-              placeholder="you@college.edu" autoComplete="email" autoFocus />
+              placeholder="you@example.com" autoComplete="email" autoFocus />
             {errors.email && <p className="oc-field-error">{errors.email}</p>}
           </div>
           <button type="submit" style={{
@@ -138,7 +137,7 @@ export default function SignUp() {
             fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 600,
             color: '#fff', background: '#0f0f0f', border: 'none',
             borderRadius: 12, cursor: 'pointer', letterSpacing: '-0.01em',
-            transition: 'opacity 0.15s, transform 0.15s',
+            transition: 'opacity 0.15s',
           }}>
             Continue with email →
           </button>
@@ -148,18 +147,16 @@ export default function SignUp() {
       {/* Step 2 — name + password */}
       {step === 'details' && (
         <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {/* Email chip — editable */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            background: '#f7f7f7', borderRadius: 10, padding: '10px 14px',
-            marginBottom: 4,
+            background: '#f7f7f7', borderRadius: 10, padding: '10px 14px', marginBottom: 4,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               <span style={{ fontSize: 13.5, color: '#3f3f3f', fontWeight: 500 }}>{email}</span>
             </div>
             <button type="button" onClick={() => { setStep('email'); setErrors({}) }}
-              style={{ fontSize: 12, color: '#9b9b9b', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+              style={{ fontSize: 12, color: '#9b9b9b', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
               Change
             </button>
           </div>
@@ -195,8 +192,7 @@ export default function SignUp() {
             fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 600,
             color: '#fff', background: '#0f0f0f', border: 'none',
             borderRadius: 12, cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.5 : 1, letterSpacing: '-0.01em',
-            transition: 'opacity 0.15s, transform 0.15s',
+            opacity: loading ? 0.5 : 1, letterSpacing: '-0.01em', transition: 'opacity 0.15s',
           }}>
             {loading ? 'Creating your account…' : 'Create account & continue →'}
           </button>
