@@ -1,142 +1,250 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useRef, type FormEvent, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, type UserType } from '../lib/supabase'
 
-/* ── Progress bar ─────────────────────────────── */
-function ProgressBar({ step, total }: { step: number; total: number }) {
-  return (
-    <div style={{ marginBottom: 40 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <span style={{ fontSize: 12, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.06em' }}>
-          STEP {step} OF {total}
-        </span>
-        <span style={{ fontSize: 12, color: '#b5b5b5' }}>
-          {Math.round((step / total) * 100)}% complete
-        </span>
-      </div>
-      <div style={{ height: 4, background: '#f0f0f0', borderRadius: 99, overflow: 'hidden' }}>
-        <div style={{
-          height: '100%', borderRadius: 99,
-          background: '#0f0f0f',
-          width: `${(step / total) * 100}%`,
-          transition: 'width 0.4s cubic-bezier(0.16,1,0.3,1)',
-        }} />
-      </div>
-    </div>
-  )
+/* ── Shared style helpers ──────────────────────────────────── */
+const inp = (err?: string): React.CSSProperties => ({
+  width: '100%', height: 48, padding: '0 16px',
+  fontFamily: "'Inter',sans-serif", fontSize: 15, color: '#0f0f0f',
+  background: '#fff',
+  border: `1.5px solid ${err ? '#ef4444' : '#e5e5e5'}`,
+  borderRadius: 12, outline: 'none', boxSizing: 'border-box',
+  boxShadow: err ? '0 0 0 3px rgba(239,68,68,0.08)' : 'none',
+})
+const btn: React.CSSProperties = {
+  width: '100%', height: 50,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  fontFamily: "'Inter',sans-serif", fontSize: 15, fontWeight: 600,
+  color: '#fff', background: '#0f0f0f', border: 'none',
+  borderRadius: 12, cursor: 'pointer',
+}
+const ghostBtn: React.CSSProperties = {
+  width: '100%', height: 44, background: 'none',
+  border: '1.5px solid #e5e5e5', borderRadius: 12,
+  fontSize: 14, color: '#9b9b9b', cursor: 'pointer',
+  fontFamily: "'Inter',sans-serif",
+}
+const grid2: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }
+const sectionLabel: React.CSSProperties = {
+  fontSize: 11, fontWeight: 600, color: '#b5b5b5',
+  letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10,
+}
+const serif: React.CSSProperties = {
+  fontFamily: "'Instrument Serif',Georgia,serif",
+  fontSize: 32, fontWeight: 400, color: '#0f0f0f',
+  lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: 28,
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, error, children, half }: {
+  label: string; error?: string; children: React.ReactNode; half?: boolean
+}) {
   return (
-    <div>
-      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#6b6b6b', marginBottom: 7 }}>{label}</label>
+    <div style={half ? {} : {}}>
+      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#6b6b6b', marginBottom: 7 }}>
+        {label}
+      </label>
       {children}
       {error && <p style={{ marginTop: 5, fontSize: 12, color: '#ef4444' }}>{error}</p>}
     </div>
   )
 }
 
-const inputStyle = (err?: string): React.CSSProperties => ({
-  width: '100%', height: 48, padding: '0 16px',
-  fontFamily: "'Inter', sans-serif", fontSize: 15, color: '#0f0f0f',
-  background: '#fff',
-  border: `1.5px solid ${err ? '#ef4444' : '#e5e5e5'}`,
-  borderRadius: 12, outline: 'none',
-  boxShadow: err ? '0 0 0 3px rgba(239,68,68,0.08)' : 'none',
-  transition: 'border-color 0.15s, box-shadow 0.15s',
-})
-
-const btnStyle: React.CSSProperties = {
-  width: '100%', height: 50,
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 600,
-  color: '#fff', background: '#0f0f0f', border: 'none',
-  borderRadius: 12, cursor: 'pointer', letterSpacing: '-0.01em',
-  transition: 'opacity 0.15s',
+function ProgressBar({ step, total }: { step: number; total: number }) {
+  return (
+    <div style={{ marginBottom: 40 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.06em' }}>
+          STEP {step} OF {total}
+        </span>
+        <span style={{ fontSize: 12, color: '#b5b5b5' }}>{Math.round((step / total) * 100)}% complete</span>
+      </div>
+      <div style={{ height: 4, background: '#f0f0f0', borderRadius: 99, overflow: 'hidden' }}>
+        <div style={{
+          height: '100%', borderRadius: 99, background: '#0f0f0f',
+          width: `${(step / total) * 100}%`, transition: 'width 0.4s cubic-bezier(0.16,1,0.3,1)',
+        }} />
+      </div>
+    </div>
+  )
 }
 
-const SKILLS_PLACEHOLDER = 'Java, React, Python, SQL — comma separated'
+const ROLES = ['SDE / Software Engineer','Frontend Engineer','Backend Engineer','Full Stack Engineer',
+  'ML / AI Engineer','Data Scientist','Data Analyst','DevOps / Cloud Engineer','Product Manager',
+  'UI/UX Designer','QA Engineer','Cybersecurity','Embedded Systems','Other']
+
+const COUNTRIES = ['India','United States','United Kingdom','Canada','Australia','Singapore','UAE','Germany','Other']
+const DEGREES   = ['B.Tech / B.E.','B.Sc','BCA','M.Tech / M.E.','M.Sc','MCA','MBA','Diploma','Other']
+const BRANCHES  = ['Computer Science','Information Technology','Electronics & Communication',
+  'Electrical Engineering','Mechanical Engineering','Civil Engineering','Data Science','Artificial Intelligence','Other']
+const YEARS     = ['1st Year','2nd Year','3rd Year','4th Year','Graduated']
+const NOTICE    = ['Immediately','15 Days','30 Days','45 Days','60 Days','90 Days']
 
 export default function Onboarding() {
-  const { user, profile, refreshProfile } = useAuth()
+  const { user, refreshProfile } = useAuth()
   const navigate = useNavigate()
 
-  const [step, setStep]       = useState(1)
-  const [role, setRole]       = useState<UserType | null>(profile?.user_type ?? null)
-  const [errors, setErrors]   = useState<Record<string, string>>({})
+  const [step,    setStep]    = useState(1)
+  const [role,    setRole]    = useState<UserType | null>(null)
+  const [errors,  setErrors]  = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState<string | null>(null)
+  const [error,   setError]   = useState<string | null>(null)
 
-  // Step 2 — basics
-  const [mobile, setMobile]         = useState('')
-  const [locationPref, setLoc]      = useState('')
-  const [skills, setSkills]         = useState('')
+  // ── Step 2: Personal info ─────────────────────────────────────
+  const [firstName, setFirstName] = useState('')
+  const [lastName,  setLastName]  = useState('')
+  const [mobile,    setMobile]    = useState('')
+  const [linkedin,  setLinkedin]  = useState('')
+  const [github,    setGithub]    = useState('')
+  const [country,   setCountry]   = useState('India')
+  const [address,   setAddress]   = useState('')
+  const [roleInts,  setRoleInts]  = useState<string[]>([])
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 
-  // Step 2 student extras
-  const [college, setCollege]       = useState('')
-  const [cgpa, setCgpa]             = useState('')
+  // ── Step 3: Academic / professional ─────────────────────────
+  // Student
+  const [college,      setCollege]      = useState('')
+  const [degree,       setDegree]       = useState('')
+  const [branch,       setBranch]       = useState('')
+  const [currentYear,  setCurrentYear]  = useState('')
+  const [passoutYear,  setPassoutYear]  = useState('')
+  const [cgpa,         setCgpa]         = useState('')
+  const [internDone,   setInternDone]   = useState<boolean | null>(null)
+  const [internDetail, setInternDetail] = useState('')
+  const [skills,       setSkills]       = useState('')
+  const [projects,     setProjects]     = useState('')
 
-  // Step 2 professional extras
-  const [prevTitle, setPrevTitle]   = useState('')
-  const [prevCompany, setPrevCo]    = useState('')
-  const [yearsExp, setYearsExp]     = useState('')
+  // Professional
+  const [yearsExp,      setYearsExp]     = useState('')
+  const [prevTitle,     setPrevTitle]    = useState('')
+  const [prevCompany,   setPrevCompany]  = useState('')
+  const [prevSalary,    setPrevSalary]   = useState('')
+  const [noticeStr,     setNoticeStr]    = useState('')
 
-  // Step 3 — resume
-  const [resumeFile, setResume]     = useState<File | null>(null)
-  const [projects, setProjects]     = useState('')
+  // ── Step 4: Resume ─────────────────────────────────────────
+  const [resumeFile, setResumeFile] = useState<File | null>(null)
+  const photoRef = useRef<HTMLInputElement>(null)
 
-  const totalSteps = 3
+  const totalSteps = 4
+  const isExperienced = role === 'professional' && Number(yearsExp) >= 2
 
-  function validateStep2() {
-    const next: Record<string, string> = {}
-    if (!mobile.trim() || mobile.length < 10) next.mobile = 'Enter a valid mobile number.'
-    if (!skills.trim()) next.skills = 'Add at least one skill.'
-    if (role === 'student' && !college.trim()) next.college = 'Enter your college name.'
-    if (role === 'professional' && !prevTitle.trim()) next.prevTitle = 'Enter your previous job title.'
-    setErrors(next)
-    return Object.keys(next).length === 0
+  function toggleRole(r: string) {
+    setRoleInts(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])
+  }
+
+  function onPhotoChange(e: ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0] ?? null
+    setPhotoFile(f)
+    if (f) setPhotoPreview(URL.createObjectURL(f))
+  }
+
+  function validate2() {
+    const errs: Record<string, string> = {}
+    if (!firstName.trim()) errs.firstName = 'Required'
+    if (!lastName.trim())  errs.lastName  = 'Required'
+    if (!mobile.trim() || !/^\+?[\d\s-]{10,15}$/.test(mobile.trim())) errs.mobile = 'Enter valid mobile'
+    if (roleInts.length === 0) errs.roleInts = 'Select at least one role'
+    setErrors(errs)
+    return Object.keys(errs).length === 0
+  }
+
+  function validate3() {
+    const errs: Record<string, string> = {}
+    if (!skills.trim()) errs.skills = 'Add at least one skill'
+    if (role === 'student') {
+      if (!college.trim()) errs.college = 'Required'
+      if (!degree)         errs.degree  = 'Required'
+      if (!currentYear)    errs.currentYear = 'Required'
+      if (internDone === null) errs.internDone = 'Required'
+    }
+    if (role === 'professional') {
+      if (!yearsExp)         errs.yearsExp  = 'Required'
+      if (!prevTitle.trim()) errs.prevTitle = 'Required'
+    }
+    setErrors(errs)
+    return Object.keys(errs).length === 0
   }
 
   async function handleFinish(e: FormEvent) {
     e.preventDefault()
-    if (!role || !user) return
+    if (!user || !role) return
     setError(null); setLoading(true)
 
     try {
       let resumeUrl: string | null = null
+      let photoUrl:  string | null = null
+
+      // Upload photo
+      if (photoFile) {
+        const path = `${user.id}/${Date.now()}-${photoFile.name}`
+        const { error: upErr } = await supabase.storage.from('photos').upload(path, photoFile, { upsert: true })
+        if (upErr) throw upErr
+        const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(path)
+        photoUrl = publicUrl
+      }
+
+      // Upload resume
       if (resumeFile) {
         const path = `${user.id}/${Date.now()}-${resumeFile.name}`
-        const { error: uploadError } = await supabase.storage.from('resumes').upload(path, resumeFile, { upsert: true })
-        if (uploadError) throw uploadError
+        const { error: upErr } = await supabase.storage.from('resumes').upload(path, resumeFile, { upsert: true })
+        if (upErr) throw upErr
         resumeUrl = path
       }
 
       const skillsArr = skills.split(',').map(s => s.trim()).filter(Boolean)
+      const noticeDays = noticeStr
+        ? noticeStr === 'Immediately' ? 0 : parseInt(noticeStr)
+        : null
 
-      if (role === 'student') {
-        const { error: dbErr } = await supabase.from('student_details').upsert({
-          id: user.id, college_name: college,
-          cgpa: cgpa ? Number(cgpa) : null,
-          location_preference: locationPref,
-          mobile_number: mobile,
-          technical_skills: skillsArr, projects, resume_url: resumeUrl,
-        })
-        if (dbErr) throw dbErr
-      } else {
-        const { error: dbErr } = await supabase.from('professional_details').upsert({
-          id: user.id, previous_job_title: prevTitle,
-          previous_company: prevCompany,
-          years_experience: yearsExp ? Number(yearsExp) : null,
-          location_preference: locationPref,
-          mobile_number: mobile,
-          technical_skills: skillsArr, resume_url: resumeUrl,
-        })
-        if (dbErr) throw dbErr
-      }
-
-      const { error: profErr } = await supabase.from('profiles').update({ user_type: role, account_status: 'active' }).eq('id', user.id)
+      // Update profile
+      const { error: profErr } = await supabase.from('profiles').update({
+        first_name:    firstName.trim(),
+        last_name:     lastName.trim(),
+        full_name:     `${firstName.trim()} ${lastName.trim()}`,
+        mobile_number: mobile.trim(),
+        linkedin_url:  linkedin.trim() || null,
+        github_url:    github.trim()   || null,
+        country,
+        address:       address.trim() || null,
+        role_interests: roleInts,
+        user_type:     role,
+        account_status: 'active',
+        photo_url:     photoUrl,
+      }).eq('id', user.id)
       if (profErr) throw profErr
+
+      // Upsert detail table
+      if (role === 'student') {
+        const { error: dErr } = await supabase.from('student_details').upsert({
+          id: user.id,
+          college_name:      college.trim(),
+          degree,
+          branch:            branch || null,
+          current_year:      currentYear,
+          passout_year:      passoutYear ? parseInt(passoutYear) : null,
+          cgpa:              cgpa ? parseFloat(cgpa) : null,
+          internship_done:   internDone === true,
+          internship_details: internDone ? internDetail.trim() || null : 'NA',
+          technical_skills:  skillsArr,
+          projects:          projects.trim() || null,
+          resume_url:        resumeUrl,
+        })
+        if (dErr) throw dErr
+      } else {
+        const { error: dErr } = await supabase.from('professional_details').upsert({
+          id: user.id,
+          years_experience:   yearsExp ? parseFloat(yearsExp) : null,
+          previous_job_title: prevTitle.trim(),
+          previous_company:   prevCompany.trim() || null,
+          previous_salary:    prevSalary ? parseFloat(prevSalary) : null,
+          notice_period:      noticeStr !== '',
+          notice_period_days: noticeDays,
+          technical_skills:   skillsArr,
+          resume_url:         resumeUrl,
+        })
+        if (dErr) throw dErr
+      }
 
       await refreshProfile()
       navigate('/dashboard')
@@ -147,61 +255,60 @@ export default function Onboarding() {
     }
   }
 
+  /* ── Render ─────────────────────────────────────────────────── */
   return (
-    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Inter', -apple-system, sans-serif" }}>
-      {/* Top nav */}
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, height: 60,
+    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Inter',-apple-system,sans-serif" }}>
+
+      {/* Navbar */}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 60,
         display: 'flex', alignItems: 'center', padding: '0 28px',
         background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid #f0f0f0', zIndex: 50,
-      }}>
+        borderBottom: '1px solid #f0f0f0', zIndex: 50 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 30, height: 30, borderRadius: 8, background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff"/></svg>
+          <div style={{ width: 30, height: 30, borderRadius: 8, background: '#0f0f0f',
+            display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff"/>
+            </svg>
           </div>
           <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em' }}>Opportunities Cell</span>
         </div>
         <div style={{ marginLeft: 'auto', fontSize: 13, color: '#b5b5b5' }}>
-          Need help? <a href="mailto:hello@opportunitiescell.com" style={{ color: '#6b6b6b', textDecoration: 'none', fontWeight: 500 }}>Contact us</a>
+          Need help? <a href="mailto:hello@opportunitiescell.com"
+            style={{ color: '#6b6b6b', textDecoration: 'none', fontWeight: 500 }}>Contact us</a>
         </div>
       </div>
 
-      <div style={{ paddingTop: 100, paddingBottom: 60, maxWidth: 580, margin: '0 auto', padding: '100px 24px 60px' }}>
+      <div style={{ paddingTop: 100, paddingBottom: 80, maxWidth: 620, margin: '0 auto', padding: '100px 24px 80px' }}>
         <ProgressBar step={step} total={totalSteps} />
 
         {error && (
-          <div className="oc-error" style={{ marginBottom: 24 }}>⚠ {error}</div>
+          <div style={{ marginBottom: 24, padding: '14px 16px', background: '#fef2f2',
+            border: '1px solid #fecaca', borderRadius: 12, fontSize: 14, color: '#dc2626' }}>
+            ⚠ {error}
+          </div>
         )}
 
-        {/* STEP 1 — Role */}
+        {/* ── STEP 1: Role ───────────────────────────────────────── */}
         {step === 1 && (
           <div className="anim-slide-up">
-            <p style={{ fontSize: 11, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>
-              LET'S PERSONALISE YOUR EXPERIENCE
-            </p>
-            <h1 style={{
-              fontFamily: "'Instrument Serif', Georgia, serif",
-              fontSize: 36, fontWeight: 400, color: '#0f0f0f',
-              lineHeight: 1.15, letterSpacing: '-0.02em', marginBottom: 10,
-            }}>Who are we applying for?</h1>
+            <p style={sectionLabel}>LET'S PERSONALISE YOUR EXPERIENCE</p>
+            <h1 style={{ ...serif, fontSize: 36, marginBottom: 10 }}>Who are we applying for?</h1>
             <p style={{ fontSize: 15, color: '#9b9b9b', marginBottom: 36 }}>
               This shapes which jobs we target and how we tailor each application.
             </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={grid2}>
               {([
-                { type: 'student' as UserType, icon: '🎓', title: "I'm a student", desc: 'Hunting for internships or first job after college.' },
-                { type: 'professional' as UserType, icon: '💼', title: 'Early-career pro', desc: "I've worked before and I'm switching or levelling up." },
+                { type: 'student' as UserType, icon: '🎓', title: "I'm a student", desc: 'Internships or first job after college.' },
+                { type: 'professional' as UserType, icon: '💼', title: 'Working professional', desc: "I've worked before and I'm levelling up." },
               ]).map(r => (
                 <button key={r.type} onClick={() => { setRole(r.type); setStep(2) }} style={{
                   background: '#fff', border: '1.5px solid #e8e8e8', borderRadius: 16,
                   padding: '24px 20px', textAlign: 'left', cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)', transition: 'all 0.15s',
                 }}>
                   <span style={{ fontSize: 28, display: 'block', marginBottom: 14 }}>{r.icon}</span>
-                  <p style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 20, color: '#0f0f0f', marginBottom: 8 }}>{r.title}</p>
+                  <p style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 20, color: '#0f0f0f', marginBottom: 8 }}>{r.title}</p>
                   <p style={{ fontSize: 13, color: '#9b9b9b', lineHeight: 1.5 }}>{r.desc}</p>
                   <div style={{ marginTop: 16, fontSize: 13, fontWeight: 600, color: '#0f0f0f' }}>Choose this →</div>
                 </button>
@@ -210,102 +317,276 @@ export default function Onboarding() {
           </div>
         )}
 
-        {/* STEP 2 — Profile details */}
+        {/* ── STEP 2: Personal info ──────────────────────────────── */}
         {step === 2 && (
-          <form className="anim-slide-up" onSubmit={(e) => { e.preventDefault(); if (validateStep2()) setStep(3) }}
+          <form className="anim-slide-up" onSubmit={e => { e.preventDefault(); if (validate2()) setStep(3) }}
             style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <div>
-              <button type="button" onClick={() => { setStep(1); setRole(null) }} style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                fontSize: 13, color: '#9b9b9b', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 24,
-              }}>← Change role</button>
+            <button type="button" onClick={() => { setStep(1); setRole(null) }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: 13, color: '#9b9b9b', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
+              ← Change role
+            </button>
+            <p style={sectionLabel}>YOUR PROFILE</p>
+            <h2 style={serif}>Tell us about yourself</h2>
 
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>
-                YOUR PROFILE
-              </p>
-              <h2 style={{
-                fontFamily: "'Instrument Serif', Georgia, serif",
-                fontSize: 32, fontWeight: 400, color: '#0f0f0f',
-                lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: 28,
-              }}>Tell us about yourself</h2>
+            {/* Photo upload */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 4 }}>
+              <div onClick={() => photoRef.current?.click()} style={{
+                width: 72, height: 72, borderRadius: '50%', background: '#f5f5f5',
+                border: '2px dashed #e5e5e5', cursor: 'pointer', overflow: 'hidden',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                {photoPreview
+                  ? <img src={photoPreview} alt="photo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b5b5b5" strokeWidth="1.8">
+                      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    </svg>
+                }
+              </div>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 500, color: '#0f0f0f', marginBottom: 4 }}>Profile photo</p>
+                <button type="button" onClick={() => photoRef.current?.click()}
+                  style={{ ...ghostBtn, width: 'auto', padding: '0 16px', height: 34, fontSize: 13 }}>
+                  Upload photo
+                </button>
+                <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onPhotoChange} />
+              </div>
             </div>
 
-            <Field label="Mobile number" error={errors.mobile}>
-              <input style={inputStyle(errors.mobile)} type="tel" value={mobile}
-                onChange={(e) => { setMobile(e.target.value); setErrors(p => ({...p, mobile: ''})) }}
-                placeholder="+91 98765 43210" autoComplete="tel" />
+            <div style={grid2}>
+              <Field label="First name *" error={errors.firstName}>
+                <input style={inp(errors.firstName)} value={firstName}
+                  onChange={e => { setFirstName(e.target.value); setErrors(p => ({...p, firstName:''})) }}
+                  placeholder="Kiran" />
+              </Field>
+              <Field label="Last name *" error={errors.lastName}>
+                <input style={inp(errors.lastName)} value={lastName}
+                  onChange={e => { setLastName(e.target.value); setErrors(p => ({...p, lastName:''})) }}
+                  placeholder="Medam" />
+              </Field>
+            </div>
+
+            <Field label="Mobile number *" error={errors.mobile}>
+              <input style={inp(errors.mobile)} type="tel" value={mobile}
+                onChange={e => { setMobile(e.target.value); setErrors(p => ({...p, mobile:''})) }}
+                placeholder="+91 98765 43210" />
             </Field>
 
-            <Field label="Preferred locations" error={errors.locationPref}>
-              <input style={inputStyle()} value={locationPref}
-                onChange={(e) => setLoc(e.target.value)}
-                placeholder="Hyderabad, Bengaluru, Remote" />
-            </Field>
+            <div style={grid2}>
+              <Field label="LinkedIn profile">
+                <input style={inp()} value={linkedin} onChange={e => setLinkedin(e.target.value)}
+                  placeholder="linkedin.com/in/yourname" />
+              </Field>
+              <Field label="GitHub profile">
+                <input style={inp()} value={github} onChange={e => setGithub(e.target.value)}
+                  placeholder="github.com/yourname" />
+              </Field>
+            </div>
 
-            <Field label="Technical skills" error={errors.skills}>
-              <input style={inputStyle(errors.skills)} value={skills}
-                onChange={(e) => { setSkills(e.target.value); setErrors(p => ({...p, skills: ''})) }}
-                placeholder={SKILLS_PLACEHOLDER} />
-            </Field>
+            <div style={grid2}>
+              <Field label="Country">
+                <select value={country} onChange={e => setCountry(e.target.value)}
+                  style={{ ...inp(), appearance: 'none' as const }}>
+                  {COUNTRIES.map(c => <option key={c}>{c}</option>)}
+                </select>
+              </Field>
+              <Field label="City / Address">
+                <input style={inp()} value={address} onChange={e => setAddress(e.target.value)}
+                  placeholder="Hyderabad, Telangana" />
+              </Field>
+            </div>
 
-            {role === 'student' ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <Field label="College name" error={errors.college}>
-                  <input style={inputStyle(errors.college)} value={college}
-                    onChange={(e) => { setCollege(e.target.value); setErrors(p => ({...p, college: ''})) }}
-                    placeholder="ACE Engineering College" />
-                </Field>
-                <Field label="CGPA">
-                  <input style={inputStyle()} type="number" step="0.01" min="0" max="10"
-                    value={cgpa} onChange={(e) => setCgpa(e.target.value)} placeholder="8.45" />
-                </Field>
+            <Field label="Roles interested in *" error={errors.roleInts}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                {ROLES.map(r => (
+                  <button key={r} type="button" onClick={() => { toggleRole(r); setErrors(p => ({...p, roleInts:''})) }}
+                    style={{
+                      padding: '7px 14px', borderRadius: 99, fontSize: 13, cursor: 'pointer',
+                      background: roleInts.includes(r) ? '#0f0f0f' : '#f5f5f5',
+                      color: roleInts.includes(r) ? '#fff' : '#4b4b4b',
+                      border: 'none', fontFamily: "'Inter',sans-serif", transition: 'all 0.15s',
+                    }}>
+                    {r}
+                  </button>
+                ))}
               </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <Field label="Previous job title" error={errors.prevTitle}>
-                  <input style={inputStyle(errors.prevTitle)} value={prevTitle}
-                    onChange={(e) => { setPrevTitle(e.target.value); setErrors(p => ({...p, prevTitle: ''})) }}
-                    placeholder="Software Engineer" />
-                </Field>
-                <Field label="Previous company">
-                  <input style={inputStyle()} value={prevCompany}
-                    onChange={(e) => setPrevCo(e.target.value)} placeholder="Infosys" />
-                </Field>
-                <Field label="Years of experience">
-                  <input style={inputStyle()} type="number" step="0.5" min="0"
-                    value={yearsExp} onChange={(e) => setYearsExp(e.target.value)} placeholder="2" />
-                </Field>
-              </div>
-            )}
+              {errors.roleInts && <p style={{ marginTop: 5, fontSize: 12, color: '#ef4444' }}>{errors.roleInts}</p>}
+            </Field>
 
-            <button type="submit" style={btnStyle}>
-              Continue →
-            </button>
+            <button type="submit" style={btn}>Continue →</button>
           </form>
         )}
 
-        {/* STEP 3 — Resume upload */}
+        {/* ── STEP 3: Academic / Professional ───────────────────── */}
         {step === 3 && (
-          <form className="anim-slide-up" onSubmit={handleFinish} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            <div>
-              <button type="button" onClick={() => setStep(2)} style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                fontSize: 13, color: '#9b9b9b', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 24,
-              }}>← Back</button>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>
-                ALMOST DONE
-              </p>
-              <h2 style={{
-                fontFamily: "'Instrument Serif', Georgia, serif",
-                fontSize: 32, fontWeight: 400, color: '#0f0f0f',
-                lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: 8,
-              }}>Upload your resume</h2>
-              <p style={{ fontSize: 14, color: '#9b9b9b', marginBottom: 28 }}>
-                We tailor every application to the job. A strong resume = more interviews.
-              </p>
-            </div>
+          <form className="anim-slide-up" onSubmit={e => { e.preventDefault(); if (validate3()) setStep(4) }}
+            style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <button type="button" onClick={() => setStep(2)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: 13, color: '#9b9b9b', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
+              ← Back
+            </button>
 
-            {/* Resume upload zone */}
+            {role === 'student' ? (
+              <>
+                <p style={sectionLabel}>ACADEMIC DETAILS</p>
+                <h2 style={serif}>Your education</h2>
+
+                <Field label="College / University *" error={errors.college}>
+                  <input style={inp(errors.college)} value={college}
+                    onChange={e => { setCollege(e.target.value); setErrors(p=>({...p,college:''})) }}
+                    placeholder="ACE Engineering College, Hyderabad" />
+                </Field>
+
+                <div style={grid2}>
+                  <Field label="Degree *" error={errors.degree}>
+                    <select value={degree} onChange={e => { setDegree(e.target.value); setErrors(p=>({...p,degree:''})) }}
+                      style={{ ...inp(errors.degree), appearance: 'none' as const }}>
+                      <option value="">Select degree</option>
+                      {DEGREES.map(d => <option key={d}>{d}</option>)}
+                    </select>
+                  </Field>
+                  <Field label="Branch / Specialisation">
+                    <select value={branch} onChange={e => setBranch(e.target.value)}
+                      style={{ ...inp(), appearance: 'none' as const }}>
+                      <option value="">Select branch</option>
+                      {BRANCHES.map(b => <option key={b}>{b}</option>)}
+                    </select>
+                  </Field>
+                </div>
+
+                <div style={grid2}>
+                  <Field label="Current year *" error={errors.currentYear}>
+                    <select value={currentYear} onChange={e => { setCurrentYear(e.target.value); setErrors(p=>({...p,currentYear:''})) }}
+                      style={{ ...inp(errors.currentYear), appearance: 'none' as const }}>
+                      <option value="">Select year</option>
+                      {YEARS.map(y => <option key={y}>{y}</option>)}
+                    </select>
+                  </Field>
+                  <Field label="Pass-out year">
+                    <input style={inp()} type="number" value={passoutYear}
+                      onChange={e => setPassoutYear(e.target.value)}
+                      placeholder="2026" min="2020" max="2030" />
+                  </Field>
+                </div>
+
+                <Field label="CGPA">
+                  <input style={inp()} type="number" step="0.01" min="0" max="10"
+                    value={cgpa} onChange={e => setCgpa(e.target.value)} placeholder="8.45" />
+                </Field>
+
+                <Field label="Any internship done? *" error={errors.internDone}>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    {(['Yes','No'] as const).map(opt => (
+                      <button key={opt} type="button"
+                        onClick={() => { setInternDone(opt === 'Yes'); setErrors(p=>({...p,internDone:''})) }}
+                        style={{
+                          flex: 1, height: 44, borderRadius: 10, border: '1.5px solid',
+                          borderColor: internDone === (opt === 'Yes') ? '#0f0f0f' : '#e5e5e5',
+                          background: internDone === (opt === 'Yes') ? '#0f0f0f' : '#fff',
+                          color: internDone === (opt === 'Yes') ? '#fff' : '#6b6b6b',
+                          fontFamily: "'Inter',sans-serif", fontSize: 14, fontWeight: 500, cursor: 'pointer',
+                        }}>
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                  {errors.internDone && <p style={{ marginTop: 5, fontSize: 12, color: '#ef4444' }}>{errors.internDone}</p>}
+                </Field>
+
+                {internDone === true && (
+                  <Field label="Internship details">
+                    <textarea value={internDetail} onChange={e => setInternDetail(e.target.value)}
+                      rows={3} placeholder="Company, role, duration, key work done…"
+                      style={{ ...inp(), height: 'auto', padding: '12px 16px', resize: 'none', lineHeight: 1.6 }} />
+                  </Field>
+                )}
+                {internDone === false && (
+                  <div style={{ padding: '12px 14px', background: '#f5f5f5', borderRadius: 10, fontSize: 13, color: '#9b9b9b' }}>
+                    ✓ Will be marked as <strong>NA</strong> on your profile.
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <p style={sectionLabel}>PROFESSIONAL DETAILS</p>
+                <h2 style={serif}>Your work experience</h2>
+
+                <Field label="Years of experience *" error={errors.yearsExp}>
+                  <input style={inp(errors.yearsExp)} type="number" step="0.5" min="0"
+                    value={yearsExp} onChange={e => { setYearsExp(e.target.value); setErrors(p=>({...p,yearsExp:''})) }}
+                    placeholder="2.5" />
+                </Field>
+
+                <div style={grid2}>
+                  <Field label="Previous job title *" error={errors.prevTitle}>
+                    <input style={inp(errors.prevTitle)} value={prevTitle}
+                      onChange={e => { setPrevTitle(e.target.value); setErrors(p=>({...p,prevTitle:''})) }}
+                      placeholder="Software Engineer" />
+                  </Field>
+                  <Field label="Previous company">
+                    <input style={inp()} value={prevCompany}
+                      onChange={e => setPrevCompany(e.target.value)} placeholder="Infosys" />
+                  </Field>
+                </div>
+
+                <Field label="Previous CTC (annual, ₹)">
+                  <input style={inp()} type="number" value={prevSalary}
+                    onChange={e => setPrevSalary(e.target.value)} placeholder="600000" />
+                </Field>
+
+                <Field label="Notice period">
+                  <select value={noticeStr} onChange={e => setNoticeStr(e.target.value)}
+                    style={{ ...inp(), appearance: 'none' as const }}>
+                    <option value="">Not applicable / Already serving</option>
+                    {NOTICE.map(n => <option key={n}>{n}</option>)}
+                  </select>
+                </Field>
+
+                {/* Only show college for < 2 years experience */}
+                {!isExperienced && (
+                  <Field label="College name">
+                    <input style={inp()} value={college}
+                      onChange={e => setCollege(e.target.value)} placeholder="ACE Engineering College" />
+                  </Field>
+                )}
+              </>
+            )}
+
+            {/* Skills — common to both */}
+            <Field label="Technical skills *" error={errors.skills}>
+              <input style={inp(errors.skills)} value={skills}
+                onChange={e => { setSkills(e.target.value); setErrors(p=>({...p,skills:''})) }}
+                placeholder="Java, React, Python, SQL — comma separated" />
+            </Field>
+
+            {role === 'student' && (
+              <Field label="Projects (optional)">
+                <textarea value={projects} onChange={e => setProjects(e.target.value)} rows={3}
+                  placeholder="Briefly describe your top 2–3 projects…"
+                  style={{ ...inp(), height: 'auto', padding: '12px 16px', resize: 'none', lineHeight: 1.6 }} />
+              </Field>
+            )}
+
+            <button type="submit" style={btn}>Continue →</button>
+          </form>
+        )}
+
+        {/* ── STEP 4: Resume + finish ────────────────────────────── */}
+        {step === 4 && (
+          <form className="anim-slide-up" onSubmit={handleFinish}
+            style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <button type="button" onClick={() => setStep(3)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: 13, color: '#9b9b9b', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>
+              ← Back
+            </button>
+            <p style={sectionLabel}>ALMOST DONE</p>
+            <h2 style={serif}>Upload your resume</h2>
+            <p style={{ fontSize: 14, color: '#9b9b9b', marginBottom: 8 }}>
+              We tailor every application to the job. A strong resume = more interviews.
+            </p>
+
             <label style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               gap: 12, padding: '36px 24px',
@@ -315,14 +596,21 @@ export default function Onboarding() {
             }}>
               {resumeFile ? (
                 <>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
                   <p style={{ fontSize: 15, fontWeight: 600, color: '#16a34a' }}>{resumeFile.name}</p>
                   <p style={{ fontSize: 13, color: '#9b9b9b' }}>Click to change</p>
                 </>
               ) : (
                 <>
-                  <div style={{ width: 48, height: 48, borderRadius: 12, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: '#fff',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="1.8">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                      <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <p style={{ fontSize: 15, fontWeight: 600, color: '#0f0f0f' }}>Upload resume</p>
@@ -331,34 +619,28 @@ export default function Onboarding() {
                 </>
               )}
               <input type="file" accept=".pdf,.doc,.docx" style={{ display: 'none' }}
-                onChange={(e) => setResume(e.target.files?.[0] ?? null)} />
+                onChange={e => setResumeFile(e.target.files?.[0] ?? null)} />
             </label>
 
-            {role === 'student' && (
-              <Field label="Projects (optional)">
-                <textarea value={projects} onChange={(e) => setProjects(e.target.value)}
-                  placeholder="Briefly describe your top 2–3 projects…"
-                  style={{ ...inputStyle(), height: 'auto', padding: '12px 16px', resize: 'none', lineHeight: 1.6 }}
-                  rows={3} />
-              </Field>
-            )}
-
-            <div style={{ background: '#f7f7f7', borderRadius: 12, padding: '14px 16px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="2" style={{ marginTop: 1, flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div style={{ background: '#f7f7f7', borderRadius: 12, padding: '14px 16px',
+              display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="2"
+                style={{ marginTop: 1, flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
               <p style={{ fontSize: 13, color: '#6b6b6b', lineHeight: 1.6 }}>
-                You can skip this and upload later from your dashboard. We'll start applying once your resume is uploaded.
+                You can skip this and upload from your dashboard later. We start applying once your resume is live.
               </p>
             </div>
 
-            <button type="submit" disabled={loading} style={{ ...btnStyle, opacity: loading ? 0.5 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}>
+            <button type="submit" disabled={loading}
+              style={{ ...btn, opacity: loading ? 0.5 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}>
               {loading ? 'Setting up your account…' : "I'm ready — start applying 🚀"}
             </button>
 
-            {!resumeFile && (
-              <button type="button" onClick={handleFinish as any} disabled={loading} style={{
-                width: '100%', height: 44, background: 'none', border: '1.5px solid #e5e5e5',
-                borderRadius: 12, fontSize: 14, color: '#9b9b9b', cursor: 'pointer', fontFamily: "'Inter', sans-serif",
-              }}>
+            {!resumeFile && !loading && (
+              <button type="button" onClick={handleFinish as never} style={ghostBtn}>
                 Skip for now →
               </button>
             )}
@@ -368,10 +650,12 @@ export default function Onboarding() {
 
       <style>{`
         .anim-slide-up { animation: slideUp 0.45s cubic-bezier(0.16,1,0.3,1) both; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-        input:focus { border-color: #0f0f0f !important; box-shadow: 0 0 0 3px rgba(15,15,15,0.08) !important; }
-        textarea:focus { border-color: #0f0f0f !important; box-shadow: 0 0 0 3px rgba(15,15,15,0.08) !important; outline: none; }
-        label:hover > div { border-color: #c5c5c5 !important; }
+        @keyframes slideUp { from { opacity:0;transform:translateY(14px); } to { opacity:1;transform:none; } }
+        input:focus,textarea:focus,select:focus {
+          border-color: #0f0f0f !important;
+          box-shadow: 0 0 0 3px rgba(15,15,15,0.08) !important;
+          outline: none;
+        }
       `}</style>
     </div>
   )
