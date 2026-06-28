@@ -63,9 +63,6 @@ export default function Dashboard() {
     : 0
 
   const isSubscribed = !!subscription
-  const subEnds = subscription?.ends_at
-    ? new Date(subscription.ends_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-    : null
 
   const STATUS_COLOR: Record<string, string> = {
     applied: '#6b6b6b', shortlisted: '#2563eb', interview: '#7c3aed',
@@ -92,12 +89,6 @@ export default function Dashboard() {
           <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em' }}>Opportunities Cell</span>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-          {!isSubscribed && (
-            <Link to="/subscription" style={{
-              padding: '8px 16px', background: '#0f0f0f', color: '#fff',
-              borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none',
-            }}>Upgrade ✦</Link>
-          )}
           {profile?.is_admin && (
             <Link to="/admin" style={{
               padding: '8px 14px', background: '#f5f5f5',
@@ -124,39 +115,45 @@ export default function Dashboard() {
           Here's how your job search is going.
         </p>
 
-        {/* Subscription banner */}
-        {!isSubscribed ? (
-          <div style={{
-            marginBottom: 28, padding: '16px 20px', borderRadius: 14,
-            background: 'linear-gradient(135deg,#0f0f0f,#333)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-          }}>
-            <div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 4 }}>
-                ✦ Activate your subscription
-              </p>
-              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
-                Admin applies to jobs on your behalf. Starting ₹250/month.
-              </p>
+        {/* Subscription card — renewal date + days left */}
+        {subscription ? (() => {
+          const endsAt   = new Date(subscription.ends_at!)
+          const daysLeft = Math.ceil((endsAt.getTime() - Date.now()) / 86400000)
+          const isUrgent = daysLeft <= 7
+          const renewDate = endsAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+          return (
+            <div style={{
+              marginBottom: 28, padding: '18px 22px', borderRadius: 14,
+              background: isUrgent ? '#fff7ed' : '#f7f7f7',
+              border: `1.5px solid ${isUrgent ? '#fed7aa' : '#ebebeb'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <span style={{
+                    fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 99,
+                    background: isUrgent ? '#ffedd5' : '#dcfce7',
+                    color: isUrgent ? '#ea580c' : '#16a34a',
+                  }}>
+                    {isUrgent ? `⚠ ${daysLeft}d left` : '✓ Active'}
+                  </span>
+                  <span style={{ fontSize: 13, color: '#9b9b9b' }}>{PLANS[subscription.plan].months} plan</span>
+                </div>
+                <p style={{ fontSize: 14, color: '#6b6b6b' }}>
+                  Next payment due:{' '}
+                  <strong style={{ color: isUrgent ? '#dc2626' : '#0f0f0f' }}>{renewDate}</strong>
+                </p>
+              </div>
+              <button onClick={() => navigate('/subscription')} style={{
+                padding: '9px 18px', background: isUrgent ? '#dc2626' : '#0f0f0f', color: '#fff',
+                border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: "'Inter',sans-serif", flexShrink: 0,
+              }}>
+                {isUrgent ? 'Renew now ⚡' : 'Manage plan'}
+              </button>
             </div>
-            <button onClick={() => navigate('/subscription')} style={{
-              padding: '10px 18px', background: '#fff', color: '#0f0f0f',
-              borderRadius: 8, fontSize: 13, fontWeight: 600, border: 'none',
-              cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
-            }}>View plans</button>
-          </div>
-        ) : (
-          <div style={{
-            marginBottom: 28, padding: '14px 18px', borderRadius: 12,
-            background: '#f0fdf4', border: '1px solid #bbf7d0',
-            display: 'flex', alignItems: 'center', gap: 10,
-          }}>
-            <span style={{ fontSize: 18 }}>✓</span>
-            <p style={{ fontSize: 14, color: '#15803d' }}>
-              <strong>{PLANS[subscription.plan].label}</strong> active · expires {subEnds}
-            </p>
-          </div>
-        )}
+          )
+        })() : null}
 
         {/* Applications stats */}
         <div style={{ marginBottom: 28 }}>

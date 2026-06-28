@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 
 interface Props {
   children:   ReactNode
-  requireSub?: boolean   // if true → redirect to /subscription when no active sub
+  requireSub?: boolean
 }
 
 const Spinner = () => (
@@ -19,13 +19,20 @@ const Spinner = () => (
 )
 
 export default function ProtectedRoute({ children, requireSub = false }: Props) {
-  const { session, loading, subscription } = useAuth()
+  const { session, loading, subscription, profile } = useAuth()
 
   if (loading) return <Spinner />
   if (!session) return <Navigate to="/sign-in" replace />
 
-  // Subscription gate — blocks /dashboard and /onboarding until paid
-  if (requireSub && !subscription) return <Navigate to="/subscription" replace />
+  // Suspended account (payment expired) → force renewal
+  if (profile?.account_status === 'suspended') {
+    return <Navigate to="/subscription?reason=expired" replace />
+  }
+
+  // Dashboard requires active subscription
+  if (requireSub && !subscription) {
+    return <Navigate to="/subscription" replace />
+  }
 
   return <>{children}</>
 }

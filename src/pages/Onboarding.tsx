@@ -629,11 +629,11 @@ export default function Onboarding() {
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <p style={{ fontSize: 15, fontWeight: 600, color: '#0f0f0f' }}>Upload resume</p>
-                    <p style={{ fontSize: 13, color: '#b5b5b5', marginTop: 4 }}>PDF or DOCX · Max 5MB</p>
+                    <p style={{ fontSize: 13, color: '#b5b5b5', marginTop: 4 }}>PDF only · Max 5MB</p>
                   </div>
                 </>
               )}
-              <input type="file" accept=".pdf,.doc,.docx" style={{ display: 'none' }}
+              <input type="file" accept=".pdf" style={{ display: 'none' }}
                 onChange={e => setResumeFile(e.target.files?.[0] ?? null)} />
             </label>
 

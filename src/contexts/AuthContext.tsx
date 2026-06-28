@@ -34,17 +34,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
     setProfile(data ?? null)
 
-    // Fetch active subscription
+    // Fetch most recent subscription (active or expired)
     const { data: sub } = await supabase
       .from('subscriptions')
       .select('*')
       .eq('user_id', userId)
-      .eq('status', 'active')
-      .gt('ends_at', new Date().toISOString())
       .order('ends_at', { ascending: false })
       .limit(1)
       .maybeSingle()
-    setSubscription(sub ?? null)
+
+    if (sub) {
+      const isExpired = sub.status === 'active' && sub.ends_at && new Date(sub.ends_at) < new Date()
+
+      if (isExpired) {
+        // Mark subscription as expired
+        await supabase.from('subscriptions').update({ status: 'expired' }).eq('id', sub.id)
+        // Suspend account
+        await supabase.from('profiles').update({ account_status: 'suspended' }).eq('id', userId)
+        setSubscription(null)
+        setProfile(prev => prev ? { ...prev, account_status: 'suspended' } : null)
+      } else if (sub.status === 'active') {
+        setSubscription(sub)
+      } else {
+        setSubscription(null)
+      }
+    } else {
+      setSubscription(null)
+    }
   }
 
   useEffect(() => {
