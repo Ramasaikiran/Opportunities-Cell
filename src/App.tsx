@@ -27,11 +27,11 @@ export default function App() {
       <Route path="/reset-password"  element={<ResetPassword />} />
       <Route path="/auth/callback"   element={<AuthCallback />} />
 
-      {/* Protected — login only (no sub required) */}
+      {/* Protected — login only */}
       <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
+      <Route path="/onboarding"   element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
 
       {/* Protected — subscription required */}
-      <Route path="/onboarding"   element={<ProtectedRoute requireSub><Onboarding /></ProtectedRoute>} />
       <Route path="/dashboard"    element={<ProtectedRoute requireSub><Dashboard /></ProtectedRoute>} />
 
       {/* Admin */}

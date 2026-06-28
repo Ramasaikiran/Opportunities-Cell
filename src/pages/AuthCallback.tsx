@@ -42,8 +42,15 @@ export default function AuthCallback() {
         })
       }
 
-      // ── Route by subscription + onboarding status ──────────────
-      // 1. Check for active subscription
+      // ── Route by onboarding + subscription status ───────────────
+      // 1. Not onboarded yet → fill profile first
+      const isOnboarded = !!(profile?.user_type)
+      if (!isOnboarded) {
+        navigate('/onboarding', { replace: true })
+        return
+      }
+
+      // 2. Onboarded but no active subscription → pay
       const { data: sub } = await supabase
         .from('subscriptions')
         .select('id')
@@ -52,22 +59,12 @@ export default function AuthCallback() {
         .gt('ends_at', new Date().toISOString())
         .maybeSingle()
 
-      const hasSub      = !!sub
-      const isOnboarded = !!(profile?.user_type)
-
-      if (!hasSub) {
-        // No subscription → pay first
+      if (!sub) {
         navigate('/subscription', { replace: true })
         return
       }
 
-      if (!isOnboarded) {
-        // Paid but not onboarded yet
-        navigate('/onboarding', { replace: true })
-        return
-      }
-
-      // Fully set up → dashboard
+      // 3. Both done → dashboard
       navigate('/dashboard', { replace: true })
     }
 

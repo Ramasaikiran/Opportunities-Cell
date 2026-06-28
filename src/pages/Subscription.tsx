@@ -173,13 +173,13 @@ export default function Subscription() {
             color: '#0f0f0f', marginBottom: 10 }}>Payment successful!</h1>
           <p style={{ fontSize: 15, color: '#9b9b9b', lineHeight: 1.7, marginBottom: 32 }}>
             Your <strong>{PLANS[selected].months}</strong> plan is active.
-            Now let's set up your profile so we can start applying.
+            Our team will start applying to jobs matching your profile.
           </p>
-          <button onClick={() => navigate('/onboarding')} style={{
+          <button onClick={() => navigate('/dashboard')} style={{
             width: '100%', height: 52, background: '#0f0f0f', color: '#fff',
             border: 'none', borderRadius: 12, fontSize: 16, fontWeight: 600,
             cursor: 'pointer', fontFamily: "'Inter',sans-serif",
-          }}>Set up my profile →</button>
+          }}>Go to dashboard →</button>
         </div>
       </div>
     )
@@ -208,7 +208,7 @@ export default function Subscription() {
 
         {/* Header */}
         <p style={{ fontSize: 11, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.1em',
-          textTransform: 'uppercase', marginBottom: 10 }}>STEP 1 OF 2 — CHOOSE A PLAN</p>
+          textTransform: 'uppercase', marginBottom: 10 }}>STEP 2 OF 2 — CHOOSE A PLAN</p>
         <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 38, fontWeight: 400,
           color: '#0f0f0f', letterSpacing: '-0.02em', marginBottom: 10, lineHeight: 1.15 }}>
           We apply.<br/>You get hired.

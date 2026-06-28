@@ -247,7 +247,7 @@ export default function Onboarding() {
       }
 
       await refreshProfile()
-      navigate('/dashboard')
+      navigate('/subscription')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.')
     } finally {
