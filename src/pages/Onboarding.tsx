@@ -81,7 +81,7 @@ const YEARS     = ['1st Year','2nd Year','3rd Year','4th Year','Graduated']
 const NOTICE    = ['Immediately','15 Days','30 Days','45 Days','60 Days','90 Days']
 
 export default function Onboarding() {
-  const { user, refreshProfile } = useAuth()
+  const { user, profile, refreshProfile } = useAuth()
   const navigate = useNavigate()
 
   const [step,    setStep]    = useState(1)
@@ -352,6 +352,21 @@ export default function Onboarding() {
                 <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onPhotoChange} />
               </div>
             </div>
+
+            {/* Email — pre-filled from signup, read-only */}
+            <Field label="Email">
+              <div style={{
+                ...inp(), display: 'flex', alignItems: 'center',
+                background: '#f7f7f7', color: '#6b6b6b',
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b5b5b5" strokeWidth="2"
+                  style={{ marginRight: 10, flexShrink: 0 }}>
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <span style={{ fontSize: 15 }}>{profile?.email || user?.email || ''}</span>
+              </div>
+            </Field>
 
             <div style={grid2}>
               <Field label="First name *" error={errors.firstName}>
