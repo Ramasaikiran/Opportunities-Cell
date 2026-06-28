@@ -264,10 +264,10 @@ export default function Onboarding() {
       navigate('/subscription')
     } catch (err) {
       console.error('Onboarding error:', err)
-      const msg = err instanceof Error ? err.message
-        : typeof err === 'object' && err !== null && 'message' in err ? String((err as {message: unknown}).message)
-        : JSON.stringify(err)
-      setError(msg || 'Something went wrong. Check console for details.')
+      const msg = (err as {message?: string; details?: string; hint?: string})?.message
+        || (err as {details?: string})?.details
+        || JSON.stringify(err)
+      setError(msg || 'Unknown error — check browser console (F12)')
     } finally {
       setLoading(false)
     }
