@@ -1,0 +1,186 @@
+-- ================================================================
+-- MIGRATION — Run this in Supabase SQL Editor
+-- Safe to run multiple times (uses IF NOT EXISTS)
+-- ================================================================
+
+-- ── 1. ADD NEW COLUMNS TO PROFILES ───────────────────────────────
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS first_name      text,
+  ADD COLUMN IF NOT EXISTS last_name       text,
+  ADD COLUMN IF NOT EXISTS mobile_number   text,
+  ADD COLUMN IF NOT EXISTS linkedin_url    text,
+  ADD COLUMN IF NOT EXISTS github_url      text,
+  ADD COLUMN IF NOT EXISTS photo_url       text,
+  ADD COLUMN IF NOT EXISTS country         text,
+  ADD COLUMN IF NOT EXISTS address         text,
+  ADD COLUMN IF NOT EXISTS role_interests  text[] default '{}',
+  ADD COLUMN IF NOT EXISTS user_type       text check (user_type in ('student','professional')),
+  ADD COLUMN IF NOT EXISTS is_admin        boolean not null default false,
+  ADD COLUMN IF NOT EXISTS account_status  text not null default 'active'
+                             check (account_status in ('pending_onboarding','active','suspended')),
+  ADD COLUMN IF NOT EXISTS last_login      timestamptz;
+
+-- ── 2. CREATE STUDENT DETAILS TABLE ──────────────────────────────
+create table if not exists public.student_details (
+  id                  uuid primary key references public.profiles(id) on delete cascade,
+  college_name        text,
+  degree              text,
+  branch              text,
+  current_year        text,
+  passout_year        int,
+  cgpa                numeric(4,2),
+  internship_done     boolean not null default false,
+  internship_details  text,
+  technical_skills    text[] default '{}',
+  projects            text,
+  resume_url          text,
+  updated_at          timestamptz not null default now()
+);
+
+alter table public.student_details enable row level security;
+
+drop policy if exists "Users manage their student details" on public.student_details;
+create policy "Users manage their student details"
+  on public.student_details for all
+  using (auth.uid() = id) with check (auth.uid() = id);
+
+-- ── 3. CREATE PROFESSIONAL DETAILS TABLE ─────────────────────────
+create table if not exists public.professional_details (
+  id                  uuid primary key references public.profiles(id) on delete cascade,
+  years_experience    numeric(4,1),
+  previous_job_title  text,
+  previous_company    text,
+  previous_salary     numeric(12,2),
+  notice_period       boolean not null default false,
+  notice_period_days  int,
+  technical_skills    text[] default '{}',
+  resume_url          text,
+  updated_at          timestamptz not null default now()
+);
+
+alter table public.professional_details enable row level security;
+
+drop policy if exists "Users manage their professional details" on public.professional_details;
+create policy "Users manage their professional details"
+  on public.professional_details for all
+  using (auth.uid() = id) with check (auth.uid() = id);
+
+-- ── 4. CREATE SUBSCRIPTIONS TABLE ────────────────────────────────
+create table if not exists public.subscriptions (
+  id                    uuid primary key default gen_random_uuid(),
+  user_id               uuid not null references public.profiles(id) on delete cascade,
+  plan                  text not null check (plan in ('monthly','quarterly','halfyearly','yearly')),
+  amount_paise          int not null,
+  status                text not null default 'pending'
+                          check (status in ('pending','active','expired','cancelled','failed')),
+  razorpay_order_id     text unique,
+  razorpay_payment_id   text unique,
+  razorpay_signature    text,
+  starts_at             timestamptz,
+  ends_at               timestamptz,
+  created_at            timestamptz not null default now()
+);
+
+alter table public.subscriptions enable row level security;
+
+drop policy if exists "Users view own subscriptions"   on public.subscriptions;
+drop policy if exists "Users insert own subscriptions" on public.subscriptions;
+create policy "Users view own subscriptions"
+  on public.subscriptions for select using (auth.uid() = user_id);
+create policy "Users insert own subscriptions"
+  on public.subscriptions for insert with check (auth.uid() = user_id);
+
+-- ── 5. CREATE JOBS TABLE ─────────────────────────────────────────
+create table if not exists public.jobs (
+  id                      uuid primary key default gen_random_uuid(),
+  title                   text not null,
+  company                 text not null,
+  description             text,
+  required_skills         text[] default '{}',
+  required_experience_min numeric(4,1) default 0,
+  required_experience_max numeric(4,1),
+  job_type                text check (job_type in ('full-time','internship','contract','part-time')),
+  role_category           text,
+  location                text,
+  country                 text,
+  salary_min              numeric(12,2),
+  salary_max              numeric(12,2),
+  apply_url               text,
+  is_active               boolean not null default true,
+  posted_at               timestamptz not null default now(),
+  created_by              uuid references public.profiles(id)
+);
+
+alter table public.jobs enable row level security;
+
+drop policy if exists "Admins manage all jobs" on public.jobs;
+create policy "Admins manage all jobs"
+  on public.jobs for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
+
+-- ── 6. CREATE JOB APPLICATIONS TABLE ─────────────────────────────
+create table if not exists public.job_applications (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid not null references public.profiles(id) on delete cascade,
+  job_id          uuid references public.jobs(id) on delete set null,
+  job_title       text,
+  company         text,
+  admin_id        uuid references public.profiles(id),
+  status          text not null default 'applied'
+                    check (status in ('applied','shortlisted','interview','rejected','hired')),
+  matched_skills  text[] default '{}',
+  applied_at      timestamptz not null default now(),
+  notes           text
+);
+
+alter table public.job_applications enable row level security;
+
+drop policy if exists "Users view own applications"    on public.job_applications;
+drop policy if exists "Admins manage all applications" on public.job_applications;
+create policy "Users view own applications"
+  on public.job_applications for select using (auth.uid() = user_id);
+create policy "Admins manage all applications"
+  on public.job_applications for all
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
+
+-- ── 7. APPLICATION STATS FUNCTION ────────────────────────────────
+create or replace function public.get_application_stats(p_user_id uuid)
+returns json language plpgsql security definer as $$
+begin
+  return json_build_object(
+    'last_7_days',  (select count(*) from public.job_applications where user_id = p_user_id and applied_at >= now() - interval '7 days'),
+    'last_30_days', (select count(*) from public.job_applications where user_id = p_user_id and applied_at >= now() - interval '30 days'),
+    'last_365_days',(select count(*) from public.job_applications where user_id = p_user_id and applied_at >= now() - interval '365 days'),
+    'all_time',     (select count(*) from public.job_applications where user_id = p_user_id),
+    'shortlisted',  (select count(*) from public.job_applications where user_id = p_user_id and status = 'shortlisted'),
+    'hired',        (select count(*) from public.job_applications where user_id = p_user_id and status = 'hired')
+  );
+end;
+$$;
+
+create or replace function public.get_matched_jobs_count(p_user_id uuid)
+returns int language plpgsql security definer as $$
+declare
+  user_skills text[];
+  matched int;
+begin
+  select technical_skills into user_skills from public.student_details where id = p_user_id;
+  if user_skills is null then
+    select technical_skills into user_skills from public.professional_details where id = p_user_id;
+  end if;
+  if user_skills is null then return 0; end if;
+  select count(*) into matched from public.jobs where is_active = true and required_skills && user_skills;
+  return matched;
+end;
+$$;
+
+-- ── 8. STORAGE BUCKETS ───────────────────────────────────────────
+-- NOTE: If these fail, create manually in Supabase Dashboard → Storage
+insert into storage.buckets (id, name, public) values ('photos',  'photos',  true)  on conflict (id) do nothing;
+insert into storage.buckets (id, name, public) values ('resumes', 'resumes', false) on conflict (id) do nothing;
+
+-- ── 9. SET YOUR ACCOUNT AS ADMIN ─────────────────────────────────
+-- UPDATE public.profiles SET is_admin = true WHERE email = 'ramasaikiranm@gmail.com';
+
+-- ── DONE ─────────────────────────────────────────────────────────
+select 'Migration complete ✓' as status;

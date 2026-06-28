@@ -263,7 +263,11 @@ export default function Onboarding() {
       await refreshProfile()
       navigate('/subscription')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
+      console.error('Onboarding error:', err)
+      const msg = err instanceof Error ? err.message
+        : typeof err === 'object' && err !== null && 'message' in err ? String((err as {message: unknown}).message)
+        : JSON.stringify(err)
+      setError(msg || 'Something went wrong. Check console for details.')
     } finally {
       setLoading(false)
     }
