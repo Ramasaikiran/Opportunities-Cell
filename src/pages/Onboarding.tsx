@@ -175,21 +175,35 @@ export default function Onboarding() {
       let resumeUrl: string | null = null
       let photoUrl:  string | null = null
 
-      // Upload photo
+      // Upload photo (skip silently if bucket missing — create bucket in Supabase dashboard first)
       if (photoFile) {
         const path = `${user.id}/${Date.now()}-${photoFile.name}`
         const { error: upErr } = await supabase.storage.from('photos').upload(path, photoFile, { upsert: true })
-        if (upErr) throw upErr
-        const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(path)
-        photoUrl = publicUrl
+        if (upErr) {
+          if (upErr.message?.toLowerCase().includes('bucket')) {
+            console.warn('Photos bucket not found — skipping photo upload. Create it in Supabase Storage.')
+          } else {
+            throw upErr
+          }
+        } else {
+          const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(path)
+          photoUrl = publicUrl
+        }
       }
 
-      // Upload resume
+      // Upload resume (skip silently if bucket missing)
       if (resumeFile) {
         const path = `${user.id}/${Date.now()}-${resumeFile.name}`
         const { error: upErr } = await supabase.storage.from('resumes').upload(path, resumeFile, { upsert: true })
-        if (upErr) throw upErr
-        resumeUrl = path
+        if (upErr) {
+          if (upErr.message?.toLowerCase().includes('bucket')) {
+            console.warn('Resumes bucket not found — skipping resume upload. Create it in Supabase Storage.')
+          } else {
+            throw upErr
+          }
+        } else {
+          resumeUrl = path
+        }
       }
 
       const skillsArr = skills.split(',').map(s => s.trim()).filter(Boolean)

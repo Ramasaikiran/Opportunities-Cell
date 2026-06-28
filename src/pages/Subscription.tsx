@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase, PLANS, type SubscriptionPlan } from '../lib/supabase'
+import { supabase, type SubscriptionPlan } from '../lib/supabase'
 
 declare global {
   interface Window {
@@ -9,11 +9,11 @@ declare global {
   }
 }
 
-function loadRazorpayScript(): Promise<boolean> {
+function loadRazorpay(): Promise<boolean> {
   return new Promise(resolve => {
-    if (document.getElementById('razorpay-script')) { resolve(true); return }
+    if (document.getElementById('rzp-script')) { resolve(true); return }
     const s  = document.createElement('script')
-    s.id     = 'razorpay-script'
+    s.id     = 'rzp-script'
     s.src    = 'https://checkout.razorpay.com/v1/checkout.js'
     s.onload  = () => resolve(true)
     s.onerror = () => resolve(false)
@@ -21,16 +21,38 @@ function loadRazorpayScript(): Promise<boolean> {
   })
 }
 
-const PLAN_FEATURES: Record<SubscriptionPlan, string[]> = {
-  monthly:    ['Admin applies on your behalf', 'Skill-based job matching', 'Application tracker', 'Email updates'],
-  quarterly:  ['Everything in Monthly', 'Priority job matching', '3× more applications/month', 'WhatsApp updates'],
-  halfyearly: ['Everything in Quarterly', 'Dedicated account manager', 'Resume optimisation tips', 'Interview alerts'],
-  yearly:     ['Everything in Half-yearly', 'Unlimited applications', 'Resume rewrite (1×)', 'Career strategy call'],
-}
-
-const PLAN_SAVINGS: Record<SubscriptionPlan, string | null> = {
-  monthly: null, quarterly: 'Save ₹50', halfyearly: 'Save ₹200', yearly: 'Save ₹500',
-}
+/* ── Plan definitions ──────────────────────────────────────────── */
+const PLANS: {
+  id: SubscriptionPlan
+  label: string
+  price: number
+  duration: string
+  perMonth: string
+  saving: string | null
+  color: string
+  features: string[]
+}[] = [
+  {
+    id: 'monthly', label: '1 Month', price: 250, duration: '30 days',
+    perMonth: '₹250/mo', saving: null, color: '#0f0f0f',
+    features: ['Admin applies on your behalf', 'Skill-based job matching', 'Application tracker', 'Email updates'],
+  },
+  {
+    id: 'quarterly', label: '3 Months', price: 700, duration: '90 days',
+    perMonth: '₹233/mo', saving: 'Save ₹50', color: '#1d4ed8',
+    features: ['Everything in 1 Month', 'Priority job matching', '3× more applications', 'WhatsApp updates'],
+  },
+  {
+    id: 'halfyearly', label: '6 Months', price: 1300, duration: '180 days',
+    perMonth: '₹216/mo', saving: 'Save ₹200', color: '#7c3aed',
+    features: ['Everything in 3 Months', 'Dedicated account manager', 'Resume optimisation tips', 'Interview alerts'],
+  },
+  {
+    id: 'yearly', label: '12 Months', price: 2500, duration: '365 days',
+    perMonth: '₹208/mo', saving: 'Save ₹500', color: '#059669',
+    features: ['Everything in 6 Months', 'Unlimited applications', 'Resume rewrite (1×)', 'Career strategy call'],
+  },
+]
 
 function fmt(date: string) {
   return new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -38,22 +60,21 @@ function fmt(date: string) {
 
 export default function Subscription() {
   const { user, profile, subscription, refreshProfile } = useAuth()
-  const navigate      = useNavigate()
-  const [params]      = useSearchParams()
-  const isExpired     = params.get('reason') === 'expired'
+  const navigate   = useNavigate()
+  const [params]   = useSearchParams()
+  const isExpired  = params.get('reason') === 'expired'
 
   const [selected, setSelected] = useState<SubscriptionPlan>('monthly')
   const [loading,  setLoading]  = useState(false)
   const [error,    setError]    = useState<string | null>(null)
-  const [success,  setSuccess]  = useState<{ plan: SubscriptionPlan; endsAt: string } | null>(null)
+  const [success,  setSuccess]  = useState<{ plan: typeof PLANS[0]; endsAt: string } | null>(null)
 
-  async function handleSubscribe() {
+  async function handlePay() {
     if (!user) return
     setError(null); setLoading(true)
-
     try {
-      const loaded = await loadRazorpayScript()
-      if (!loaded) throw new Error('Payment gateway failed to load. Check your connection.')
+      const ok = await loadRazorpay()
+      if (!ok) throw new Error('Payment gateway failed to load.')
 
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('Session expired. Please sign in again.')
@@ -66,17 +87,17 @@ export default function Subscription() {
           body: JSON.stringify({ plan: selected }),
         }
       )
-      const orderData = await res.json()
-      if (!res.ok) throw new Error(orderData.error || 'Could not create order.')
+      const order = await res.json()
+      if (!res.ok) throw new Error(order.error || 'Could not create order.')
 
-      const { orderId, amount, keyId } = orderData
+      const plan = PLANS.find(p => p.id === selected)!
 
       await new Promise<void>((resolve, reject) => {
         const rzp = new window.Razorpay({
-          key: keyId, amount, currency: 'INR',
+          key: order.keyId, amount: order.amount, currency: 'INR',
           name: 'Opportunities Cell',
-          description: `${PLANS[selected].months} subscription`,
-          order_id: orderId,
+          description: `${plan.label} subscription`,
+          order_id: order.orderId,
           prefill: {
             name:    profile?.full_name     || '',
             email:   profile?.email         || '',
@@ -86,10 +107,10 @@ export default function Subscription() {
           config: {
             display: {
               blocks: {
-                upi: { name: 'Pay via UPI', instruments: [{ method: 'upi', flows: ['intent','collect','qr'] }] },
-                other: { name: 'Other methods', instruments: [{ method: 'card' },{ method: 'netbanking' },{ method: 'wallet' }] },
+                upi:   { name: 'Pay via UPI',      instruments: [{ method: 'upi', flows: ['intent','collect','qr'] }] },
+                other: { name: 'Other methods',    instruments: [{ method: 'card' },{ method: 'netbanking' }] },
               },
-              sequence: ['block.upi', 'block.other'],
+              sequence: ['block.upi','block.other'],
               preferences: { show_default_blocks: false },
             },
           },
@@ -109,13 +130,9 @@ export default function Subscription() {
               )
               const verData = await verRes.json()
               if (!verRes.ok) throw new Error(verData.error || 'Verification failed.')
-
-              // Re-activate account if it was suspended
-              await supabase.from('profiles').update({ account_status: 'active' })
-                .eq('id', user.id)
-
+              await supabase.from('profiles').update({ account_status: 'active' }).eq('id', user.id)
               await refreshProfile()
-              setSuccess({ plan: selected, endsAt: verData.ends_at })
+              setSuccess({ plan, endsAt: verData.ends_at })
               resolve()
             } catch (err) { reject(err) }
           },
@@ -131,39 +148,41 @@ export default function Subscription() {
     }
   }
 
-  /* ── Success screen ───────────────────────────────────────────── */
+  /* ── Success ─────────────────────────────────────────────────── */
   if (success) {
-    const nextDue = fmt(success.endsAt)
-    const plan    = PLANS[success.plan]
+    const { plan, endsAt } = success
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontFamily: "'Inter',sans-serif", background: '#fff', padding: '0 24px' }}>
         <div style={{ textAlign: 'center', maxWidth: 440 }}>
-          <div style={{ fontSize: 60, marginBottom: 20 }}>🎉</div>
+          <div style={{ fontSize: 64, marginBottom: 16 }}>🎉</div>
           <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 32, fontWeight: 400,
-            color: '#0f0f0f', marginBottom: 12 }}>Payment successful!</h1>
+            color: '#0f0f0f', marginBottom: 8 }}>Payment successful!</h1>
+          <p style={{ fontSize: 15, color: '#9b9b9b', marginBottom: 28 }}>
+            Your <strong>{plan.label}</strong> plan is now active.
+          </p>
 
-          {/* Renewal date card */}
-          <div style={{ background: '#f7f7f7', border: '1.5px solid #ebebeb', borderRadius: 14,
-            padding: '20px 24px', marginBottom: 28, textAlign: 'left' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontSize: 13, color: '#9b9b9b' }}>Plan</span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: '#0f0f0f' }}>{plan.label}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontSize: 13, color: '#9b9b9b' }}>Duration</span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: '#0f0f0f' }}>{plan.months}</span>
-            </div>
-            <div style={{ height: 1, background: '#ebebeb', margin: '12px 0' }} />
+          {/* Receipt card */}
+          <div style={{ background: '#f7f7f7', borderRadius: 16, padding: '24px', marginBottom: 28, textAlign: 'left' }}>
+            {[
+              { label: 'Plan',          value: plan.label },
+              { label: 'Amount paid',   value: `₹${plan.price.toLocaleString('en-IN')}` },
+              { label: 'Duration',      value: plan.duration },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ display: 'flex', justifyContent: 'space-between',
+                paddingBottom: 12, marginBottom: 12, borderBottom: '1px solid #ebebeb' }}>
+                <span style={{ fontSize: 14, color: '#9b9b9b' }}>{label}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: '#0f0f0f' }}>{value}</span>
+              </div>
+            ))}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 13, color: '#9b9b9b' }}>Next payment due</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#dc2626' }}>{nextDue}</span>
+              <span style={{ fontSize: 14, color: '#9b9b9b' }}>Next payment due</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#dc2626' }}>{fmt(endsAt)}</span>
             </div>
           </div>
 
-          <p style={{ fontSize: 14, color: '#9b9b9b', marginBottom: 28, lineHeight: 1.6 }}>
-            Your account will be <strong>paused automatically</strong> on {nextDue} if payment isn't renewed.
-            We'll remind you 3 days before.
+          <p style={{ fontSize: 13, color: '#b5b5b5', marginBottom: 24 }}>
+            Your account will be paused on <strong>{fmt(endsAt)}</strong> if not renewed.
           </p>
 
           <button onClick={() => navigate('/dashboard')} style={{
@@ -176,128 +195,196 @@ export default function Subscription() {
     )
   }
 
-  /* ── Main page ────────────────────────────────────────────────── */
+  /* ── Main ────────────────────────────────────────────────────── */
+  const selectedPlan = PLANS.find(p => p.id === selected)!
+
   return (
-    <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Inter',sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: '#fafafa', fontFamily: "'Inter',sans-serif" }}>
 
       {/* Navbar */}
       <div style={{ height: 60, display: 'flex', alignItems: 'center', padding: '0 28px',
-        background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 50 }}>
+        background: '#fff', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 30, height: 30, borderRadius: 8, background: '#0f0f0f',
+          <div style={{ width: 28, height: 28, borderRadius: 7, background: '#0f0f0f',
             display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
               <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff"/>
             </svg>
           </div>
           <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em' }}>Opportunities Cell</span>
         </div>
+        {/* Step indicator */}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+          {['Details','Payment'].map((s, i) => (
+            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {i > 0 && <div style={{ width: 24, height: 1, background: '#e5e5e5' }} />}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: 22, height: 22, borderRadius: '50%',
+                  background: i === 0 ? '#22c55e' : '#0f0f0f',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {i === 0
+                    ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    : <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>2</span>
+                  }
+                </div>
+                <span style={{ fontSize: 13, fontWeight: i === 1 ? 600 : 400,
+                  color: i === 1 ? '#0f0f0f' : '#9b9b9b' }}>{s}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div style={{ maxWidth: 660, margin: '0 auto', padding: '52px 24px 80px' }}>
+      <div style={{ maxWidth: 700, margin: '0 auto', padding: '48px 24px 80px' }}>
 
-        {/* Expired / suspended banner */}
+        {/* Expired banner */}
         {isExpired && (
-          <div style={{ marginBottom: 36, padding: '20px 22px',
-            background: 'linear-gradient(135deg, #fff1f2, #fff7ed)',
+          <div style={{ marginBottom: 32, padding: '18px 22px', background: '#fff1f2',
             border: '1.5px solid #fecaca', borderRadius: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-              <span style={{ fontSize: 20 }}>⚠️</span>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#dc2626', fontFamily: "'Inter',sans-serif" }}>
-                Your account is paused
-              </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 18 }}>⚠️</span>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#dc2626' }}>Account paused</h2>
             </div>
-            <p style={{ fontSize: 14, color: '#b45309', lineHeight: 1.6 }}>
-              Your subscription expired and your account has been paused.
-              Renew below to instantly reactivate access to your dashboard.
+            <p style={{ fontSize: 14, color: '#b45309' }}>
+              Your subscription expired. Renew below to reactivate instantly.
             </p>
           </div>
         )}
 
         {/* Header */}
         <p style={{ fontSize: 11, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.1em',
-          textTransform: 'uppercase', marginBottom: 10 }}>
-          {isExpired ? 'RENEW SUBSCRIPTION' : 'STEP 2 OF 2 — CHOOSE A PLAN'}
+          textTransform: 'uppercase', marginBottom: 8 }}>
+          {isExpired ? 'RENEW SUBSCRIPTION' : 'STEP 2 OF 2 — PAYMENT'}
         </p>
-        <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 38, fontWeight: 400,
-          color: '#0f0f0f', letterSpacing: '-0.02em', marginBottom: 10, lineHeight: 1.15 }}>
-          {isExpired ? 'Reactivate your account.' : 'We apply.\nYou get hired.'}
+        <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 36, fontWeight: 400,
+          color: '#0f0f0f', letterSpacing: '-0.02em', marginBottom: 8, lineHeight: 1.2 }}>
+          Choose your plan
         </h1>
         <p style={{ fontSize: 15, color: '#9b9b9b', marginBottom: 36 }}>
-          {isExpired
-            ? 'Pick a plan and resume where you left off. All your data is saved.'
-            : 'Pick a plan. We match jobs to your skills and apply on your behalf.'}
+          We match jobs to your skills and apply on your behalf. Cancel anytime.
         </p>
 
-        {/* Plan cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 12, marginBottom: 28 }}>
-          {(Object.keys(PLANS) as SubscriptionPlan[]).map(plan => {
-            const p          = PLANS[plan]
-            const isSelected = selected === plan
-            const saving     = PLAN_SAVINGS[plan]
+        {/* 4 plan cards — 2×2 grid on desktop, stack on mobile */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 28 }}>
+          {PLANS.map(plan => {
+            const isSelected = selected === plan.id
             return (
-              <button key={plan} type="button" onClick={() => setSelected(plan)} style={{
-                background: isSelected ? '#0f0f0f' : '#fff',
-                border: `2px solid ${isSelected ? '#0f0f0f' : '#ebebeb'}`,
+              <button key={plan.id} type="button" onClick={() => setSelected(plan.id)} style={{
+                background: isSelected ? plan.color : '#fff',
+                border: `2px solid ${isSelected ? plan.color : '#e8e8e8'}`,
                 borderRadius: 16, padding: '22px 20px', textAlign: 'left',
-                cursor: 'pointer', transition: 'all 0.2s', position: 'relative',
+                cursor: 'pointer', transition: 'all 0.18s', position: 'relative',
+                boxShadow: isSelected ? `0 8px 24px ${plan.color}22` : '0 1px 4px rgba(0,0,0,0.04)',
               }}>
-                {saving && (
-                  <span style={{ position: 'absolute', top: 14, right: 14, fontSize: 11,
-                    fontWeight: 700, padding: '3px 8px',
-                    background: isSelected ? 'rgba(255,255,255,0.15)' : '#fef9c3',
-                    color: isSelected ? '#fff' : '#854d0e', borderRadius: 99 }}>
-                    {saving}
-                  </span>
+                {plan.saving && (
+                  <span style={{
+                    position: 'absolute', top: 14, right: 14,
+                    fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 99,
+                    background: isSelected ? 'rgba(255,255,255,0.2)' : '#fef9c3',
+                    color: isSelected ? '#fff' : '#92400e',
+                  }}>{plan.saving}</span>
                 )}
-                <p style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 22,
-                  color: isSelected ? '#fff' : '#0f0f0f', marginBottom: 2 }}>{p.label}</p>
-                <p style={{ fontSize: 13, color: isSelected ? 'rgba(255,255,255,0.5)' : '#b5b5b5', marginBottom: 18 }}>
-                  {p.months}
+
+                {/* Duration label */}
+                <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em',
+                  color: isSelected ? 'rgba(255,255,255,0.6)' : '#b5b5b5',
+                  textTransform: 'uppercase', marginBottom: 6 }}>
+                  {plan.duration}
                 </p>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {PLAN_FEATURES[plan].map(f => (
-                    <li key={f} style={{ fontSize: 13,
-                      color: isSelected ? 'rgba(255,255,255,0.8)' : '#6b6b6b',
-                      display: 'flex', alignItems: 'flex-start', gap: 8, lineHeight: 1.4 }}>
-                      <span style={{ color: isSelected ? '#4ade80' : '#22c55e', flexShrink: 0 }}>✓</span>{f}
+
+                {/* Plan name */}
+                <p style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 24,
+                  color: isSelected ? '#fff' : '#0f0f0f', marginBottom: 4, lineHeight: 1 }}>
+                  {plan.label}
+                </p>
+
+                {/* Price */}
+                <p style={{ fontSize: 28, fontWeight: 800,
+                  color: isSelected ? '#fff' : '#0f0f0f', marginBottom: 2, lineHeight: 1 }}>
+                  ₹{plan.price.toLocaleString('en-IN')}
+                </p>
+                <p style={{ fontSize: 12, color: isSelected ? 'rgba(255,255,255,0.55)' : '#9b9b9b', marginBottom: 18 }}>
+                  {plan.perMonth}
+                </p>
+
+                {/* Features */}
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0,
+                  display: 'flex', flexDirection: 'column', gap: 7 }}>
+                  {plan.features.map(f => (
+                    <li key={f} style={{ fontSize: 12.5,
+                      color: isSelected ? 'rgba(255,255,255,0.85)' : '#6b6b6b',
+                      display: 'flex', alignItems: 'flex-start', gap: 7, lineHeight: 1.4 }}>
+                      <span style={{ color: isSelected ? '#86efac' : '#22c55e', flexShrink: 0 }}>✓</span>
+                      {f}
                     </li>
                   ))}
                 </ul>
+
+                {/* Selected indicator */}
+                {isSelected && (
+                  <div style={{ position: 'absolute', top: 14, left: 20,
+                    width: 20, height: 20, borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.25)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </div>
+                )}
               </button>
             )
           })}
         </div>
 
+        {/* Summary bar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 18px', background: '#fff', border: '1.5px solid #e8e8e8',
+          borderRadius: 12, marginBottom: 16 }}>
+          <div>
+            <p style={{ fontSize: 13, color: '#9b9b9b', marginBottom: 2 }}>Selected</p>
+            <p style={{ fontSize: 15, fontWeight: 600, color: '#0f0f0f' }}>
+              {selectedPlan.label} — ₹{selectedPlan.price.toLocaleString('en-IN')}
+            </p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: 13, color: '#9b9b9b', marginBottom: 2 }}>Per month</p>
+            <p style={{ fontSize: 15, fontWeight: 600, color: '#0f0f0f' }}>{selectedPlan.perMonth}</p>
+          </div>
+        </div>
+
         {error && (
-          <div style={{ marginBottom: 20, padding: '14px 16px', background: '#fef2f2',
+          <div style={{ marginBottom: 16, padding: '14px 16px', background: '#fef2f2',
             border: '1px solid #fecaca', borderRadius: 12, fontSize: 14, color: '#dc2626' }}>
             ⚠ {error}
           </div>
         )}
 
-        <button onClick={handleSubscribe} disabled={loading} style={{
-          width: '100%', height: 56, background: loading ? '#6b6b6b' : '#0f0f0f', color: '#fff',
-          border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 600,
+        {/* Pay button */}
+        <button onClick={handlePay} disabled={loading} style={{
+          width: '100%', height: 56, background: loading ? '#9b9b9b' : selectedPlan.color,
+          color: '#fff', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 700,
           cursor: loading ? 'not-allowed' : 'pointer', fontFamily: "'Inter',sans-serif",
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+          transition: 'background 0.2s',
+          boxShadow: loading ? 'none' : `0 4px 16px ${selectedPlan.color}44`,
         }}>
           {loading ? (
             <>
               <div style={{ width: 18, height: 18, borderRadius: '50%',
-                border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff',
+                border: '2.5px solid rgba(255,255,255,0.3)', borderTopColor: '#fff',
                 animation: 'spin 0.7s linear infinite' }} />
               Opening payment…
             </>
-          ) : isExpired ? `Renew — ${PLANS[selected].label} →` : `Pay ${PLANS[selected].label} →`}
+          ) : (
+            `Pay ₹${selectedPlan.price.toLocaleString('en-IN')} — ${selectedPlan.label} →`
+          )}
         </button>
 
         <p style={{ textAlign: 'center', fontSize: 12, color: '#b5b5b5', marginTop: 14 }}>
-          🔒 Secured by Razorpay · UPI, Cards, Net banking · No auto-renewal
+          🔒 Secured by Razorpay · UPI · Cards · Net banking · No auto-renewal
         </p>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
