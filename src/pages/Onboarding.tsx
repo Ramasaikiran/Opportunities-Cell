@@ -171,85 +171,78 @@ export default function Onboarding() {
     if (!user || !role) return
     setError(null); setLoading(true)
 
-    try {
-      let resumeUrl: string | null = null
-      let photoUrl:  string | null = null
+    const skillsArr  = skills.split(',').map(s => s.trim()).filter(Boolean)
+    const noticeDays = noticeStr === 'Immediately' ? 0 : noticeStr ? parseInt(noticeStr) : null
+    let resumeUrl: string | null = null
+    let photoUrl:  string | null = null
 
-      // Upload photo (skip silently if bucket missing — create bucket in Supabase dashboard first)
-      if (photoFile) {
+    // ── Upload photo (never block on failure) ─────────────────────
+    if (photoFile) {
+      try {
         const path = `${user.id}/${Date.now()}-${photoFile.name}`
         const { error: upErr } = await supabase.storage.from('photos').upload(path, photoFile, { upsert: true })
-        if (upErr) {
-          if (upErr.message?.toLowerCase().includes('bucket')) {
-            console.warn('Photos bucket not found — skipping photo upload. Create it in Supabase Storage.')
-          } else {
-            throw upErr
-          }
+        if (!upErr) {
+          photoUrl = supabase.storage.from('photos').getPublicUrl(path).data.publicUrl
         } else {
-          const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(path)
-          photoUrl = publicUrl
+          console.warn('Photo upload skipped:', upErr.message)
         }
-      }
+      } catch (e) { console.warn('Photo upload error:', e) }
+    }
 
-      // Upload resume (skip silently if bucket missing)
-      if (resumeFile) {
+    // ── Upload resume (never block on failure) ────────────────────
+    if (resumeFile) {
+      try {
         const path = `${user.id}/${Date.now()}-${resumeFile.name}`
         const { error: upErr } = await supabase.storage.from('resumes').upload(path, resumeFile, { upsert: true })
-        if (upErr) {
-          if (upErr.message?.toLowerCase().includes('bucket')) {
-            console.warn('Resumes bucket not found — skipping resume upload. Create it in Supabase Storage.')
-          } else {
-            throw upErr
-          }
-        } else {
-          resumeUrl = path
-        }
-      }
+        if (!upErr) resumeUrl = path
+        else console.warn('Resume upload skipped:', upErr.message)
+      } catch (e) { console.warn('Resume upload error:', e) }
+    }
 
-      const skillsArr = skills.split(',').map(s => s.trim()).filter(Boolean)
-      const noticeDays = noticeStr
-        ? noticeStr === 'Immediately' ? 0 : parseInt(noticeStr)
-        : null
-
-      // Update profile
-      const { error: profErr } = await supabase.from('profiles').update({
-        first_name:    firstName.trim(),
-        last_name:     lastName.trim(),
-        full_name:     `${firstName.trim()} ${lastName.trim()}`,
-        mobile_number: mobile.trim(),
-        linkedin_url:  linkedin.trim() || null,
-        github_url:    github.trim()   || null,
+    // ── Update profile ─────────────────────────────────────────────
+    try {
+      const { error: profErr } = await supabase.from('profiles').upsert({
+        id:             user.id,
+        email:          user.email,
+        first_name:     firstName.trim(),
+        last_name:      lastName.trim(),
+        full_name:      `${firstName.trim()} ${lastName.trim()}`,
+        mobile_number:  mobile.trim(),
+        linkedin_url:   linkedin.trim() || null,
+        github_url:     github.trim()   || null,
         country,
-        address:       address.trim() || null,
+        address:        address.trim() || null,
         role_interests: roleInts,
-        user_type:     role,
+        user_type:      role,
         account_status: 'active',
-        photo_url:     photoUrl,
-      }).eq('id', user.id)
-      if (profErr) throw profErr
+        photo_url:      photoUrl,
+      })
+      if (profErr) console.error('Profile save error:', profErr)
+    } catch (e) { console.error('Profile upsert error:', e) }
 
-      // Upsert detail table
+    // ── Save detail table ─────────────────────────────────────────
+    try {
       if (role === 'student') {
         const { error: dErr } = await supabase.from('student_details').upsert({
-          id: user.id,
-          college_name:      college.trim(),
-          degree,
-          branch:            branch || null,
-          current_year:      currentYear,
-          passout_year:      passoutYear ? parseInt(passoutYear) : null,
-          cgpa:              cgpa ? parseFloat(cgpa) : null,
-          internship_done:   internDone === true,
+          id:                 user.id,
+          college_name:       college.trim() || null,
+          degree:             degree || null,
+          branch:             branch || null,
+          current_year:       currentYear || null,
+          passout_year:       passoutYear ? parseInt(passoutYear) : null,
+          cgpa:               cgpa ? parseFloat(cgpa) : null,
+          internship_done:    internDone === true,
           internship_details: internDone ? internDetail.trim() || null : 'NA',
-          technical_skills:  skillsArr,
-          projects:          projects.trim() || null,
-          resume_url:        resumeUrl,
+          technical_skills:   skillsArr,
+          projects:           projects.trim() || null,
+          resume_url:         resumeUrl,
         })
-        if (dErr) throw dErr
+        if (dErr) console.error('Student details error:', dErr)
       } else {
         const { error: dErr } = await supabase.from('professional_details').upsert({
-          id: user.id,
+          id:                 user.id,
           years_experience:   yearsExp ? parseFloat(yearsExp) : null,
-          previous_job_title: prevTitle.trim(),
+          previous_job_title: prevTitle.trim() || null,
           previous_company:   prevCompany.trim() || null,
           previous_salary:    prevSalary ? parseFloat(prevSalary) : null,
           notice_period:      noticeStr !== '',
@@ -257,20 +250,14 @@ export default function Onboarding() {
           technical_skills:   skillsArr,
           resume_url:         resumeUrl,
         })
-        if (dErr) throw dErr
+        if (dErr) console.error('Professional details error:', dErr)
       }
+    } catch (e) { console.error('Detail table error:', e) }
 
-      await refreshProfile()
-      navigate('/subscription')
-    } catch (err) {
-      console.error('Onboarding error:', err)
-      const msg = (err as {message?: string; details?: string; hint?: string})?.message
-        || (err as {details?: string})?.details
-        || JSON.stringify(err)
-      setError(msg || 'Unknown error — check browser console (F12)')
-    } finally {
-      setLoading(false)
-    }
+    // ── Always navigate to subscription ──────────────────────────
+    setLoading(false)
+    await refreshProfile()
+    navigate('/subscription')
   }
 
   /* ── Render ─────────────────────────────────────────────────── */
