@@ -80,6 +80,36 @@ const BRANCHES  = ['Computer Science','Information Technology','Electronics & Co
 const YEARS     = ['1st Year','2nd Year','3rd Year','4th Year','Graduated']
 const NOTICE    = ['Immediately','15 Days','30 Days','45 Days','60 Days','90 Days']
 
+// Degree total duration map (years)
+const DEGREE_DURATION: Record<string, number> = {
+  'B.Tech / B.E.': 4, 'B.Sc': 3, 'BCA': 3,
+  'M.Tech / M.E.': 2, 'M.Sc': 2, 'MCA': 3, 'MBA': 2, 'Diploma': 3, 'Other': 4,
+}
+
+// Year label → years remaining until graduation
+const YEAR_REMAINING: Record<string, number> = {
+  '1st Year': 3, '2nd Year': 2, '3rd Year': 1, '4th Year': 0, 'Graduated': -1,
+}
+
+function calcPassoutYear(currentYear: string, degree: string): number | null {
+  if (!currentYear || !degree) return null
+  const rem = YEAR_REMAINING[currentYear]
+  if (rem === undefined) return null
+  if (rem === -1) return null // Graduated — user enters manually
+  const dur = DEGREE_DURATION[degree] || 4
+  const yrIndex = dur - rem // which year number they're in
+  const yearsLeft = dur - yrIndex
+  return new Date().getFullYear() + yearsLeft
+}
+
+function isValidLinkedIn(url: string) {
+  return /linkedin\.com\/(in|pub)\//i.test(url.trim())
+}
+
+function isValidGitHub(url: string) {
+  return /github\.com\/[a-zA-Z0-9_-]+/i.test(url.trim())
+}
+
 export default function Onboarding() {
   const { user, profile, refreshProfile } = useAuth()
   const navigate = useNavigate()
@@ -143,7 +173,11 @@ export default function Onboarding() {
     const errs: Record<string, string> = {}
     if (!firstName.trim()) errs.firstName = 'Required'
     if (!lastName.trim())  errs.lastName  = 'Required'
-    if (!mobile.trim() || !/^\+?[\d\s-]{10,15}$/.test(mobile.trim())) errs.mobile = 'Enter valid mobile'
+    if (!mobile.trim() || !/^\+?[\d\s-]{10,15}$/.test(mobile.trim())) errs.mobile = 'Enter valid mobile number'
+    if (!linkedin.trim())               errs.linkedin = 'LinkedIn profile is required'
+    else if (!isValidLinkedIn(linkedin)) errs.linkedin = 'Enter a valid LinkedIn URL (linkedin.com/in/yourname)'
+    if (!github.trim())                 errs.github   = 'GitHub profile is required'
+    else if (!isValidGitHub(github))    errs.github   = 'Enter a valid GitHub URL (github.com/yourname)'
     if (roleInts.length === 0) errs.roleInts = 'Select at least one role'
     setErrors(errs)
     return Object.keys(errs).length === 0
@@ -460,7 +494,16 @@ export default function Onboarding() {
 
                 <div style={grid2}>
                   <Field label="Degree *" error={errors.degree}>
-                    <select value={degree} onChange={e => { setDegree(e.target.value); setErrors(p=>({...p,degree:''})) }}
+                    <select value={degree} onChange={e => {
+                      const d = e.target.value
+                      setDegree(d)
+                      setErrors(p=>({...p,degree:''}))
+                      // Recalculate passout year if year already selected
+                      if (currentYear) {
+                        const calc = calcPassoutYear(currentYear, d)
+                        if (calc) setPassoutYear(String(calc))
+                      }
+                    }}
                       style={{ ...inp(errors.degree), appearance: 'none' as const }}>
                       <option value="">Select degree</option>
                       {DEGREES.map(d => <option key={d}>{d}</option>)}
@@ -477,16 +520,42 @@ export default function Onboarding() {
 
                 <div style={grid2}>
                   <Field label="Current year *" error={errors.currentYear}>
-                    <select value={currentYear} onChange={e => { setCurrentYear(e.target.value); setErrors(p=>({...p,currentYear:''})) }}
+                    <select value={currentYear} onChange={e => {
+                      const y = e.target.value
+                      setCurrentYear(y)
+                      setErrors(p=>({...p,currentYear:''}))
+                      // Auto-calculate passout year
+                      const calc = calcPassoutYear(y, degree)
+                      if (calc) setPassoutYear(String(calc))
+                      else if (y === 'Graduated') setPassoutYear('') // let them enter manually
+                    }}
                       style={{ ...inp(errors.currentYear), appearance: 'none' as const }}>
                       <option value="">Select year</option>
                       {YEARS.map(y => <option key={y}>{y}</option>)}
                     </select>
                   </Field>
-                  <Field label="Pass-out year">
-                    <input style={inp()} type="number" value={passoutYear}
-                      onChange={e => setPassoutYear(e.target.value)}
-                      placeholder="2026" min="2020" max="2030" />
+                  <Field label={currentYear === 'Graduated' ? 'Graduation year *' : 'Expected graduation year'}>
+                    <div style={{ position: 'relative' }}>
+                      <input style={{
+                        ...inp(),
+                        background: currentYear && currentYear !== 'Graduated' ? '#f7f7f7' : '#fff',
+                        color: currentYear && currentYear !== 'Graduated' ? '#6b6b6b' : '#0f0f0f',
+                      }}
+                        type="number" value={passoutYear}
+                        onChange={e => setPassoutYear(e.target.value)}
+                        readOnly={!!(currentYear && currentYear !== 'Graduated')}
+                        placeholder="e.g. 2026" min="2020" max="2032" />
+                      {currentYear && currentYear !== 'Graduated' && passoutYear && (
+                        <span style={{ position: 'absolute', right: 12, top: '50%',
+                          transform: 'translateY(-50%)', fontSize: 11, color: '#22c55e',
+                          fontWeight: 600 }}>Auto</span>
+                      )}
+                    </div>
+                    {currentYear && currentYear !== 'Graduated' && passoutYear && (
+                      <p style={{ fontSize: 11, color: '#9b9b9b', marginTop: 4 }}>
+                        Calculated from your year of study
+                      </p>
+                    )}
                   </Field>
                 </div>
 

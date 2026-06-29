@@ -184,3 +184,32 @@ insert into storage.buckets (id, name, public) values ('resumes', 'resumes', fal
 
 -- ── DONE ─────────────────────────────────────────────────────────
 select 'Migration complete ✓' as status;
+
+-- ── RATE LIMITING TABLE ───────────────────────────────────────────
+create table if not exists public.rate_limits (
+  id         uuid primary key default gen_random_uuid(),
+  identifier text not null,           -- IP or user_id
+  action     text not null,           -- 'signup', 'payment', 'order'
+  hit_at     timestamptz not null default now()
+);
+create index if not exists idx_rate_limits_lookup on public.rate_limits(identifier, action, hit_at);
+-- Auto-delete entries older than 1 hour
+create or replace function public.check_rate_limit(
+  p_identifier text, p_action text, p_max_hits int, p_window_minutes int
+) returns boolean language plpgsql security definer as $$
+declare
+  hit_count int;
+begin
+  -- Clean old entries
+  delete from public.rate_limits
+  where identifier = p_identifier and action = p_action
+    and hit_at < now() - (p_window_minutes || ' minutes')::interval;
+  -- Count recent hits
+  select count(*) into hit_count from public.rate_limits
+  where identifier = p_identifier and action = p_action;
+  if hit_count >= p_max_hits then return false; end if;
+  -- Record this hit
+  insert into public.rate_limits (identifier, action) values (p_identifier, p_action);
+  return true;
+end;
+$$;

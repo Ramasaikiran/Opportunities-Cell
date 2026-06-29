@@ -1,40 +1,52 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const PLANS: Record<string, { amount: number; days: number; label: string }> = {
-  monthly:     { amount: 25000,  days: 30,  label: '1 Month'  },
-  quarterly:   { amount: 70000,  days: 90,  label: '3 Months' },
-  halfyearly:  { amount: 130000, days: 180, label: '6 Months' },
-  yearly:      { amount: 250000, days: 365, label: '1 Year'   },
+const PLANS: Record<string, { amount: number; days: number }> = {
+  monthly:    { amount: 25000,  days: 30  },
+  quarterly:  { amount: 70000,  days: 90  },
+  halfyearly: { amount: 130000, days: 180 },
+  yearly:     { amount: 250000, days: 365 },
 }
 
-const corsHeaders = {
+const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
 
   try {
     const { plan } = await req.json()
-    if (!PLANS[plan]) return new Response(JSON.stringify({ error: 'Invalid plan' }), { status: 400, headers: corsHeaders })
+    if (!PLANS[plan]) return new Response(JSON.stringify({ error: 'Invalid plan' }), { status: 400, headers: cors })
 
-    // Verify user auth
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
-    const authHeader = req.headers.get('Authorization')!
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authErr } = await supabase.auth.getUser(token)
-    if (authErr || !user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders })
+
+    // Auth
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '')
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(token!)
+    if (authErr || !user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: cors })
+
+    // Rate limit: max 5 order attempts per user per hour
+    const { data: allowed } = await supabase.rpc('check_rate_limit', {
+      p_identifier:    user.id,
+      p_action:        'payment_order',
+      p_max_hits:      5,
+      p_window_minutes: 60,
+    })
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: 'Too many payment attempts. Please wait and try again.' }), {
+        status: 429, headers: cors,
+      })
+    }
 
     const { amount } = PLANS[plan]
-    const keyId = Deno.env.get('RAZORPAY_KEY_ID')!
+    const keyId     = Deno.env.get('RAZORPAY_KEY_ID')!
     const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET')!
 
-    // Create Razorpay order
     const razorRes = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
@@ -42,30 +54,24 @@ serve(async (req) => {
         'Authorization': `Basic ${btoa(`${keyId}:${keySecret}`)}`,
       },
       body: JSON.stringify({
-        amount,
-        currency: 'INR',
-        receipt: `opp_${user.id.slice(0, 8)}_${Date.now()}`,
+        amount, currency: 'INR',
+        receipt: `opc_${user.id.slice(0,8)}_${Date.now()}`,
         notes: { plan, user_id: user.id },
       }),
     })
     const order = await razorRes.json()
     if (!razorRes.ok) throw new Error(order.error?.description || 'Razorpay error')
 
-    // Insert pending subscription record
     await supabase.from('subscriptions').insert({
-      user_id: user.id,
-      plan,
-      amount_paise: amount,
-      status: 'pending',
+      user_id: user.id, plan,
+      amount_paise: amount, status: 'pending',
       razorpay_order_id: order.id,
     })
 
     return new Response(JSON.stringify({ orderId: order.id, amount, keyId }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   } catch (err) {
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
-      status: 500, headers: corsHeaders,
-    })
+    return new Response(JSON.stringify({ error: (err as Error).message }), { status: 500, headers: cors })
   }
 })
