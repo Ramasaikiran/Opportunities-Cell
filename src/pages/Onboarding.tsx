@@ -436,12 +436,14 @@ export default function Onboarding() {
             </Field>
 
             <div style={grid2}>
-              <Field label="LinkedIn profile">
-                <input style={inp()} value={linkedin} onChange={e => setLinkedin(e.target.value)}
+              <Field label="LinkedIn profile *" error={errors.linkedin}>
+                <input style={inp(errors.linkedin)} value={linkedin}
+                  onChange={e => { setLinkedin(e.target.value); setErrors(p => ({ ...p, linkedin: '' })) }}
                   placeholder="linkedin.com/in/yourname" />
               </Field>
-              <Field label="GitHub profile">
-                <input style={inp()} value={github} onChange={e => setGithub(e.target.value)}
+              <Field label="GitHub profile *" error={errors.github}>
+                <input style={inp(errors.github)} value={github}
+                  onChange={e => { setGithub(e.target.value); setErrors(p => ({ ...p, github: '' })) }}
                   placeholder="github.com/yourname" />
               </Field>
             </div>
