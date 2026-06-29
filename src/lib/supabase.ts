@@ -119,12 +119,13 @@ export interface JobApplication {
 }
 
 export interface AppStats {
-  last_7_days: number
-  last_30_days: number
+  last_7_days:   number
+  last_30_days:  number
+  last_90_days:  number
   last_365_days: number
-  all_time: number
-  shortlisted: number
-  hired: number
+  all_time:      number
+  shortlisted:   number
+  hired:         number
 }
 
 // Subscription plan metadata

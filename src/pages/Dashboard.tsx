@@ -3,10 +3,13 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, PLANS, type AppStats, type JobApplication } from '../lib/supabase'
 
-type Period = '7' | '30' | '365' | 'all'
+type Period = '7' | '30' | '90' | '365'
 
 const PERIOD_MAP: Record<Period, string> = {
-  '7': 'Last 7 days', '30': 'Last 30 days', '365': 'Last year', 'all': 'All time',
+  '7':   'Last 7 days',
+  '30':  'Last 30 days',
+  '90':  'Last 90 days',
+  '365': 'Last 365 days',
 }
 
 const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
@@ -57,8 +60,10 @@ export default function Dashboard() {
   }
 
   const periodVal = stats
-    ? period === '7' ? stats.last_7_days : period === '30' ? stats.last_30_days
-    : period === '365' ? stats.last_365_days : stats.all_time
+    ? period === '7'   ? stats.last_7_days
+    : period === '30'  ? stats.last_30_days
+    : period === '90'  ? stats.last_90_days
+    : stats.last_365_days
     : 0
 
   // Subscription renewal info

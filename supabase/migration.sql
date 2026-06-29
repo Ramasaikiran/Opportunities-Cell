@@ -148,12 +148,13 @@ create or replace function public.get_application_stats(p_user_id uuid)
 returns json language plpgsql security definer as $$
 begin
   return json_build_object(
-    'last_7_days',  (select count(*) from public.job_applications where user_id = p_user_id and applied_at >= now() - interval '7 days'),
-    'last_30_days', (select count(*) from public.job_applications where user_id = p_user_id and applied_at >= now() - interval '30 days'),
-    'last_365_days',(select count(*) from public.job_applications where user_id = p_user_id and applied_at >= now() - interval '365 days'),
-    'all_time',     (select count(*) from public.job_applications where user_id = p_user_id),
-    'shortlisted',  (select count(*) from public.job_applications where user_id = p_user_id and status = 'shortlisted'),
-    'hired',        (select count(*) from public.job_applications where user_id = p_user_id and status = 'hired')
+    'last_7_days',   (select count(*) from public.job_applications where user_id = p_user_id and applied_at >= now() - interval '7 days'),
+    'last_30_days',  (select count(*) from public.job_applications where user_id = p_user_id and applied_at >= now() - interval '30 days'),
+    'last_90_days',  (select count(*) from public.job_applications where user_id = p_user_id and applied_at >= now() - interval '90 days'),
+    'last_365_days', (select count(*) from public.job_applications where user_id = p_user_id and applied_at >= now() - interval '365 days'),
+    'all_time',      (select count(*) from public.job_applications where user_id = p_user_id),
+    'shortlisted',   (select count(*) from public.job_applications where user_id = p_user_id and status = 'shortlisted'),
+    'hired',         (select count(*) from public.job_applications where user_id = p_user_id and status = 'hired')
   );
 end;
 $$;

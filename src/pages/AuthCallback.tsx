@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 
 export default function AuthCallback() {
   const navigate = useNavigate()
-  const [state, setState] = useState<'verifying' | 'error'>('verifying')
+  const [state,   setState]   = useState<'verifying' | 'error'>('verifying')
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -22,30 +22,37 @@ export default function AuthCallback() {
 
       const userId = data.session.user.id
 
-      // Ensure profile exists (defensive upsert for OAuth users)
-      const { data: profile } = await supabase
+      // Ensure profile exists (OAuth users)
+      let { data: profile } = await supabase
         .from('profiles')
-        .select('id, account_status, user_type')
+        .select('id, account_status, user_type, is_admin')
         .eq('id', userId)
         .maybeSingle()
 
       if (!profile) {
         await supabase.from('profiles').upsert({
-          id: userId,
-          full_name:
-            data.session.user.user_metadata?.full_name ??
-            data.session.user.email?.split('@')[0] ??
-            'New member',
+          id:         userId,
+          full_name:  data.session.user.user_metadata?.full_name ?? data.session.user.email?.split('@')[0] ?? 'New member',
           email:      data.session.user.email,
           avatar_url: data.session.user.user_metadata?.avatar_url ?? null,
           account_status: 'active',
         })
+        // Re-fetch after insert
+        const { data: refetched } = await supabase
+          .from('profiles').select('id, account_status, user_type, is_admin')
+          .eq('id', userId).maybeSingle()
+        profile = refetched
       }
 
-      // ── Route by onboarding + subscription status ───────────────
-      // 1. Not onboarded yet → fill profile first
-      const isOnboarded = !!(profile?.user_type)
-      if (!isOnboarded) {
+      // ── ADMIN → skip everything, go straight to admin panel ────
+      if (profile?.is_admin) {
+        navigate('/admin', { replace: true })
+        return
+      }
+
+      // ── USER routing ────────────────────────────────────────────
+      // 1. Not onboarded → fill profile first
+      if (!profile?.user_type) {
         navigate('/onboarding', { replace: true })
         return
       }
@@ -64,7 +71,7 @@ export default function AuthCallback() {
         return
       }
 
-      // 3. Both done → dashboard
+      // 3. Fully set up → dashboard
       navigate('/dashboard', { replace: true })
     }
 
@@ -73,37 +80,27 @@ export default function AuthCallback() {
   }, [navigate])
 
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: '#fff', fontFamily: "'Inter',sans-serif",
-    }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', background: '#fff', fontFamily: "'Inter',sans-serif" }}>
       <div style={{ textAlign: 'center', maxWidth: 400, padding: '0 24px' }}>
         {state === 'verifying' ? (
           <>
-            <div style={{
-              width: 40, height: 40, borderRadius: '50%',
+            <div style={{ width: 40, height: 40, borderRadius: '50%',
               border: '3px solid #f0f0f0', borderTopColor: '#0f0f0f',
-              animation: 'spin 0.8s linear infinite', margin: '0 auto 24px',
-            }} />
+              animation: 'spin 0.8s linear infinite', margin: '0 auto 24px' }} />
             <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 24,
-              fontWeight: 400, color: '#0f0f0f', marginBottom: 8 }}>
-              Verifying your account
-            </h1>
+              fontWeight: 400, color: '#0f0f0f', marginBottom: 8 }}>Verifying your account</h1>
             <p style={{ fontSize: 14, color: '#9b9b9b' }}>One moment — almost in.</p>
           </>
         ) : (
           <>
             <div style={{ fontSize: 40, marginBottom: 20 }}>⚠️</div>
             <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 24,
-              fontWeight: 400, color: '#0f0f0f', marginBottom: 8 }}>
-              Link no longer valid
-            </h1>
+              fontWeight: 400, color: '#0f0f0f', marginBottom: 8 }}>Link no longer valid</h1>
             <p style={{ fontSize: 14, color: '#9b9b9b', marginBottom: 28 }}>{message}</p>
-            <a href="/sign-up" style={{
-              display: 'inline-block', padding: '12px 24px',
+            <a href="/sign-up" style={{ display: 'inline-block', padding: '12px 24px',
               background: '#0f0f0f', color: '#fff', borderRadius: 10,
-              fontSize: 14, fontWeight: 600, textDecoration: 'none',
-            }}>Back to sign up</a>
+              fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>Back to sign up</a>
           </>
         )}
       </div>
