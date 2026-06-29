@@ -22,9 +22,11 @@ export default function Landing() {
 
   useEffect(() => {
     if (!session) return
-    if (!profile?.user_type) { navigate('/onboarding'); return }
-    if (!subscription) { navigate('/subscription'); return }
-    navigate('/dashboard')
+    if (profile === null) return          // still loading
+    if (profile?.is_admin) { navigate('/admin', { replace: true }); return }
+    if (!profile?.user_type) { navigate('/onboarding', { replace: true }); return }
+    if (!subscription) { navigate('/subscription', { replace: true }); return }
+    navigate('/dashboard', { replace: true })
   }, [session, profile, subscription])
 
   return (
