@@ -1,4 +1,4 @@
-import { useState, useRef, type FormEvent, type ChangeEvent } from 'react'
+import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, type UserType } from '../lib/supabase'
@@ -113,6 +113,15 @@ function isValidGitHub(url: string) {
 export default function Onboarding() {
   const { user, profile, refreshProfile } = useAuth()
   const navigate = useNavigate()
+
+  // ── Guard: block re-registration ──────────────────────────────
+  useEffect(() => {
+    if (!profile) return
+    // Admin should never be in onboarding
+    if (profile.is_admin) { navigate('/admin', { replace: true }); return }
+    // Already onboarded → skip to next step
+    if (profile.user_type) { navigate('/subscription', { replace: true }); return }
+  }, [profile, navigate])
 
   const [step,    setStep]    = useState(1)
   const [role,    setRole]    = useState<UserType | null>(null)

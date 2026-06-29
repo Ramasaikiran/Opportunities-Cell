@@ -214,3 +214,34 @@ begin
   return true;
 end;
 $$;
+
+-- ── ONE IDENTITY PER ACCOUNT ──────────────────────────────────────
+-- Prevent changing user_type once it's been set
+-- Prevent admin from being a student or professional simultaneously
+
+CREATE OR REPLACE FUNCTION public.enforce_single_identity()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  -- Admin accounts cannot have a user_type
+  IF NEW.is_admin = true AND NEW.user_type IS NOT NULL THEN
+    RAISE EXCEPTION 'Admin accounts cannot be registered as student or professional.';
+  END IF;
+
+  -- user_type cannot be changed once set (prevents re-registration as different role)
+  IF OLD.user_type IS NOT NULL AND NEW.user_type IS NOT NULL AND OLD.user_type != NEW.user_type THEN
+    RAISE EXCEPTION 'Account role cannot be changed. You are already registered as %.', OLD.user_type;
+  END IF;
+
+  -- Cannot become admin if already registered as student/professional
+  IF OLD.user_type IS NOT NULL AND NEW.is_admin = true THEN
+    RAISE EXCEPTION 'A student or professional account cannot be converted to admin.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS enforce_single_identity_trigger ON public.profiles;
+CREATE TRIGGER enforce_single_identity_trigger
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.enforce_single_identity();

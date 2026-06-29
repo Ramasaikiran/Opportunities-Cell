@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 const Spinner = () => (
@@ -15,17 +15,25 @@ export default function ProtectedRoute({ children, requireSub = false }: {
   children: ReactNode; requireSub?: boolean
 }) {
   const { session, loading, subscription, profile } = useAuth()
+  const location = useLocation()
 
   if (loading) return <Spinner />
   if (!session) return <Navigate to="/sign-in" replace />
 
-  // Admins always bypass — go directly to admin panel
+  // ── ADMIN: always go to admin panel, never user flows ──────────
   if (profile?.is_admin) return <Navigate to="/admin" replace />
 
-  // Suspended account → force renewal
-  if (profile?.account_status === 'suspended') return <Navigate to="/subscription?reason=expired" replace />
+  // ── Suspended account → force renewal ─────────────────────────
+  if (profile?.account_status === 'suspended') {
+    return <Navigate to="/subscription?reason=expired" replace />
+  }
 
-  // Dashboard requires active subscription
+  // ── Already onboarded → block access to /onboarding ───────────
+  if (location.pathname === '/onboarding' && profile?.user_type) {
+    return <Navigate to={subscription ? '/dashboard' : '/subscription'} replace />
+  }
+
+  // ── Dashboard requires active subscription ─────────────────────
   if (requireSub && !subscription) return <Navigate to="/subscription" replace />
 
   return <>{children}</>
