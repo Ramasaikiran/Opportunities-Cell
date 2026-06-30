@@ -243,6 +243,7 @@ export default function Onboarding() {
     }
 
     // ── Update profile ─────────────────────────────────────────────
+    let profileSaveFailed = false
     try {
       const { error: profErr } = await supabase.from('profiles').upsert({
         id:             user.id,
@@ -260,10 +261,17 @@ export default function Onboarding() {
         account_status: 'active',
         photo_url:      photoUrl,
       })
-      if (profErr) console.error('Profile save error:', profErr)
-    } catch (e) { console.error('Profile upsert error:', e) }
+      if (profErr) { console.error('Profile save error:', profErr); profileSaveFailed = true
+        setError(`Couldn't save your profile: ${profErr.message}. Please try again — your details weren't lost.`) }
+    } catch (e) {
+      console.error('Profile upsert error:', e); profileSaveFailed = true
+      setError(`Couldn't save your profile: ${(e as Error).message}. Please try again — your details weren't lost.`)
+    }
+
+    if (profileSaveFailed) { setLoading(false); return }
 
     // ── Save detail table ─────────────────────────────────────────
+    let detailSaveFailed = false
     try {
       if (role === 'student') {
         const { error: dErr } = await supabase.from('student_details').upsert({
@@ -280,7 +288,8 @@ export default function Onboarding() {
           projects:           projects.trim() || null,
           resume_url:         resumeUrl,
         })
-        if (dErr) console.error('Student details error:', dErr)
+        if (dErr) { console.error('Student details error:', dErr); detailSaveFailed = true
+          setError(`Couldn't save your details: ${dErr.message}. Please try again.`) }
       } else {
         const { error: dErr } = await supabase.from('professional_details').upsert({
           id:                 user.id,
@@ -293,11 +302,17 @@ export default function Onboarding() {
           technical_skills:   skillsArr,
           resume_url:         resumeUrl,
         })
-        if (dErr) console.error('Professional details error:', dErr)
+        if (dErr) { console.error('Professional details error:', dErr); detailSaveFailed = true
+          setError(`Couldn't save your details: ${dErr.message}. Please try again.`) }
       }
-    } catch (e) { console.error('Detail table error:', e) }
+    } catch (e) {
+      console.error('Detail table error:', e); detailSaveFailed = true
+      setError(`Couldn't save your details: ${(e as Error).message}. Please try again.`)
+    }
 
-    // ── Always navigate to subscription ──────────────────────────
+    if (detailSaveFailed) { setLoading(false); return }
+
+    // ── Only navigate once everything actually saved ────────────────
     setLoading(false)
     await refreshProfile()
     navigate('/subscription')
