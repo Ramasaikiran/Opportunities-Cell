@@ -3,11 +3,12 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 
 export default function AdminLogin() {
-  const { session, profile, profileLoaded, signIn, signOut } = useAuth()
+  const { session, profile, profileLoaded, signIn, signInWithGoogle, signOut } = useAuth()
   const navigate = useNavigate()
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [waitingOnProfile, setWaitingOnProfile] = useState(false)
   const [error,    setError]    = useState<string | null>(null)
 
@@ -42,6 +43,13 @@ export default function AdminLogin() {
   }
 
   const loading = submitting || waitingOnProfile
+
+  async function handleGoogle() {
+    setError(null); setGoogleLoading(true)
+    const { error: err } = await signInWithGoogle()
+    if (err) { setError(err); setGoogleLoading(false) }
+    // On success, browser redirects away to Google → /auth/callback handles the rest.
+  }
 
   const inp: React.CSSProperties = {
     height: 46, padding: '0 16px', fontSize: 14, color: '#0f0f0f',
@@ -81,6 +89,24 @@ export default function AdminLogin() {
           fontFamily: "'Inter',sans-serif",
         }}>
           {loading ? 'Checking…' : 'Sign in →'}
+        </button>
+
+        <p style={{ fontSize: 12, color: '#6b6b6b', textAlign: 'center', margin: '12px 0' }}>
+          <a href="/forgot-password" style={{ color: '#9b9b9b' }}>Forgot password?</a>
+        </p>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0' }}>
+          <div style={{ flex: 1, height: 1, background: '#262626' }} />
+          <span style={{ fontSize: 11, color: '#5a5a5a' }}>or</span>
+          <div style={{ flex: 1, height: 1, background: '#262626' }} />
+        </div>
+
+        <button type="button" onClick={handleGoogle} disabled={googleLoading} style={{
+          width: '100%', height: 46, background: '#161616', color: '#fff',
+          border: '1.5px solid #2a2a2a', borderRadius: 10, fontSize: 14, fontWeight: 500,
+          cursor: googleLoading ? 'not-allowed' : 'pointer', fontFamily: "'Inter',sans-serif",
+        }}>
+          {googleLoading ? 'Redirecting…' : 'Continue with Google'}
         </button>
 
         <p style={{ fontSize: 12, color: '#6b6b6b', marginTop: 18, textAlign: 'center' }}>
