@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { supabase } from '../../lib/supabase'
 
 export default function AdminLogin() {
   const { session, profile, profileLoaded, signIn, signInWithGoogle, signOut } = useAuth()
@@ -9,24 +10,26 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const [waitingOnProfile, setWaitingOnProfile] = useState(false)
+  const [expectedUid, setExpectedUid] = useState<string | null>(null)
   const [error,    setError]    = useState<string | null>(null)
 
-  // Once a fresh profile has loaded after a sign-in attempt, decide where to go.
+  // Resolve only once the context's profile actually belongs to the user we just signed in as.
+  // (profile/profileLoaded can briefly hold stale pre-login values right after signIn() resolves.)
   useEffect(() => {
-    if (!waitingOnProfile || !profileLoaded) return
-    setWaitingOnProfile(false)
-    if (profile?.is_admin) {
+    if (!expectedUid) return
+    if (!profileLoaded || profile?.id !== expectedUid) return
+    setExpectedUid(null)
+    if (profile.is_admin) {
       navigate('/admin', { replace: true })
     } else {
-      setError(`Signed in as ${profile?.email ?? email}, but this account does not have admin access.`)
+      setError(`Signed in as ${profile.email}, but this account does not have admin access.`)
       signOut()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [waitingOnProfile, profileLoaded, profile])
+  }, [expectedUid, profileLoaded, profile])
 
   // Already signed in as admin → straight to panel
-  if (session && profileLoaded && profile?.is_admin && !waitingOnProfile) {
+  if (session && profileLoaded && profile?.is_admin && !expectedUid) {
     return <Navigate to="/admin" replace />
   }
 
@@ -37,12 +40,14 @@ export default function AdminLogin() {
     const { error: signInErr } = await signIn(email.trim(), password)
     if (signInErr) { setError(signInErr); setSubmitting(false); return }
 
-    // signIn succeeded → AuthContext will refetch the profile; wait for it.
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setError('Sign in failed.'); setSubmitting(false); return }
+
     setSubmitting(false)
-    setWaitingOnProfile(true)
+    setExpectedUid(user.id) // waits for context profile to catch up to this exact user
   }
 
-  const loading = submitting || waitingOnProfile
+  const loading = submitting || !!expectedUid
 
   async function handleGoogle() {
     setError(null); setGoogleLoading(true)
