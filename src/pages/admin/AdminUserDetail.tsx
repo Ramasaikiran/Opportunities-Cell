@@ -1,12 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import {
   supabase, type Profile, type StudentDetails, type ProfessionalDetails,
-  type Job, type JobApplication,
+  type Job, type JobApplication, type Subscription, type UserAppStats, PLANS,
 } from '../../lib/supabase'
 
-type TabType = 'profile' | 'jobs' | 'applications'
+type TabType = 'profile' | 'subscription' | 'jobs' | 'applications'
+
+const STATUS_OPTS: JobApplication['status'][] = ['applied','assessment','interview','hr_round','rejected','offer','joined']
+const STATUS_COLOR: Record<string, string> = {
+  applied: '#6b6b6b', assessment: '#0891b2', interview: '#7c3aed', hr_round: '#9333ea',
+  rejected: '#dc2626', offer: '#16a34a', joined: '#15803d',
+  shortlisted: '#0891b2', hired: '#16a34a', // legacy
+}
+
+const BLANK_APPLY = { company: '', role: '', jobUrl: '', date: new Date().toISOString().slice(0,10), notes: '' }
 
 export default function AdminUserDetail() {
   const { id } = useParams<{ id: string }>()
@@ -14,6 +23,8 @@ export default function AdminUserDetail() {
 
   const [profile,  setProfile]  = useState<Profile | null>(null)
   const [details,  setDetails]  = useState<StudentDetails | ProfessionalDetails | null>(null)
+  const [sub,       setSub]     = useState<Subscription | null>(null)
+  const [stats,     setStats]   = useState<UserAppStats | null>(null)
   const [jobs,     setJobs]     = useState<Job[]>([])
   const [apps,     setApps]     = useState<JobApplication[]>([])
   const [matched,  setMatched]  = useState<Job[]>([])
@@ -22,17 +33,27 @@ export default function AdminUserDetail() {
   const [applying, setApplying] = useState<string | null>(null)
   const [applyErr, setApplyErr] = useState<string | null>(null)
 
+  // Manual "Apply Job" modal
+  const [showModal, setShowModal] = useState(false)
+  const [form, setForm] = useState(BLANK_APPLY)
+  const [submitting, setSubmitting] = useState(false)
+  const [modalErr, setModalErr] = useState<string | null>(null)
+
   useEffect(() => { if (id) load(id) }, [id])
 
   async function load(uid: string) {
     setLoading(true)
-    const [pRes, appRes] = await Promise.all([
+    const [pRes, appRes, subRes, statsRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', uid).single(),
       supabase.from('job_applications').select('*').eq('user_id', uid).order('applied_at', { ascending: false }),
+      supabase.from('subscriptions').select('*').eq('user_id', uid).order('ends_at', { ascending: false }).limit(1).maybeSingle(),
+      supabase.rpc('get_user_app_stats', { p_user_id: uid }),
     ])
     const p = pRes.data as Profile | null
     setProfile(p)
     setApps((appRes.data as JobApplication[]) ?? [])
+    setSub((subRes.data as Subscription) ?? null)
+    if (!statsRes.error && statsRes.data) setStats(statsRes.data as UserAppStats)
 
     if (p?.user_type === 'student') {
       const { data } = await supabase.from('student_details').select('*').eq('id', uid).single()
@@ -42,11 +63,9 @@ export default function AdminUserDetail() {
       setDetails(data as ProfessionalDetails)
     }
 
-    // Load all active jobs + compute matches
     const { data: allJobs } = await supabase.from('jobs').select('*').eq('is_active', true)
     if (allJobs) {
       setJobs(allJobs as Job[])
-      // Match: get user skills, find overlap
       const skillsRes = p?.user_type === 'student'
         ? await supabase.from('student_details').select('technical_skills').eq('id', uid).single()
         : await supabase.from('professional_details').select('technical_skills').eq('id', uid).single()
@@ -59,11 +78,21 @@ export default function AdminUserDetail() {
     setLoading(false)
   }
 
+  async function refreshAppsAndStats() {
+    if (!id) return
+    const [appsData, statsRes] = await Promise.all([
+      supabase.from('job_applications').select('*').eq('user_id', id).order('applied_at', { ascending: false }),
+      supabase.rpc('get_user_app_stats', { p_user_id: id }),
+    ])
+    setApps((appsData.data as JobApplication[]) ?? [])
+    if (!statsRes.error && statsRes.data) setStats(statsRes.data as UserAppStats)
+  }
+
+  // ── Apply from matched-jobs list ──────────────────────────────
   async function applyForUser(job: Job) {
     if (!id || !adminProfile) return
     setApplying(job.id); setApplyErr(null)
     try {
-      // Get user skills for this job
       const skillsRes = profile?.user_type === 'student'
         ? await supabase.from('student_details').select('technical_skills').eq('id', id).single()
         : await supabase.from('professional_details').select('technical_skills').eq('id', id).single()
@@ -72,29 +101,50 @@ export default function AdminUserDetail() {
         userSkills.map(u => u.toLowerCase()).includes(s.toLowerCase())
       )
 
-      // Check not already applied
       const { data: existing } = await supabase.from('job_applications')
         .select('id').eq('user_id', id).eq('job_id', job.id).maybeSingle()
       if (existing) { setApplyErr(`Already applied to ${job.title}`); return }
 
       const { error } = await supabase.from('job_applications').insert({
-        user_id:        id,
-        job_id:         job.id,
-        job_title:      job.title,
-        company:        job.company,
-        admin_id:       adminProfile.id,
-        status:         'applied',
-        matched_skills: matchedSkills,
+        user_id: id, job_id: job.id, job_title: job.title, company: job.company,
+        job_url: job.apply_url, admin_id: adminProfile.id, status: 'applied', matched_skills: matchedSkills,
       })
       if (error) throw error
-      // Refresh apps
-      const { data: appsData } = await supabase.from('job_applications')
-        .select('*').eq('user_id', id).order('applied_at', { ascending: false })
-      setApps((appsData as JobApplication[]) ?? [])
+      await refreshAppsAndStats()
     } catch (err) {
       setApplyErr((err as Error).message)
     } finally {
       setApplying(null)
+    }
+  }
+
+  // ── Manual "Apply Job" modal submit ────────────────────────────
+  async function handleManualApply(e: FormEvent) {
+    e.preventDefault()
+    if (!id || !adminProfile) return
+    if (!form.company.trim() || !form.role.trim()) { setModalErr('Company and role are required.'); return }
+    setSubmitting(true); setModalErr(null)
+    try {
+      const { error } = await supabase.from('job_applications').insert({
+        user_id:   id,
+        job_id:    null,
+        job_title: form.role.trim(),
+        company:   form.company.trim(),
+        job_url:   form.jobUrl.trim() || null,
+        admin_id:  adminProfile.id,
+        status:    'applied',
+        matched_skills: [],
+        applied_at: new Date(form.date).toISOString(),
+        notes:      form.notes.trim() || null,
+      })
+      if (error) throw error
+      await refreshAppsAndStats()
+      setShowModal(false)
+      setForm(BLANK_APPLY)
+    } catch (err) {
+      setModalErr((err as Error).message)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -123,9 +173,19 @@ export default function AdminUserDetail() {
     border: 'none', cursor: 'pointer', fontFamily: "'Inter',sans-serif",
   })
 
-  const STATUS_OPTS: JobApplication['status'][] = ['applied','shortlisted','interview','rejected','hired']
-  const STATUS_COLOR: Record<string, string> = {
-    applied: '#6b6b6b', shortlisted: '#2563eb', interview: '#7c3aed', rejected: '#dc2626', hired: '#16a34a',
+  const Field = ({ label, value }: { label: string; value: string | null | undefined }) => (
+    <div style={{ background: '#fff', border: '1.5px solid #f0f0f0', borderRadius: 12, padding: '16px 18px' }}>
+      <p style={{ fontSize: 11, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.08em', marginBottom: 6 }}>
+        {label.toUpperCase()}
+      </p>
+      <p style={{ fontSize: 14, color: value ? '#0f0f0f' : '#b5b5b5' }}>{value || '—'}</p>
+    </div>
+  )
+
+  const inp: React.CSSProperties = {
+    height: 42, padding: '0 14px', fontSize: 14, color: '#0f0f0f',
+    border: '1.5px solid #e5e5e5', borderRadius: 10, background: '#fff',
+    fontFamily: "'Inter',sans-serif", outline: 'none', width: '100%',
   }
 
   return (
@@ -135,11 +195,16 @@ export default function AdminUserDetail() {
         background: '#0f0f0f', gap: 16 }}>
         <Link to="/admin/users" style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>← Users</Link>
         <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{profile.full_name}</span>
+        <button onClick={() => setShowModal(true)} style={{
+          marginLeft: 'auto', padding: '9px 18px', background: '#fff', color: '#0f0f0f',
+          border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+          fontFamily: "'Inter',sans-serif",
+        }}>+ Apply Job</button>
       </div>
 
       <div style={{ maxWidth: 920, margin: '0 auto', padding: '36px 24px' }}>
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 32 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 28 }}>
           {profile.photo_url || profile.avatar_url ? (
             <img src={profile.photo_url || profile.avatar_url!} alt=""
               style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />
@@ -164,10 +229,26 @@ export default function AdminUserDetail() {
           </div>
         </div>
 
+        {/* Stats strip */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 24 }}>
+          {[
+            { v: stats?.total_applications ?? apps.length, l: 'Total applications', c: '#0f0f0f' },
+            { v: stats?.interviews ?? 0,  l: 'Interviews',  c: '#7c3aed' },
+            { v: stats?.rejections ?? 0,  l: 'Rejections',  c: '#dc2626' },
+            { v: stats?.offers ?? 0,      l: 'Offers',      c: '#16a34a' },
+          ].map(({ v, l, c }) => (
+            <div key={l} style={{ background: '#fff', border: '1.5px solid #f0f0f0', borderRadius: 12, padding: '14px 16px' }}>
+              <span style={{ fontSize: 24, fontWeight: 700, color: c }}>{v}</span>
+              <p style={{ fontSize: 12, color: '#9b9b9b', marginTop: 2 }}>{l}</p>
+            </div>
+          ))}
+        </div>
+
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 28, background: '#f0f0f0',
-          padding: 4, borderRadius: 10, width: 'fit-content' }}>
+          padding: 4, borderRadius: 10, width: 'fit-content', flexWrap: 'wrap' }}>
           <button style={tabStyle('profile')}      onClick={() => setTab('profile')}>Profile</button>
+          <button style={tabStyle('subscription')} onClick={() => setTab('subscription')}>Subscription</button>
           <button style={tabStyle('jobs')}         onClick={() => setTab('jobs')}>
             Match jobs ({matched.length})
           </button>
@@ -185,88 +266,72 @@ export default function AdminUserDetail() {
 
         {/* ── PROFILE TAB ───────────────────────────────────── */}
         {tab === 'profile' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            {[
-              { label: 'Mobile',    value: profile.mobile_number },
-              { label: 'LinkedIn',  value: profile.linkedin_url },
-              { label: 'GitHub',    value: profile.github_url },
-              { label: 'Country',   value: profile.country },
-              { label: 'Address',   value: profile.address },
-              { label: 'Role interests', value: profile.role_interests?.join(', ') || '—' },
-            ].map(({ label, value }) => (
-              <div key={label} style={{ background: '#fff', border: '1.5px solid #f0f0f0', borderRadius: 12, padding: '16px 18px' }}>
-                <p style={{ fontSize: 11, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.08em', marginBottom: 6 }}>
-                  {label.toUpperCase()}
-                </p>
-                <p style={{ fontSize: 14, color: value ? '#0f0f0f' : '#b5b5b5' }}>{value || '—'}</p>
-              </div>
-            ))}
-
-            {sd && <>
-              {[
-                { label: 'College',       value: sd.college_name },
-                { label: 'Degree',        value: sd.degree },
-                { label: 'Branch',        value: sd.branch },
-                { label: 'Year',          value: sd.current_year },
-                { label: 'Pass-out year', value: sd.passout_year?.toString() },
-                { label: 'CGPA',          value: sd.cgpa?.toString() },
-                { label: 'Internship',    value: sd.internship_done ? sd.internship_details || 'Yes' : 'NA' },
-                { label: 'Projects',      value: sd.projects },
-              ].map(({ label, value }) => (
-                <div key={label} style={{ background: '#fff', border: '1.5px solid #f0f0f0', borderRadius: 12, padding: '16px 18px' }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.08em', marginBottom: 6 }}>
-                    {label.toUpperCase()}
-                  </p>
-                  <p style={{ fontSize: 14, color: value ? '#0f0f0f' : '#b5b5b5' }}>{value || '—'}</p>
+          <>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#6b6b6b', letterSpacing: '0.06em',
+              marginBottom: 10, marginTop: 4 }}>PERSONAL INFORMATION</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+              <Field label="Name"     value={profile.full_name} />
+              <Field label="Email"    value={profile.email} />
+              <Field label="Phone"    value={profile.mobile_number} />
+              <Field label="Experience" value={pd?.years_experience ? `${pd.years_experience} yrs` : sd ? 'Student' : null} />
+              <Field label="Education" value={sd ? [sd.degree, sd.branch, sd.college_name].filter(Boolean).join(' · ') : null} />
+              <Field label="LinkedIn" value={profile.linkedin_url} />
+              <Field label="GitHub"   value={profile.github_url} />
+              <Field label="Portfolio" value={profile.portfolio_url} />
+              <div style={{ gridColumn: '1 / -1', background: '#fff', border: '1.5px solid #f0f0f0',
+                borderRadius: 12, padding: '16px 18px' }}>
+                <p style={{ fontSize: 11, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.08em', marginBottom: 10 }}>SKILLS</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {userSkills.length > 0
+                    ? userSkills.map(s => (
+                      <span key={s} style={{ fontSize: 13, padding: '4px 12px', background: '#f0f0f0',
+                        color: '#0f0f0f', borderRadius: 99 }}>{s}</span>
+                    ))
+                    : <span style={{ fontSize: 14, color: '#b5b5b5' }}>No skills added yet.</span>}
                 </div>
-              ))}
-            </>}
-
-            {pd && <>
-              {[
-                { label: 'Experience',     value: pd.years_experience ? `${pd.years_experience} yrs` : null },
-                { label: 'Previous title', value: pd.previous_job_title },
-                { label: 'Previous co.',   value: pd.previous_company },
-                { label: 'Previous CTC',   value: pd.previous_salary ? `₹${pd.previous_salary.toLocaleString('en-IN')}` : null },
-                { label: 'Notice period',  value: pd.notice_period ? `${pd.notice_period_days ?? 0} days` : 'NA' },
-              ].map(({ label, value }) => (
-                <div key={label} style={{ background: '#fff', border: '1.5px solid #f0f0f0', borderRadius: 12, padding: '16px 18px' }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.08em', marginBottom: 6 }}>
-                    {label.toUpperCase()}
-                  </p>
-                  <p style={{ fontSize: 14, color: value ? '#0f0f0f' : '#b5b5b5' }}>{value || '—'}</p>
-                </div>
-              ))}
-            </>}
-
-            {/* Skills */}
-            <div style={{ gridColumn: '1 / -1', background: '#fff', border: '1.5px solid #f0f0f0',
-              borderRadius: 12, padding: '16px 18px' }}>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.08em', marginBottom: 10 }}>
-                TECHNICAL SKILLS
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {userSkills.length > 0
-                  ? userSkills.map(s => (
-                    <span key={s} style={{ fontSize: 13, padding: '4px 12px', background: '#f0f0f0',
-                      color: '#0f0f0f', borderRadius: 99 }}>{s}</span>
-                  ))
-                  : <span style={{ fontSize: 14, color: '#b5b5b5' }}>No skills added yet.</span>
-                }
               </div>
+              {(sd?.resume_url || pd?.resume_url) && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <a href="#" onClick={async e => {
+                    e.preventDefault()
+                    const url = sd?.resume_url || pd?.resume_url!
+                    const { data } = await supabase.storage.from('resumes').createSignedUrl(url, 3600)
+                    if (data?.signedUrl) window.open(data.signedUrl, '_blank')
+                  }} style={{ fontSize: 14, color: '#2563eb', textDecoration: 'underline', cursor: 'pointer' }}>
+                    📄 Download resume
+                  </a>
+                </div>
+              )}
             </div>
 
-            {/* Resume link */}
-            {(sd?.resume_url || pd?.resume_url) && (
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#6b6b6b', letterSpacing: '0.06em',
+              marginBottom: 10 }}>JOB PREFERENCES</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <Field label="Preferred roles"     value={profile.role_interests?.join(', ') || null} />
+              <Field label="Preferred locations" value={profile.preferred_locations?.join(', ') || null} />
+              <Field label="Salary expectation"  value={profile.salary_expectation ? `₹${profile.salary_expectation.toLocaleString('en-IN')}` : null} />
+              <Field label="Employment type"     value={profile.employment_type} />
+              <Field label="Work preference"     value={profile.work_preference} />
+            </div>
+          </>
+        )}
+
+        {/* ── SUBSCRIPTION TAB ──────────────────────────────── */}
+        {tab === 'subscription' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            {sub ? (<>
+              <Field label="Plan"        value={PLANS[sub.plan]?.label ?? sub.plan} />
+              <Field label="Status"      value={sub.status} />
+              <Field label="Start date"  value={sub.starts_at ? new Date(sub.starts_at).toLocaleDateString('en-IN') : null} />
+              <Field label="Expiry date" value={sub.ends_at ? new Date(sub.ends_at).toLocaleDateString('en-IN') : null} />
               <div style={{ gridColumn: '1 / -1' }}>
-                <a href="#" onClick={async e => {
-                  e.preventDefault()
-                  const url = sd?.resume_url || pd?.resume_url!
-                  const { data } = await supabase.storage.from('resumes').createSignedUrl(url, 3600)
-                  if (data?.signedUrl) window.open(data.signedUrl, '_blank')
-                }} style={{ fontSize: 14, color: '#2563eb', textDecoration: 'underline', cursor: 'pointer' }}>
-                  📄 Download resume
-                </a>
+                <Link to="/admin/subscriptions" style={{ fontSize: 13, color: '#2563eb', textDecoration: 'none' }}>
+                  Manage in Subscriptions →
+                </Link>
+              </div>
+            </>) : (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px 0', fontSize: 14, color: '#b5b5b5' }}>
+                No subscription on record.
               </div>
             )}
           </div>
@@ -277,7 +342,6 @@ export default function AdminUserDetail() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <p style={{ fontSize: 13, color: '#9b9b9b', marginBottom: 8 }}>
               {matched.length} jobs match {profile.first_name || profile.full_name.split(' ')[0]}'s skills.
-              Jobs already applied are hidden.
             </p>
             {matched.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 14, color: '#b5b5b5' }}>
@@ -328,6 +392,12 @@ export default function AdminUserDetail() {
         {/* ── APPLICATIONS TAB ──────────────────────────────── */}
         {tab === 'applications' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+              <button onClick={() => setShowModal(true)} style={{
+                padding: '8px 16px', background: '#0f0f0f', color: '#fff', border: 'none',
+                borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+              }}>+ Apply Job</button>
+            </div>
             {apps.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px 0', fontSize: 14, color: '#b5b5b5' }}>
                 No applications yet.
@@ -336,7 +406,7 @@ export default function AdminUserDetail() {
               <div key={app.id} style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 padding: '16px 20px', background: '#fff',
-                border: '1.5px solid #f0f0f0', borderRadius: 12, gap: 12,
+                border: '1.5px solid #f0f0f0', borderRadius: 12, gap: 12, flexWrap: 'wrap',
               }}>
                 <div>
                   <p style={{ fontSize: 15, fontWeight: 500, color: '#0f0f0f', marginBottom: 2 }}>
@@ -344,22 +414,85 @@ export default function AdminUserDetail() {
                   </p>
                   <p style={{ fontSize: 13, color: '#9b9b9b' }}>
                     {app.company || '—'} · {new Date(app.applied_at).toLocaleDateString('en-IN')}
+                    {app.job_url && <> · <a href={app.job_url} target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>job link</a></>}
                   </p>
+                  {app.notes && <p style={{ fontSize: 12, color: '#b5b5b5', marginTop: 4 }}>{app.notes}</p>}
                 </div>
                 <select value={app.status}
                   onChange={e => updateAppStatus(app.id, e.target.value as JobApplication['status'])}
                   style={{
                     fontSize: 13, fontWeight: 600, padding: '5px 10px', borderRadius: 8,
-                    border: '1.5px solid #e5e5e5', background: STATUS_COLOR[app.status] + '18',
-                    color: STATUS_COLOR[app.status], fontFamily: "'Inter',sans-serif", cursor: 'pointer', outline: 'none',
+                    border: '1.5px solid #e5e5e5', background: (STATUS_COLOR[app.status] ?? '#6b6b6b') + '18',
+                    color: STATUS_COLOR[app.status] ?? '#6b6b6b', fontFamily: "'Inter',sans-serif", cursor: 'pointer', outline: 'none',
                   }}>
-                  {STATUS_OPTS.map(s => <option key={s} value={s}>{s}</option>)}
+                  {(STATUS_OPTS.includes(app.status) ? STATUS_OPTS : [app.status, ...STATUS_OPTS]).map(s =>
+                    <option key={s} value={s}>{s.replace('_',' ')}</option>)}
                 </select>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* ── APPLY JOB MODAL ──────────────────────────────────── */}
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,15,15,0.5)', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 20 }}
+          onClick={() => !submitting && setShowModal(false)}>
+          <form onClick={e => e.stopPropagation()} onSubmit={handleManualApply} style={{
+            width: '100%', maxWidth: 420, background: '#fff', borderRadius: 18, padding: '28px 26px',
+            display: 'flex', flexDirection: 'column', gap: 14,
+          }}>
+            <h2 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 22, fontWeight: 400, color: '#0f0f0f' }}>
+              Apply for {profile.first_name || profile.full_name.split(' ')[0]}
+            </h2>
+
+            {modalErr && (
+              <div style={{ padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca',
+                borderRadius: 10, fontSize: 13, color: '#dc2626' }}>⚠ {modalErr}</div>
+            )}
+
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#6b6b6b' }}>Company name</label>
+              <input style={{ ...inp, marginTop: 6 }} value={form.company}
+                onChange={e => setForm(f => ({ ...f, company: e.target.value }))} placeholder="Microsoft" required />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#6b6b6b' }}>Job role</label>
+              <input style={{ ...inp, marginTop: 6 }} value={form.role}
+                onChange={e => setForm(f => ({ ...f, role: e.target.value }))} placeholder="Software Engineer" required />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#6b6b6b' }}>Job URL</label>
+              <input style={{ ...inp, marginTop: 6 }} value={form.jobUrl}
+                onChange={e => setForm(f => ({ ...f, jobUrl: e.target.value }))} placeholder="https://…" type="url" />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#6b6b6b' }}>Date applied</label>
+              <input style={{ ...inp, marginTop: 6 }} type="date" value={form.date}
+                onChange={e => setForm(f => ({ ...f, date: e.target.value }))} required />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#6b6b6b' }}>Notes</label>
+              <textarea style={{ ...inp, marginTop: 6, height: 70, padding: '10px 14px', resize: 'vertical' }}
+                value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                placeholder="Optional notes…" />
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+              <button type="button" onClick={() => setShowModal(false)} disabled={submitting} style={{
+                flex: 1, height: 44, background: '#f5f5f5', color: '#6b6b6b', border: 'none',
+                borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+              }}>Cancel</button>
+              <button type="submit" disabled={submitting} style={{
+                flex: 2, height: 44, background: submitting ? '#3a3a3a' : '#0f0f0f', color: '#fff', border: 'none',
+                borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: submitting ? 'not-allowed' : 'pointer',
+                fontFamily: "'Inter',sans-serif",
+              }}>{submitting ? 'Saving…' : '✓ Mark as Applied'}</button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   )
 }

@@ -16,11 +16,11 @@ export default function AdminRoute({ children }: { children: React.ReactNode }) 
   // Wait for auth bootstrap AND profile fetch to complete
   if (loading || !profileLoaded) return <Spinner />
 
-  // No session at all → sign in
-  if (!session) return <Navigate to="/sign-in" replace />
+  // No session at all → admin sign in
+  if (!session) return <Navigate to="/admin/login" replace />
 
-  // Session exists but profile is null (DB issue / new user) → sign in
-  if (!profile) return <Navigate to="/sign-in" replace />
+  // Session exists but profile is null (DB issue / new user) → admin sign in
+  if (!profile) return <Navigate to="/admin/login" replace />
 
   // Authenticated but not admin → user dashboard
   if (!profile.is_admin) return <Navigate to="/dashboard" replace />

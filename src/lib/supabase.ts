@@ -21,7 +21,10 @@ export type UserType      = 'student' | 'professional'
 export type AccountStatus = 'pending_onboarding' | 'active' | 'suspended'
 export type SubscriptionPlan = 'monthly' | 'quarterly' | 'halfyearly' | 'yearly'
 export type SubStatus = 'pending' | 'active' | 'expired' | 'cancelled' | 'failed'
-export type AppStatus = 'applied' | 'shortlisted' | 'interview' | 'rejected' | 'hired'
+export type AppStatus = 'applied' | 'assessment' | 'interview' | 'hr_round' | 'rejected' | 'offer' | 'joined'
+  | 'shortlisted' | 'hired' // legacy values, still readable
+export type EmploymentType = 'full-time' | 'internship' | 'contract' | 'part-time'
+export type WorkPreference = 'remote' | 'hybrid' | 'onsite'
 
 export interface Profile {
   id: string
@@ -37,6 +40,11 @@ export interface Profile {
   country: string | null
   address: string | null
   role_interests: string[]
+  portfolio_url: string | null
+  preferred_locations: string[]
+  salary_expectation: number | null
+  employment_type: EmploymentType | null
+  work_preference: WorkPreference | null
   user_type: UserType | null
   is_admin: boolean
   account_status: AccountStatus
@@ -111,11 +119,49 @@ export interface JobApplication {
   job_id: string | null
   job_title: string | null
   company: string | null
+  job_url: string | null
   admin_id: string | null
   status: AppStatus
   matched_skills: string[]
   applied_at: string
   notes: string | null
+}
+
+export interface ActivityLogEntry {
+  id: string
+  admin_id: string | null
+  action: string
+  target_user_id: string | null
+  details: string | null
+  created_at: string
+}
+
+export interface Notification {
+  id: string
+  user_id: string
+  title: string
+  message: string | null
+  type: string
+  is_read: boolean
+  created_at: string
+}
+
+export interface AdminDashboardStats {
+  total_users: number
+  active_subscribers: number
+  apps_today: number
+  apps_week: number
+  apps_month: number
+  total_interviews: number
+  total_offers: number
+  expiring_subscriptions: number
+}
+
+export interface UserAppStats {
+  total_applications: number
+  interviews: number
+  rejections: number
+  offers: number
 }
 
 export interface AppStats {

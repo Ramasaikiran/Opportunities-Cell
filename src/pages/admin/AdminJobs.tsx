@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { supabase, type Job } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
+import AdminNav from './AdminNav'
 
 const BLANK: Omit<Job,'id'|'posted_at'> = {
   title: '', company: '', description: '', required_skills: [],
@@ -76,12 +76,12 @@ export default function AdminJobs() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#fafafa', fontFamily: "'Inter',sans-serif" }}>
-      <div style={{ height: 60, display: 'flex', alignItems: 'center', padding: '0 28px',
-        background: '#0f0f0f', gap: 16 }}>
-        <Link to="/admin" style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', textDecoration: 'none' }}>← Admin</Link>
-        <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>Job Listings</span>
+      <AdminNav title="Job Listings" />
+      <div style={{ height: 56, display: 'flex', alignItems: 'center', padding: '0 28px',
+        background: '#fff', borderBottom: '1.5px solid #f0f0f0', gap: 16 }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: '#0f0f0f' }}>Job Listings</span>
         <button onClick={openNew} style={{
-          marginLeft: 'auto', padding: '8px 18px', background: '#fff', color: '#0f0f0f',
+          marginLeft: 'auto', padding: '8px 18px', background: '#0f0f0f', color: '#fff',
           border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
           fontFamily: "'Inter',sans-serif",
         }}>+ Add job</button>

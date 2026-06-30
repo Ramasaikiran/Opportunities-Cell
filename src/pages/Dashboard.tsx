@@ -41,8 +41,46 @@ export default function Dashboard() {
   const [apps,       setApps]       = useState<JobApplication[]>([])
   const [period,     setPeriod]     = useState<Period>('30')
   const [loading,    setLoading]    = useState(true)
+  const [resumeUrl,    setResumeUrl]    = useState<string | null>(null)
+  const [resumeUploading, setResumeUploading] = useState(false)
+  const [resumeError,  setResumeError]  = useState<string | null>(null)
 
   useEffect(() => { if (profile) load() }, [profile])
+  useEffect(() => { if (profile) loadResume() }, [profile])
+
+  async function loadResume() {
+    if (!profile) return
+    const table = profile.user_type === 'professional' ? 'professional_details' : 'student_details'
+    const { data } = await supabase.from(table).select('resume_url').eq('id', profile.id).maybeSingle()
+    setResumeUrl(data?.resume_url ?? null)
+  }
+
+  async function handleResumeUpload(file: File) {
+    if (!profile) return
+    if (file.type !== 'application/pdf') { setResumeError('PDF only.'); return }
+    if (file.size > 5 * 1024 * 1024)      { setResumeError('Max 5MB.'); return }
+    setResumeUploading(true); setResumeError(null)
+    try {
+      const path = `${profile.id}/${Date.now()}-${file.name}`
+      const { error: upErr } = await supabase.storage.from('resumes').upload(path, file, { upsert: true })
+      if (upErr) throw upErr
+      const table = profile.user_type === 'professional' ? 'professional_details' : 'student_details'
+      const { error: dbErr } = await supabase.from(table).update({ resume_url: path }).eq('id', profile.id)
+      if (dbErr) throw dbErr
+      setResumeUrl(path)
+    } catch (err) {
+      setResumeError((err as Error).message)
+    } finally {
+      setResumeUploading(false)
+    }
+  }
+
+  async function viewResume() {
+    if (!resumeUrl) return
+    const { data } = await supabase.storage.from('resumes').createSignedUrl(resumeUrl, 3600)
+    if (data?.signedUrl) window.open(data.signedUrl, '_blank')
+  }
+
 
   async function load() {
     if (!profile) return
@@ -190,6 +228,36 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Resume — update directly, no full onboarding flow needed */}
+        <div style={{ marginBottom: 24, padding: '16px 20px', background: '#fff',
+          border: '1px solid #f0f0f0', borderRadius: 12, display: 'flex',
+          alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 600, color: '#0f0f0f', marginBottom: 2 }}>
+              {resumeUrl ? '📄 Resume on file' : '📄 No resume uploaded'}
+            </p>
+            <p style={{ fontSize: 12, color: '#9b9b9b' }}>
+              {resumeUrl ? 'We use this for every application we submit on your behalf.' : 'Upload a PDF so we can start applying for you.'}
+            </p>
+            {resumeError && <p style={{ fontSize: 12, color: '#dc2626', marginTop: 4 }}>⚠ {resumeError}</p>}
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            {resumeUrl && (
+              <button onClick={viewResume} style={{ background: '#f5f5f5', color: '#0f0f0f', border: 'none',
+                padding: '9px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                fontFamily: "'Inter',sans-serif" }}>View</button>
+            )}
+            <label style={{ background: resumeUploading ? '#e5e5e5' : '#0f0f0f',
+              color: resumeUploading ? '#9b9b9b' : '#fff', padding: '9px 16px', borderRadius: 8,
+              fontSize: 13, fontWeight: 600, cursor: resumeUploading ? 'not-allowed' : 'pointer',
+              fontFamily: "'Inter',sans-serif" }}>
+              {resumeUploading ? 'Uploading…' : resumeUrl ? 'Replace' : 'Upload'}
+              <input type="file" accept=".pdf" style={{ display: 'none' }} disabled={resumeUploading}
+                onChange={e => { const f = e.target.files?.[0]; if (f) handleResumeUpload(f); e.target.value = '' }} />
+            </label>
+          </div>
+        </div>
 
         {/* Stats — period dropdown */}
         <div style={{ marginBottom: 20 }}>
