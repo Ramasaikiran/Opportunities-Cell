@@ -13,28 +13,10 @@ const CROSS = () => (
     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
   </svg>
 )
-const STAR = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b">
-    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-  </svg>
-)
-
-const AVATARS = ['PK','AR','SM','VR','NK','DP']
-
-const COMPANIES = ['Razorpay','Groww','Zepto','PhonePe','Flipkart','CRED','Swiggy','Meesho']
-
-/* ── live ticker numbers (rotates every 4 s) ─────────────────── */
-const TICKERS = [
-  '47 interviews booked this week',
-  '12 offers accepted this month',
-  '340 applications sent today',
-  '8 students got shortlisted today',
-]
 
 export default function Landing() {
   const { session, subscription, profile } = useAuth()
   const navigate = useNavigate()
-  const [tickerIdx, setTickerIdx]   = useState(0)
   const [showSticky, setShowSticky] = useState(false)
   const [openFaq, setOpenFaq]       = useState<number | null>(null)
 
@@ -48,12 +30,6 @@ export default function Landing() {
     navigate('/dashboard', { replace: true })
   }, [session, profile, subscription])
 
-  /* ticker */
-  useEffect(() => {
-    const id = setInterval(() => setTickerIdx(i => (i + 1) % TICKERS.length), 4000)
-    return () => clearInterval(id)
-  }, [])
-
   /* sticky bar */
   useEffect(() => {
     const onScroll = () => setShowSticky(window.scrollY > 600)
@@ -65,28 +41,28 @@ export default function Landing() {
 
   const FAQS = [
     {
-      q: 'How do I know you\'re actually applying and not just taking my money?',
-      a: 'Your dashboard shows every single job we\'ve applied to — company name, role, date applied, matched skills, and current status. Full transparency, zero guessing.',
-    },
-    {
-      q: 'What if I don\'t get any interviews?',
-      a: 'If you don\'t receive at least 1 shortlist within 14 days of your profile going active, email us and we\'ll extend your subscription by 14 days free. No questions asked.',
+      q: 'Is this live? How do I know you\'ll actually apply?',
+      a: 'We\'re onboarding our first founding members right now. Once your profile is active, your dashboard shows every single application — company, role, date, matched skills, and status. Full transparency from day one.',
     },
     {
       q: 'Do you write generic cover letters or tailored ones?',
-      a: 'Every application is tailored to the JD. We match your skills, highlight relevant projects, and write a cover letter specific to that company. Recruiters notice.',
+      a: 'Every application is tailored to the JD. We match your skills, highlight relevant projects, and write a cover letter specific to that company.',
     },
     {
       q: 'How many applications per day?',
-      a: '10–15 applications daily. That\'s 300–450/month while you focus entirely on interview prep and DSA.',
+      a: '10–15 applications daily once your profile is active. That\'s 300–450/month while you focus on interview prep and DSA.',
     },
     {
       q: 'Can I cancel anytime?',
-      a: 'Yes. No auto-renewal, no lock-in, no questions. Plans are one-time payments. When your period ends, you decide if you want to continue.',
+      a: 'Yes. No auto-renewal, no lock-in. Plans are one-time payments. When your period ends, you decide if you want to continue.',
     },
     {
       q: 'I\'m a fresher with no experience. Will this work?',
-      a: 'Especially built for freshers. We highlight your projects, college, skills, and internships. Our targeting filters for fresher-friendly roles and companies that actively hire from colleges.',
+      a: 'Built especially for freshers. We highlight your projects, college, skills, and internships, and target fresher-friendly roles at companies that actively hire from colleges.',
+    },
+    {
+      q: 'Why join now instead of waiting?',
+      a: 'Founding member pricing is locked for early sign-ups and we\'re limiting our first batch so every profile gets proper attention from our team. Once a batch fills, pricing moves to standard rates.',
     },
   ]
 
@@ -95,14 +71,9 @@ export default function Landing() {
 
       {/* ── ANNOUNCEMENT BAR ──────────────────────────────────── */}
       <div style={{ background: '#0f0f0f', padding: '10px 24px', textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, transition: 'opacity 0.4s' }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e',
-            display: 'block', flexShrink: 0, boxShadow: '0 0 0 3px rgba(34,197,94,0.25)',
-            animation: 'pulse 2s infinite' }} />
-          <span style={{ fontSize: 13, color: '#fff', fontWeight: 500 }}>
-            🔥 <strong>{TICKERS[tickerIdx]}</strong>
-          </span>
-        </div>
+        <span style={{ fontSize: 13, color: '#fff', fontWeight: 500 }}>
+          🚀 <strong>Now open for founding members</strong> — limited first batch, locked-in pricing
+        </span>
       </div>
 
       {/* ── NAV ───────────────────────────────────────────────── */}
@@ -124,7 +95,7 @@ export default function Landing() {
             <span style={{ fontSize: 13, color: '#22c55e', fontWeight: 600,
               background: '#f0fdf4', padding: '4px 12px', borderRadius: 99,
               border: '1px solid #bbf7d0' }}>
-              ₹250/mo
+              ₹399/mo
             </span>
             <button onClick={() => navigate('/sign-in')} style={{
               background: 'none', border: 'none', fontSize: 14, color: '#6b6b6b',
@@ -142,13 +113,13 @@ export default function Landing() {
       {/* ── HERO ──────────────────────────────────────────────── */}
       <section style={{ maxWidth: 780, margin: '0 auto', padding: '100px 24px 80px', textAlign: 'center' }}>
 
-        {/* Urgency pill */}
+        {/* Early access pill */}
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8,
           background: '#fff7ed', border: '1px solid #fed7aa',
           borderRadius: 99, padding: '7px 16px', marginBottom: 32 }}>
-          <span style={{ fontSize: 13 }}>⏳</span>
+          <span style={{ fontSize: 13 }}>⚡</span>
           <span style={{ fontSize: 13, fontWeight: 600, color: '#c2410c' }}>
-            Only 12 spots left in Hyderabad this month
+            Founding member pricing — limited first batch
           </span>
         </div>
 
@@ -183,60 +154,18 @@ export default function Landing() {
             letterSpacing: '-0.02em',
             boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
           }}>
-            Get my first shortlist — ₹250/mo →
+            Join as a founding member — ₹399/mo →
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <span style={{ fontSize: 13, color: '#9b9b9b' }}>✓ Setup in 4 minutes</span>
             <span style={{ fontSize: 13, color: '#9b9b9b' }}>✓ No auto-renewal</span>
-            <span style={{ fontSize: 13, color: '#9b9b9b' }}>✓ 14-day guarantee</span>
-          </div>
-        </div>
-
-        {/* Avatar + trust */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: 14, marginTop: 52 }}>
-          <div style={{ display: 'flex' }}>
-            {AVATARS.map((a, i) => (
-              <div key={a} style={{
-                width: 34, height: 34, borderRadius: '50%',
-                background: `hsl(${i * 45 + 200},55%,55%)`,
-                border: '2.5px solid #fff', marginLeft: i === 0 ? 0 : -10,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 11, fontWeight: 700, color: '#fff',
-              }}>{a[0]}</div>
-            ))}
-          </div>
-          <div style={{ textAlign: 'left' }}>
-            <div style={{ display: 'flex', gap: 2, marginBottom: 3 }}>
-              {[1,2,3,4,5].map(i => <STAR key={i} />)}
-            </div>
-            <p style={{ fontSize: 13, color: '#9b9b9b' }}>
-              <strong style={{ color: '#0f0f0f' }}>550+ students</strong> placed · 4.9/5 rating
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── PLACEMENT LOGOS ───────────────────────────────────── */}
-      <section style={{ borderTop: '1px solid #f0f0f0', borderBottom: '1px solid #f0f0f0',
-        padding: '28px 24px', background: '#fafafa' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#c4c4c4', letterSpacing: '0.12em',
-            textTransform: 'uppercase', textAlign: 'center', marginBottom: 20 }}>
-            Our students work at
-          </p>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexWrap: 'wrap', gap: '8px 28px' }}>
-            {COMPANIES.map(c => (
-              <span key={c} style={{ fontSize: 14, fontWeight: 700, color: '#b5b5b5',
-                letterSpacing: '-0.02em' }}>{c}</span>
-            ))}
+            <span style={{ fontSize: 13, color: '#9b9b9b' }}>✓ Cancel anytime</span>
           </div>
         </div>
       </section>
 
       {/* ── PAIN vs GAIN ──────────────────────────────────────── */}
-      <section style={{ background: '#fff' }}>
+      <section style={{ background: '#fff', borderTop: '1px solid #f0f0f0' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '88px 24px',
           display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60 }}>
           <div>
@@ -256,7 +185,6 @@ export default function Landing() {
               </div>
             ))}
 
-            {/* cost of inaction */}
             <div style={{ marginTop: 24, padding: '16px 18px', background: '#fef2f2',
               border: '1px solid #fecaca', borderRadius: 12 }}>
               <p style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 4 }}>
@@ -264,7 +192,7 @@ export default function Landing() {
               </p>
               <p style={{ fontSize: 13, color: '#7f1d1d', lineHeight: 1.6 }}>
                 Every month unemployed = ₹30,000–50,000 in lost salary.
-                ₹250/month to fix it isn't a cost. It's the best ROI of your life.
+                ₹399/month to fix it isn't a cost. It's the best ROI of your life.
               </p>
             </div>
           </div>
@@ -279,44 +207,23 @@ export default function Landing() {
               'Tailored applications matched exactly to your skills and role',
               '300–450 applications/month while you focus on interview prep',
               'Dashboard shows every job applied, status, matched skills',
-              'First shortlist typically within 3–5 days of going active',
+              'You\'re among the first to get this advantage — before everyone else catches on',
             ].map(t => (
               <div key={t} style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'flex-start' }}>
                 <TICK /><p style={{ fontSize: 14, color: '#0f0f0f', lineHeight: 1.6 }}>{t}</p>
               </div>
             ))}
 
-            {/* guarantee callout */}
             <div style={{ marginTop: 24, padding: '16px 18px', background: '#f0fdf4',
               border: '1px solid #bbf7d0', borderRadius: 12 }}>
               <p style={{ fontSize: 13, fontWeight: 700, color: '#15803d', marginBottom: 4 }}>
-                🛡️ 14-day shortlist guarantee
+                🎯 Founding member advantage
               </p>
               <p style={{ fontSize: 13, color: '#166534', lineHeight: 1.6 }}>
-                Don't get shortlisted in 14 days? We extend your plan free.
-                Zero risk to you.
+                Join the first batch and lock in early pricing before it moves to standard rates.
               </p>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ── STATS STRIP ───────────────────────────────────────── */}
-      <section style={{ background: '#0f0f0f', padding: '64px 24px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto',
-          display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 1 }}>
-          {[
-            { n: '12,400+', l: 'Applications sent'        },
-            { n: '550+',    l: 'Students placed'           },
-            { n: '87%',     l: 'Get shortlisted ≤ 30 days' },
-            { n: '3–5 days',l: 'Avg. to first interview'   },
-          ].map(s => (
-            <div key={s.n} style={{ padding: '28px 24px', textAlign: 'center' }}>
-              <p style={{ fontFamily: "'Instrument Serif',Georgia,serif",
-                fontSize: 36, color: '#fff', marginBottom: 8 }}>{s.n}</p>
-              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>{s.l}</p>
-            </div>
-          ))}
         </div>
       </section>
 
@@ -329,7 +236,7 @@ export default function Landing() {
         <h2 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 40,
           fontWeight: 400, textAlign: 'center', letterSpacing: '-0.025em',
           color: '#0f0f0f', marginBottom: 16 }}>
-          4 minutes setup. Interviews for months.
+          4 minutes setup. Applications for months.
         </h2>
         <p style={{ fontSize: 16, color: '#9b9b9b', textAlign: 'center', marginBottom: 56, maxWidth: 500, margin: '0 auto 56px' }}>
           You set up once. We do the grind. You focus on being ready when they call.
@@ -345,7 +252,7 @@ export default function Landing() {
             },
             {
               step: '02', title: 'Pick a plan', time: '2 min',
-              desc: 'From ₹250/month. No hidden charges. Cancel any time instantly.',
+              desc: 'From ₹399/month. No hidden charges. Cancel any time instantly.',
               icon: '⚡',
             },
             {
@@ -384,103 +291,12 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ──────────────────────────────────────── */}
-      <section style={{ background: '#fafafa', borderTop: '1px solid #f0f0f0', padding: '96px 24px' }}>
-        <div style={{ maxWidth: 960, margin: '0 auto' }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#b5b5b5',
-            letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'center', marginBottom: 12 }}>
-            RESULTS
-          </p>
-          <h2 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 40,
-            fontWeight: 400, textAlign: 'center', letterSpacing: '-0.025em',
-            color: '#0f0f0f', marginBottom: 56 }}>
-            Real students. Real timelines.
-          </h2>
-
-          {/* Featured testimonial */}
-          <div style={{ background: '#0f0f0f', borderRadius: 20, padding: '36px 40px',
-            marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: -20, right: -20, fontSize: 120,
-              color: 'rgba(255,255,255,0.03)', fontFamily: 'Georgia,serif', lineHeight: 1 }}>"</div>
-            <div style={{ display: 'flex', gap: 2, marginBottom: 16 }}>
-              {[1,2,3,4,5].map(i => <STAR key={i} />)}
-            </div>
-            <p style={{ fontSize: 22, fontFamily: "'Instrument Serif',Georgia,serif",
-              color: '#fff', lineHeight: 1.55, marginBottom: 24, maxWidth: 700 }}>
-              "They applied to 340 jobs in my first month. I attended 7 interviews. Got 2 offers. Chose Zepto.
-              Literally the best ₹1,300 I ever spent — and I had an internship offer in week 3."
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#7c3aed',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 13, fontWeight: 700, color: '#fff' }}>SR</div>
-              <div>
-                <p style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>Sneha R.</p>
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>Product Manager · Zepto · Got offer in 19 days</p>
-              </div>
-            </div>
-          </div>
-
-          {/* 3-col grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 16 }}>
-            {[
-              { text: 'Week 1: 4 shortlists. Week 3: offer from a Series B startup. Insane value for ₹250.', name: 'Priya M.', role: 'SDE · Razorpay', time: 'Placed in 18 days', initials: 'PM', color: '#0d9488' },
-              { text: 'Applied manually for 4 months. Zero replies. Joined here. Got 3 interviews in 8 days. I wish I found this earlier.', name: 'Arjun K.', role: 'Engineer · Groww', time: 'Placed in 11 days', initials: 'AK', color: '#1d4ed8' },
-              { text: 'The team customises every application. It shows — recruiters actually read them. Got my PhonePe offer in 2 weeks.', name: 'Vikram P.', role: 'Backend · PhonePe', time: 'Placed in 14 days', initials: 'VP', color: '#dc2626' },
-            ].map(r => (
-              <div key={r.name} style={{ background: '#fff', border: '1px solid #f0f0f0',
-                borderRadius: 14, padding: '22px 20px' }}>
-                <div style={{ display: 'flex', gap: 2, marginBottom: 12 }}>
-                  {[1,2,3,4,5].map(i => <STAR key={i} />)}
-                </div>
-                <p style={{ fontSize: 14, color: '#3f3f3f', lineHeight: 1.65, marginBottom: 18 }}>"{r.text}"</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: r.color,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{r.initials}</div>
-                  <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#0f0f0f' }}>{r.name}</p>
-                    <p style={{ fontSize: 12, color: '#9b9b9b' }}>{r.role}</p>
-                    <p style={{ fontSize: 11, color: '#22c55e', fontWeight: 600 }}>{r.time}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* 2 more */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            {[
-              { text: 'Freshers: stop wasting time on portals. Pay ₹250. Let these guys handle it. Focus on DSA. It actually works.', name: 'Nidhi A.', role: 'SDE · Flipkart', time: 'Placed in 22 days', initials: 'NA', color: '#059669' },
-              { text: 'Got placed in 19 days. Best ₹250 I ever spent. Period. The dashboard showing every application gave me so much confidence.', name: 'Rohit S.', role: 'Full Stack · CRED', time: 'Placed in 19 days', initials: 'RS', color: '#7c3aed' },
-            ].map(r => (
-              <div key={r.name} style={{ background: '#fff', border: '1px solid #f0f0f0',
-                borderRadius: 14, padding: '22px 20px' }}>
-                <div style={{ display: 'flex', gap: 2, marginBottom: 12 }}>
-                  {[1,2,3,4,5].map(i => <STAR key={i} />)}
-                </div>
-                <p style={{ fontSize: 14, color: '#3f3f3f', lineHeight: 1.65, marginBottom: 18 }}>"{r.text}"</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: r.color,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{r.initials}</div>
-                  <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#0f0f0f' }}>{r.name}</p>
-                    <p style={{ fontSize: 12, color: '#9b9b9b' }}>{r.role}</p>
-                    <p style={{ fontSize: 11, color: '#22c55e', fontWeight: 600 }}>{r.time}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── PRICING ───────────────────────────────────────────── */}
-      <section style={{ maxWidth: 960, margin: '0 auto', padding: '96px 24px' }}>
+      <section style={{ background: '#fafafa', borderTop: '1px solid #f0f0f0', maxWidth: '100%', margin: 0, padding: '96px 24px' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
         <p style={{ fontSize: 11, fontWeight: 700, color: '#b5b5b5',
           letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'center', marginBottom: 12 }}>
-          PRICING
+          FOUNDING MEMBER PRICING
         </p>
         <h2 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 40,
           fontWeight: 400, textAlign: 'center', letterSpacing: '-0.025em',
@@ -488,15 +304,15 @@ export default function Landing() {
           Less than one Swiggy order a day.
         </h2>
         <p style={{ fontSize: 16, color: '#9b9b9b', textAlign: 'center', marginBottom: 56 }}>
-          ₹250/month = ₹8.3/day to get 10–15 applications sent while you sleep.
+          ₹399/month = ₹13/day to get 10–15 applications sent while you sleep.
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
           {[
-            { label: '1 Month',  price: '₹250',   sub: '₹250/mo',  highlight: false, popular: false, saving: null,       color: '#0f0f0f' },
-            { label: '3 Months', price: '₹700',   sub: '₹233/mo',  highlight: false, popular: false, saving: 'Save ₹50', color: '#1d4ed8' },
-            { label: '6 Months', price: '₹1,300', sub: '₹216/mo',  highlight: true,  popular: true,  saving: 'Save ₹200',color: '#7c3aed' },
-            { label: '12 Months',price: '₹2,500', sub: '₹208/mo',  highlight: false, popular: false, saving: 'Save ₹500',color: '#059669' },
+            { label: '1 Month',  price: '₹399',   sub: '₹399/mo',  highlight: false, popular: false, saving: null,        color: '#0f0f0f' },
+            { label: '3 Months', price: '₹1,099', sub: '₹366/mo',  highlight: false, popular: false, saving: '~8% off',  color: '#1d4ed8' },
+            { label: '6 Months', price: '₹1,999', sub: '₹333/mo',  highlight: true,  popular: true,  saving: '~16% off', color: '#7c3aed' },
+            { label: '12 Months',price: '₹3,599', sub: '₹300/mo',  highlight: false, popular: false, saving: '~25% off', color: '#059669' },
           ].map(p => (
             <div key={p.label} style={{
               background: p.highlight ? p.color : '#fff',
@@ -538,21 +354,14 @@ export default function Landing() {
           ))}
         </div>
 
-        <div style={{ marginTop: 36, padding: '20px 24px', background: '#f0fdf4',
-          border: '1px solid #bbf7d0', borderRadius: 12, textAlign: 'center' }}>
-          <p style={{ fontSize: 14, color: '#15803d', fontWeight: 500 }}>
-            🛡️ <strong>14-day shortlist guarantee</strong> on all plans.
-            Don't get shortlisted? We extend your plan free of charge.
-          </p>
-        </div>
-
-        <p style={{ textAlign: 'center', fontSize: 13, color: '#b5b5b5', marginTop: 20 }}>
+        <p style={{ textAlign: 'center', fontSize: 13, color: '#b5b5b5', marginTop: 28 }}>
           🔒 Secured by Razorpay · UPI · Cards · Net banking · No auto-renewal
         </p>
+        </div>
       </section>
 
       {/* ── FAQ ───────────────────────────────────────────────── */}
-      <section style={{ background: '#fafafa', borderTop: '1px solid #f0f0f0', padding: '96px 24px' }}>
+      <section style={{ background: '#fff', padding: '96px 24px' }}>
         <div style={{ maxWidth: 680, margin: '0 auto' }}>
           <p style={{ fontSize: 11, fontWeight: 700, color: '#b5b5b5',
             letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'center', marginBottom: 12 }}>
@@ -595,7 +404,7 @@ export default function Landing() {
               padding: '16px 40px', borderRadius: 12, fontSize: 15, fontWeight: 700,
               cursor: 'pointer', fontFamily: "'Inter',sans-serif",
             }}>
-              I'm ready — get me shortlisted →
+              I'm ready — count me in →
             </button>
           </div>
         </div>
@@ -615,7 +424,7 @@ export default function Landing() {
           gets the role you wanted.
         </h2>
         <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.55)', marginBottom: 48, maxWidth: 480, margin: '0 auto 48px' }}>
-          ₹250. 4 minutes. 14-day guarantee. What are you waiting for?
+          ₹399. 4 minutes. Founding member pricing. What are you waiting for?
         </p>
         <button onClick={goSignUp} style={{
           background: '#fff', color: '#0f0f0f', border: 'none',
@@ -623,19 +432,11 @@ export default function Landing() {
           cursor: 'pointer', fontFamily: "'Inter',sans-serif", letterSpacing: '-0.02em',
           boxShadow: '0 8px 40px rgba(255,255,255,0.15)',
         }}>
-          Get my first shortlist →
+          Join as a founding member →
         </button>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 18 }}>
-          Setup in 4 min · ₹250/month · No auto-renewal · 14-day guarantee
+          Setup in 4 min · ₹399/month · No auto-renewal · Cancel anytime
         </p>
-
-        {/* mini trust strip */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: 28, marginTop: 52, flexWrap: 'wrap' }}>
-          {['550+ students placed','12,400+ applications sent','4.9/5 avg rating','87% shortlisted ≤ 30 days'].map(t => (
-            <span key={t} style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>✓ {t}</span>
-          ))}
-        </div>
       </section>
 
       {/* ── FOOTER ────────────────────────────────────────────── */}
@@ -671,7 +472,7 @@ export default function Landing() {
           <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e',
             display: 'block', boxShadow: '0 0 0 3px rgba(34,197,94,0.25)' }} />
           <span style={{ fontSize: 14, color: '#fff', fontWeight: 500 }}>
-            <strong>550+ students placed.</strong> Spots filling fast.
+            <strong>Founding member pricing.</strong> Limited spots.
           </span>
         </div>
         <button onClick={goSignUp} style={{
@@ -679,12 +480,11 @@ export default function Landing() {
           padding: '10px 28px', borderRadius: 8, fontSize: 14, fontWeight: 700,
           cursor: 'pointer', fontFamily: "'Inter',sans-serif", whiteSpace: 'nowrap',
         }}>
-          Start for ₹250 →
+          Start for ₹399 →
         </button>
       </div>
 
       <style>{`
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
         @media (max-width: 768px) {
           div[style*="repeat(4,1fr)"] { grid-template-columns: 1fr 1fr !important; }
           div[style*="repeat(3,1fr)"] { grid-template-columns: 1fr !important; }

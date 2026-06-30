@@ -130,8 +130,8 @@ export interface AppStats {
 
 // Subscription plan metadata
 export const PLANS: Record<SubscriptionPlan, { label: string; amount: number; months: string }> = {
-  monthly:    { label: '₹250 / month',   amount: 250,  months: '1 month'  },
-  quarterly:  { label: '₹700 / 3 months', amount: 700,  months: '3 months' },
-  halfyearly: { label: '₹1,300 / 6 months', amount: 1300, months: '6 months' },
-  yearly:     { label: '₹2,500 / year',  amount: 2500, months: '12 months' },
+  monthly:    { label: '₹399 / month',   amount: 399,  months: '1 month'  },
+  quarterly:  { label: '₹1,099 / 3 months', amount: 1099, months: '3 months' },
+  halfyearly: { label: '₹1,999 / 6 months', amount: 1999, months: '6 months' },
+  yearly:     { label: '₹3,599 / year',  amount: 3599, months: '12 months' },
 }

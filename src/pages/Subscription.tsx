@@ -33,23 +33,23 @@ const PLANS: {
   features: string[]
 }[] = [
   {
-    id: 'monthly', label: '1 Month', price: 250, duration: '30 days',
-    perMonth: '₹250/mo', saving: null, color: '#0f0f0f',
+    id: 'monthly', label: '1 Month', price: 399, duration: '30 days',
+    perMonth: '₹399/mo', saving: null, color: '#0f0f0f',
     features: ['Admin applies on your behalf', 'Skill-based job matching', 'Application tracker', 'Email updates'],
   },
   {
-    id: 'quarterly', label: '3 Months', price: 700, duration: '90 days',
-    perMonth: '₹233/mo', saving: 'Save ₹50', color: '#1d4ed8',
+    id: 'quarterly', label: '3 Months', price: 1099, duration: '90 days',
+    perMonth: '₹366/mo', saving: '~8% off', color: '#1d4ed8',
     features: ['Everything in 1 Month', 'Priority job matching', '3× more applications', 'WhatsApp updates'],
   },
   {
-    id: 'halfyearly', label: '6 Months', price: 1300, duration: '180 days',
-    perMonth: '₹216/mo', saving: 'Save ₹200', color: '#7c3aed',
+    id: 'halfyearly', label: '6 Months', price: 1999, duration: '180 days',
+    perMonth: '₹333/mo', saving: '~16% off', color: '#7c3aed',
     features: ['Everything in 3 Months', 'Dedicated account manager', 'Resume optimisation tips', 'Interview alerts'],
   },
   {
-    id: 'yearly', label: '12 Months', price: 2500, duration: '365 days',
-    perMonth: '₹208/mo', saving: 'Save ₹500', color: '#059669',
+    id: 'yearly', label: '12 Months', price: 3599, duration: '365 days',
+    perMonth: '₹300/mo', saving: '~25% off', color: '#059669',
     features: ['Everything in 6 Months', 'Unlimited applications', 'Resume rewrite (1×)', 'Career strategy call'],
   },
 ]

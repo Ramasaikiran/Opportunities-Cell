@@ -14,10 +14,10 @@ const Spinner = () => (
 export default function ProtectedRoute({ children, requireSub = false }: {
   children: ReactNode; requireSub?: boolean
 }) {
-  const { session, loading, subscription, profile } = useAuth()
+  const { session, loading, profileLoaded, subscription, profile } = useAuth()
   const location = useLocation()
 
-  if (loading) return <Spinner />
+  if (loading || (session && !profileLoaded)) return <Spinner />
   if (!session) return <Navigate to="/sign-in" replace />
 
   // ── ADMIN: always go to admin panel, never user flows ──────────

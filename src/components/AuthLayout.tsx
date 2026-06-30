@@ -2,14 +2,9 @@ import type { ReactNode } from 'react'
 import { isMisconfigured } from '../lib/supabase'
 
 const STATS = [
-  { n: '12,400+', label: 'Applications sent' },
-  { n: '550+',   label: 'Active members'    },
-  { n: '3 days', label: 'Avg. to first reply' },
-]
-
-const REVIEWS = [
-  { text: 'Got 4 shortlists in week one. The team applies while I sleep.', name: 'Priya M.', role: 'SDE · Razorpay', initials: 'PM' },
-  { text: 'Saved 3 hours daily. Worth every rupee of the ₹250 plan.', name: 'Arjun K.', role: 'Engineer · Groww', initials: 'AK' },
+  { n: '10–15', label: 'Applications / day' },
+  { n: '4 min',  label: 'Setup time'         },
+  { n: '₹399',   label: 'Starting / month'   },
 ]
 
 const AVATARS = ['PK','AR','SM','VR','NK']
@@ -44,7 +39,7 @@ export default function AuthLayout({ eyebrow, title, subtitle, children, footer 
             borderRadius: 99, padding: '6px 14px', marginBottom: 32 }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', display: 'block', flexShrink: 0 }} />
             <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>
-              43 members joined this week
+              Now open — founding members
             </span>
           </div>
 
@@ -83,41 +78,7 @@ export default function AuthLayout({ eyebrow, title, subtitle, children, footer 
                   fontSize: 10, fontWeight: 700, color: '#fff',
                 }}>{a[0]}</div>
               ))}
-              <div style={{ width: 30, height: 30, borderRadius: '50%',
-                background: 'rgba(255,255,255,0.1)', border: '2px solid #0f0f0f',
-                marginLeft: -8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.6)',
-              }}>+550</div>
             </div>
-            <div>
-              <div style={{ display: 'flex', gap: 2, marginBottom: 3 }}>
-                {[1,2,3,4,5].map(i => <svg key={i} width="11" height="11" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>)}
-              </div>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>4.9 / 5 from 550+ placements</p>
-            </div>
-          </div>
-
-          {/* Reviews */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {REVIEWS.map(r => (
-              <div key={r.name} style={{
-                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: 12, padding: '16px 18px', display: 'flex', gap: 14,
-              }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                  background: 'rgba(255,255,255,0.15)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 700, color: '#fff' }}>{r.initials}</div>
-                <div>
-                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, marginBottom: 8 }}>
-                    "{r.text}"
-                  </p>
-                  <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>
-                    {r.name} <span style={{ fontWeight: 400 }}>· {r.role}</span>
-                  </p>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
 

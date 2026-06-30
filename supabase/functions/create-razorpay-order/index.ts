@@ -2,10 +2,10 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const PLANS: Record<string, { amount: number; days: number }> = {
-  monthly:    { amount: 25000,  days: 30  },
-  quarterly:  { amount: 70000,  days: 90  },
-  halfyearly: { amount: 130000, days: 180 },
-  yearly:     { amount: 250000, days: 365 },
+  monthly:    { amount: 39900,  days: 30  },
+  quarterly:  { amount: 109900, days: 90  },
+  halfyearly: { amount: 199900, days: 180 },
+  yearly:     { amount: 359900, days: 365 },
 }
 
 const cors = {

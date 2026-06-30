@@ -10,7 +10,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 function TrustStrip() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 16 }}>
-      {['Plans from ₹250/mo', 'Cancel anytime', 'Secure payment'].map((t, i) => (
+      {['Plans from ₹399/mo', 'Cancel anytime', 'Secure payment'].map((t, i) => (
         <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#b5b5b5' }}>
           {i > 0 && <span style={{ color: '#e5e5e5' }}>·</span>}
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -93,7 +93,7 @@ export default function SignUp() {
     <AuthLayout
       eyebrow="2 MINUTE SETUP"
       title="Start getting interviews"
-      subtitle="Join 550+ students and professionals who stopped applying manually."
+      subtitle="Be among our first founding members. Stop applying manually."
       footer={
         <>
           Already have an account?{' '}
