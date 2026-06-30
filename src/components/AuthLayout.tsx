@@ -166,14 +166,30 @@ export default function AuthLayout({ eyebrow, title, subtitle, children, footer 
           main { padding-top: 80px !important; justify-content: flex-start !important; }
         }
         .oc-input {
-          width: 100%; height: 48px; padding: 0 14px;
-          font-family: 'Inter',-apple-system,sans-serif; font-size: 15px; color: #0f0f0f;
+          width: 100%; height: 54px; padding: 0 16px;
+          font-family: 'Inter',-apple-system,sans-serif; font-size: 16px; color: #0f0f0f;
           background: #fff; border: 1.5px solid #e5e5e5; border-radius: 10px;
           outline: none; box-sizing: border-box; transition: border-color 0.15s, box-shadow 0.15s;
         }
         .oc-input:focus { border-color: #0f0f0f; box-shadow: 0 0 0 3px rgba(15,15,15,0.08); }
         .oc-input.error { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.08); }
-        .oc-label { display: block; font-size: 13px; font-weight: 500; color: #6b6b6b; margin-bottom: 7px; }
+        .oc-input::placeholder { color: #c5c5c5; }
+        .oc-label { display: block; font-size: 13px; font-weight: 600; color: #4b4b4b; margin-bottom: 8px; }
+        .oc-btn-primary {
+          width: 100%; height: 54px; display: flex; align-items: center; justify-content: center;
+          font-family: 'Inter',sans-serif; font-size: 15.5px; font-weight: 600;
+          color: #fff; background: #0f0f0f; border: none; border-radius: 12px;
+          cursor: pointer; letter-spacing: -0.01em; transition: opacity 0.15s, transform 0.1s;
+        }
+        .oc-btn-primary:active { transform: scale(0.98); }
+        .oc-btn-primary:disabled { cursor: not-allowed; opacity: 0.5; }
+        .oc-eye-btn {
+          position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+          background: none; border: none; cursor: pointer; color: #9b9b9b;
+          width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+          border-radius: 8px;
+        }
+        .oc-eye-btn:active { background: #f2f2f2; }
         .oc-field-error { margin-top: 5px; font-size: 12px; color: #ef4444; }
         .oc-error { padding: 12px 14px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; font-size: 13px; color: #dc2626; margin-bottom: 16px; line-height: 1.5; }
         .oc-divider { display: flex; align-items: center; gap: 12; color: #c5c5c5; font-size: 12px; font-weight: 500; }

@@ -23,13 +23,10 @@ function TrustStrip() {
 
 function ShowHideToggle({ show, onToggle }: { show: boolean; onToggle: () => void }) {
   return (
-    <button type="button" onClick={onToggle} style={{
-      position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
-      background: 'none', border: 'none', cursor: 'pointer', color: '#b5b5b5', padding: 4,
-    }}>
+    <button type="button" onClick={onToggle} className="oc-eye-btn" aria-label="Toggle password visibility">
       {show
-        ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"/></svg>
-        : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22"/></svg>
+        : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
       }
     </button>
   )
@@ -107,14 +104,9 @@ export default function SignUp() {
       }
     >
       {/* Google — Primary CTA */}
-      <button type="button" onClick={handleGoogle} disabled={gLoading} style={{
-        width: '100%', height: 52,
+      <button type="button" onClick={handleGoogle} disabled={gLoading} className="oc-btn-primary" style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-        fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 600,
-        color: '#ffffff', background: '#0f0f0f',
-        border: 'none', borderRadius: 12, cursor: 'pointer',
-        transition: 'opacity 0.15s, transform 0.15s',
-        opacity: gLoading ? 0.6 : 1, letterSpacing: '-0.01em',
+        opacity: gLoading ? 0.6 : 1,
       }}>
         <GoogleIcon />
         {gLoading ? 'Redirecting…' : 'Continue with Google'}
@@ -122,13 +114,13 @@ export default function SignUp() {
 
       <TrustStrip />
 
-      <div className="oc-divider" style={{ margin: '22px 0' }}><span>or use email</span></div>
+      <div className="oc-divider" style={{ margin: '24px 0' }}><span>or use email</span></div>
 
       {formError && <div className="oc-error">⚠ {formError}</div>}
 
       {/* Step 1 — full name + email */}
       {step === 'email' && (
-        <form onSubmit={handleEmailStep} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form onSubmit={handleEmailStep} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div>
             <label className="oc-label">Full name</label>
             <input className={`oc-input${errors.fullName ? ' error' : ''}`}
@@ -140,19 +132,12 @@ export default function SignUp() {
           <div>
             <label className="oc-label">Email</label>
             <input className={`oc-input${errors.email ? ' error' : ''}`}
-              type="email" value={email}
+              type="email" inputMode="email" value={email}
               onChange={(e) => { setEmail(e.target.value); setErrors(p => ({...p, email: ''})) }}
               placeholder="you@example.com" autoComplete="email" />
             {errors.email && <p className="oc-field-error">{errors.email}</p>}
           </div>
-          <button type="submit" style={{
-            width: '100%', height: 50,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 600,
-            color: '#fff', background: '#0f0f0f', border: 'none',
-            borderRadius: 12, cursor: 'pointer', letterSpacing: '-0.01em',
-            transition: 'opacity 0.15s',
-          }}>
+          <button type="submit" className="oc-btn-primary" style={{ marginTop: 2 }}>
             Continue →
           </button>
         </form>
@@ -160,9 +145,9 @@ export default function SignUp() {
 
       {/* Step 2 — password only (name+email confirmed above) */}
       {step === 'details' && (
-        <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* Confirmed identity */}
-          <div style={{ background: '#f7f7f7', borderRadius: 10, padding: '12px 14px',
+          <div style={{ background: '#f7f7f7', borderRadius: 10, padding: '14px 16px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
@@ -172,8 +157,9 @@ export default function SignUp() {
               <p style={{ fontSize: 12, color: '#9b9b9b', paddingLeft: 21 }}>{email}</p>
             </div>
             <button type="button" onClick={() => { setStep('email'); setErrors({}) }}
-              style={{ fontSize: 12, color: '#9b9b9b', background: 'none', border: 'none',
-                cursor: 'pointer', textDecoration: 'underline', fontFamily: "'Inter',sans-serif" }}>
+              style={{ fontSize: 12, color: '#6b6b6b', background: 'none', border: 'none',
+                cursor: 'pointer', textDecoration: 'underline', fontFamily: "'Inter',sans-serif",
+                padding: 6 }}>
               Edit
             </button>
           </div>
@@ -186,7 +172,7 @@ export default function SignUp() {
                 type={showPwd ? 'text' : 'password'} value={password}
                 onChange={(e) => { setPassword(e.target.value); setErrors(p => ({...p, password: ''})) }}
                 placeholder="Create a strong password" autoComplete="new-password"
-                style={{ paddingRight: 44 }} />
+                style={{ paddingRight: 48 }} />
               <ShowHideToggle show={showPwd} onToggle={() => setShowPwd(p => !p)} />
             </div>
             <PasswordStrength password={password} />
@@ -201,20 +187,13 @@ export default function SignUp() {
                 type={showConfirmPwd ? 'text' : 'password'} value={confirmPassword}
                 onChange={(e) => { setConfirmPassword(e.target.value); setErrors(p => ({...p, confirmPassword: ''})) }}
                 placeholder="Re-enter your password" autoComplete="new-password"
-                style={{ paddingRight: 44 }} />
+                style={{ paddingRight: 48 }} />
               <ShowHideToggle show={showConfirmPwd} onToggle={() => setShowConfirmPwd(p => !p)} />
             </div>
             {errors.confirmPassword && <p className="oc-field-error">{errors.confirmPassword}</p>}
           </div>
 
-          <button type="submit" disabled={loading} style={{
-            width: '100%', height: 50, marginTop: 4,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 600,
-            color: '#fff', background: '#0f0f0f', border: 'none',
-            borderRadius: 12, cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.5 : 1, letterSpacing: '-0.01em', transition: 'opacity 0.15s',
-          }}>
+          <button type="submit" disabled={loading} className="oc-btn-primary" style={{ marginTop: 4 }}>
             {loading ? 'Creating your account…' : 'Create account →'}
           </button>
         </form>
