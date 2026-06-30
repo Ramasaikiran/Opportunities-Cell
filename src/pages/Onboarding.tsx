@@ -139,7 +139,7 @@ function clearDraft() {
 }
 
 export default function Onboarding() {
-  const { user, profile, refreshProfile } = useAuth()
+  const { user, profile, refreshProfile, signOut } = useAuth()
   const navigate = useNavigate()
   const draft = useRef(loadDraft()).current
 
@@ -399,9 +399,15 @@ export default function Onboarding() {
           </div>
           <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em' }}>Opportunities Cell</span>
         </div>
-        <div style={{ marginLeft: 'auto', fontSize: 13, color: '#b5b5b5' }}>
-          Need help? <a href="mailto:hello@opportunitiescell.com"
-            style={{ color: '#6b6b6b', textDecoration: 'none', fontWeight: 500 }}>Contact us</a>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 18 }}>
+          <span style={{ fontSize: 13, color: '#b5b5b5' }}>
+            Need help? <a href="mailto:hello@opportunitiescell.com"
+              style={{ color: '#6b6b6b', textDecoration: 'none', fontWeight: 500 }}>Contact us</a>
+          </span>
+          <button onClick={() => signOut()} style={{ background: 'none', border: 'none',
+            fontSize: 13, color: '#666', cursor: 'pointer', fontWeight: 500 }}>
+            Logout
+          </button>
         </div>
       </div>
 

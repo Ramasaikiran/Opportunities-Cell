@@ -59,7 +59,7 @@ function fmt(date: string) {
 }
 
 export default function Subscription() {
-  const { user, profile, subscription, refreshProfile } = useAuth()
+  const { user, profile, subscription, refreshProfile, signOut } = useAuth()
   const navigate   = useNavigate()
   const [params]   = useSearchParams()
   const isExpired  = params.get('reason') === 'expired'
@@ -214,7 +214,11 @@ export default function Subscription() {
           <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em' }}>Opportunities Cell</span>
         </div>
         {/* Step indicator */}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 14 }}>
+          <button onClick={() => signOut()} style={{ background: 'none', border: 'none',
+            fontSize: 13, color: '#666', cursor: 'pointer', fontWeight: 500 }}>
+            Logout
+          </button>
           {['Details','Payment'].map((s, i) => (
             <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               {i > 0 && <div style={{ width: 24, height: 1, background: '#e5e5e5' }} />}

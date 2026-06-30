@@ -43,7 +43,9 @@ export default function SignUp() {
   const [email, setEmail]         = useState('')
   const [fullName, setFullName]   = useState('')
   const [password, setPassword]   = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [showPwd, setShowPwd]     = useState(false)
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false)
   const [errors, setErrors]       = useState<Record<string, string>>({})
   const [loading, setLoading]     = useState(false)
   const [gLoading, setGLoading]   = useState(false)
@@ -58,6 +60,7 @@ export default function SignUp() {
     const next: Record<string, string> = {}
     if (!fullName.trim() || fullName.trim().length < 2) next.fullName = 'Enter your full name.'
     if (!passwordRequirementsMet(password)) next.password = '8+ chars, uppercase, number.'
+    if (confirmPassword !== password) next.confirmPassword = 'Passwords do not match.'
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -188,6 +191,20 @@ export default function SignUp() {
             </div>
             <PasswordStrength password={password} />
             {errors.password && <p className="oc-field-error">{errors.password}</p>}
+          </div>
+
+          <div>
+            <label className="oc-label">Confirm password</label>
+            <div style={{ position: 'relative' }}>
+              <input id="confirm-password-input"
+                className={`oc-input${errors.confirmPassword ? ' error' : ''}`}
+                type={showConfirmPwd ? 'text' : 'password'} value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); setErrors(p => ({...p, confirmPassword: ''})) }}
+                placeholder="Re-enter your password" autoComplete="new-password"
+                style={{ paddingRight: 44 }} />
+              <ShowHideToggle show={showConfirmPwd} onToggle={() => setShowConfirmPwd(p => !p)} />
+            </div>
+            {errors.confirmPassword && <p className="oc-field-error">{errors.confirmPassword}</p>}
           </div>
 
           <button type="submit" disabled={loading} style={{
