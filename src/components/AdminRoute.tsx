@@ -11,12 +11,19 @@ const Spinner = () => (
 )
 
 export default function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { profile, loading, session } = useAuth()
+  const { loading, profileLoaded, session, profile } = useAuth()
 
-  // Wait while auth bootstraps OR session exists but profile not yet fetched
-  if (loading || (session && !profile)) return <Spinner />
+  // Wait for auth bootstrap AND profile fetch to complete
+  if (loading || !profileLoaded) return <Spinner />
 
+  // No session at all → sign in
   if (!session) return <Navigate to="/sign-in" replace />
-  if (!profile?.is_admin) return <Navigate to="/dashboard" replace />
+
+  // Session exists but profile is null (DB issue / new user) → sign in
+  if (!profile) return <Navigate to="/sign-in" replace />
+
+  // Authenticated but not admin → user dashboard
+  if (!profile.is_admin) return <Navigate to="/dashboard" replace />
+
   return <>{children}</>
 }

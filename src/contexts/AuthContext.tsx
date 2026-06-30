@@ -5,19 +5,20 @@ import type { Session, User } from '@supabase/supabase-js'
 import { supabase, type Profile, type Subscription } from '../lib/supabase'
 
 interface AuthContextValue {
-  session:      Session | null
-  user:         User | null
-  profile:      Profile | null
-  subscription: Subscription | null
-  loading:      boolean
-  isAdmin:      boolean
+  session:       Session | null
+  user:          User | null
+  profile:       Profile | null
+  subscription:  Subscription | null
+  loading:       boolean
+  profileLoaded: boolean          // ← true once fetchProfile has completed at least once
+  isAdmin:       boolean
   signUp:               (fullName: string, email: string, password: string) => Promise<{ error: string | null }>
   signIn:               (email: string, password: string)                   => Promise<{ error: string | null }>
   signInWithGoogle:     ()                                                  => Promise<{ error: string | null }>
   resendVerification:   (email: string)                                     => Promise<{ error: string | null }>
   requestPasswordReset: (email: string)                                     => Promise<{ error: string | null }>
   updatePassword:       (password: string)                                  => Promise<{ error: string | null }>
-  signOut:      () => Promise<void>
+  signOut:        () => Promise<void>
   refreshProfile: () => Promise<void>
 }
 
@@ -25,16 +26,16 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session,      setSession]      = useState<Session | null>(null)
-  const [profile,      setProfile]      = useState<Profile | null>(null)
-  const [subscription, setSubscription] = useState<Subscription | null>(null)
-  const [loading,      setLoading]      = useState(true)
+  const [session,       setSession]       = useState<Session | null>(null)
+  const [profile,       setProfile]       = useState<Profile | null>(null)
+  const [subscription,  setSubscription]  = useState<Subscription | null>(null)
+  const [loading,       setLoading]       = useState(true)
+  const [profileLoaded, setProfileLoaded] = useState(false)   // ← new
 
   async function fetchProfile(userId: string) {
     const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
     setProfile(data ?? null)
 
-    // Fetch most recent subscription (active or expired)
     const { data: sub } = await supabase
       .from('subscriptions')
       .select('*')
@@ -45,11 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (sub) {
       const isExpired = sub.status === 'active' && sub.ends_at && new Date(sub.ends_at) < new Date()
-
       if (isExpired) {
-        // Mark subscription as expired
         await supabase.from('subscriptions').update({ status: 'expired' }).eq('id', sub.id)
-        // Suspend account
         await supabase.from('profiles').update({ account_status: 'suspended' }).eq('id', userId)
         setSubscription(null)
         setProfile(prev => prev ? { ...prev, account_status: 'suspended' } : null)
@@ -61,23 +59,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       setSubscription(null)
     }
+
+    setProfileLoaded(true)   // ← always mark done, even on error/null
   }
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session)
-      if (session?.user) await fetchProfile(session.user.id)
+      if (session?.user) {
+        await fetchProfile(session.user.id)
+      } else {
+        setProfileLoaded(true)   // no user → nothing to load
+      }
       setLoading(false)
     })
 
     const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
       if (session?.user) {
+        setProfileLoaded(false)              // ← reset so routes wait for fresh fetch
         fetchProfile(session.user.id)
         if (event === 'SIGNED_IN') supabase.rpc('touch_last_login')
       } else {
         setProfile(null)
         setSubscription(null)
+        setProfileLoaded(true)               // signed out → nothing to load
       }
     })
     return () => sub.unsubscribe()
@@ -132,8 +138,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{
-      session, user: session?.user ?? null, profile, subscription, loading,
-      isAdmin: profile?.is_admin ?? false,
+      session, user: session?.user ?? null, profile, subscription,
+      loading, profileLoaded, isAdmin: profile?.is_admin ?? false,
       signUp, signIn, signInWithGoogle, resendVerification,
       requestPasswordReset, updatePassword, signOut, refreshProfile,
     }}>
