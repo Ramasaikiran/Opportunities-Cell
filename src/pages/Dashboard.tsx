@@ -57,7 +57,8 @@ export default function Dashboard() {
 
   async function handleResumeUpload(file: File) {
     if (!profile) return
-    if (file.type !== 'application/pdf') { setResumeError('PDF only.'); return }
+    const looksLikePdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+    if (!looksLikePdf) { setResumeError('PDF only.'); return }
     if (file.size > 5 * 1024 * 1024)      { setResumeError('Max 5MB.'); return }
     setResumeUploading(true); setResumeError(null)
     try {
@@ -253,7 +254,7 @@ export default function Dashboard() {
               fontSize: 13, fontWeight: 600, cursor: resumeUploading ? 'not-allowed' : 'pointer',
               fontFamily: "'Inter',sans-serif" }}>
               {resumeUploading ? 'Uploading…' : resumeUrl ? 'Replace' : 'Upload'}
-              <input type="file" accept=".pdf" style={{ display: 'none' }} disabled={resumeUploading}
+              <input type="file" accept="application/pdf,.pdf" style={{ display: 'none' }} disabled={resumeUploading}
                 onChange={e => { const f = e.target.files?.[0]; if (f) handleResumeUpload(f); e.target.value = '' }} />
             </label>
           </div>

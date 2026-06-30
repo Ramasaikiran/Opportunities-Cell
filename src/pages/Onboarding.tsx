@@ -218,7 +218,8 @@ export default function Onboarding() {
 
   async function handleResumeSelect(file: File | null) {
     if (!file || !user) return
-    if (file.type !== 'application/pdf') { setResumeUploadErr('PDF only.'); return }
+    const looksLikePdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+    if (!looksLikePdf) { setResumeUploadErr('PDF only.'); return }
     if (file.size > 5 * 1024 * 1024)      { setResumeUploadErr('Max 5MB.'); return }
     setResumeUploadErr(null); setResumeUploading(true)
     try {
@@ -807,7 +808,7 @@ export default function Onboarding() {
                   </div>
                 </>
               )}
-              <input type="file" accept=".pdf" style={{ display: 'none' }} disabled={resumeUploading}
+              <input type="file" accept="application/pdf,.pdf" style={{ display: 'none' }} disabled={resumeUploading}
                 onChange={e => handleResumeSelect(e.target.files?.[0] ?? null)} />
             </label>
             {resumeUploadErr && (
