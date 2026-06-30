@@ -126,7 +126,7 @@ export default function SignUp() {
             <input className={`oc-input${errors.fullName ? ' error' : ''}`}
               type="text" value={fullName}
               onChange={(e) => { setFullName(e.target.value); setErrors(p => ({...p, fullName: ''})) }}
-              placeholder="Kiran Medam" autoComplete="name" autoFocus />
+              placeholder="Rahul Sharma" autoComplete="name" autoFocus />
             {errors.fullName && <p className="oc-field-error">{errors.fullName}</p>}
           </div>
           <div>

@@ -501,31 +501,31 @@ export default function Onboarding() {
             </Field>
 
             <div style={grid2}>
-              <Field label="First name *" error={errors.firstName}>
+              <Field label="First name" error={errors.firstName}>
                 <input style={inp(errors.firstName)} value={firstName}
                   onChange={e => { setFirstName(e.target.value); setErrors(p => ({...p, firstName:''})) }}
-                  placeholder="Kiran" />
+                  placeholder="Rahul" />
               </Field>
-              <Field label="Last name *" error={errors.lastName}>
+              <Field label="Last name" error={errors.lastName}>
                 <input style={inp(errors.lastName)} value={lastName}
                   onChange={e => { setLastName(e.target.value); setErrors(p => ({...p, lastName:''})) }}
-                  placeholder="Medam" />
+                  placeholder="Sharma" />
               </Field>
             </div>
 
-            <Field label="Mobile number *" error={errors.mobile}>
+            <Field label="Mobile number" error={errors.mobile}>
               <input style={inp(errors.mobile)} type="tel" value={mobile}
                 onChange={e => { setMobile(e.target.value); setErrors(p => ({...p, mobile:''})) }}
                 placeholder="+91 98765 43210" />
             </Field>
 
             <div style={grid2}>
-              <Field label="LinkedIn profile *" error={errors.linkedin}>
+              <Field label="LinkedIn profile" error={errors.linkedin}>
                 <input style={inp(errors.linkedin)} value={linkedin}
                   onChange={e => { setLinkedin(e.target.value); setErrors(p => ({ ...p, linkedin: '' })) }}
                   placeholder="linkedin.com/in/yourname" />
               </Field>
-              <Field label="GitHub profile *" error={errors.github}>
+              <Field label="GitHub profile" error={errors.github}>
                 <input style={inp(errors.github)} value={github}
                   onChange={e => { setGithub(e.target.value); setErrors(p => ({ ...p, github: '' })) }}
                   placeholder="github.com/yourname" />
@@ -545,7 +545,7 @@ export default function Onboarding() {
               </Field>
             </div>
 
-            <Field label="Roles interested in *" error={errors.roleInts}>
+            <Field label="Roles interested in" error={errors.roleInts}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
                 {ROLES.map(r => (
                   <button key={r} type="button" onClick={() => { toggleRole(r); setErrors(p => ({...p, roleInts:''})) }}
@@ -586,14 +586,14 @@ export default function Onboarding() {
                 <p style={sectionLabel}>ACADEMIC DETAILS</p>
                 <h2 style={serif}>Your education</h2>
 
-                <Field label="College / University *" error={errors.college}>
+                <Field label="College / University" error={errors.college}>
                   <input style={inp(errors.college)} value={college}
                     onChange={e => { setCollege(e.target.value); setErrors(p=>({...p,college:''})) }}
-                    placeholder="ACE Engineering College, Hyderabad" />
+                    placeholder="e.g. IIT Delhi, VIT Vellore" />
                 </Field>
 
                 <div style={grid2}>
-                  <Field label="Degree *" error={errors.degree}>
+                  <Field label="Degree" error={errors.degree}>
                     <select value={degree} onChange={e => {
                       const d = e.target.value
                       setDegree(d)
@@ -619,7 +619,7 @@ export default function Onboarding() {
                 </div>
 
                 <div style={grid2}>
-                  <Field label="Current year *" error={errors.currentYear}>
+                  <Field label="Current year" error={errors.currentYear}>
                     <select value={currentYear} onChange={e => {
                       const y = e.target.value
                       setCurrentYear(y)
@@ -634,7 +634,7 @@ export default function Onboarding() {
                       {YEARS.map(y => <option key={y}>{y}</option>)}
                     </select>
                   </Field>
-                  <Field label={currentYear === 'Graduated' ? 'Graduation year *' : 'Expected graduation year'}>
+                  <Field label={currentYear === 'Graduated' ? 'Graduation year' : 'Expected graduation year'}>
                     <div style={{ position: 'relative' }}>
                       <input style={{
                         ...inp(),
@@ -661,10 +661,10 @@ export default function Onboarding() {
 
                 <Field label="CGPA">
                   <input style={inp()} type="number" step="0.01" min="0" max="10"
-                    value={cgpa} onChange={e => setCgpa(e.target.value)} placeholder="8.45" />
+                    value={cgpa} onChange={e => setCgpa(e.target.value)} placeholder="e.g. 8.2" />
                 </Field>
 
-                <Field label="Any internship done? *" error={errors.internDone}>
+                <Field label="Any internship done?" error={errors.internDone}>
                   <div style={{ display: 'flex', gap: 10 }}>
                     {(['Yes','No'] as const).map(opt => (
                       <button key={opt} type="button"
@@ -701,14 +701,14 @@ export default function Onboarding() {
                 <p style={sectionLabel}>PROFESSIONAL DETAILS</p>
                 <h2 style={serif}>Your work experience</h2>
 
-                <Field label="Years of experience *" error={errors.yearsExp}>
+                <Field label="Years of experience" error={errors.yearsExp}>
                   <input style={inp(errors.yearsExp)} type="number" step="0.5" min="0"
                     value={yearsExp} onChange={e => { setYearsExp(e.target.value); setErrors(p=>({...p,yearsExp:''})) }}
                     placeholder="2.5" />
                 </Field>
 
                 <div style={grid2}>
-                  <Field label="Previous job title *" error={errors.prevTitle}>
+                  <Field label="Previous job title" error={errors.prevTitle}>
                     <input style={inp(errors.prevTitle)} value={prevTitle}
                       onChange={e => { setPrevTitle(e.target.value); setErrors(p=>({...p,prevTitle:''})) }}
                       placeholder="Software Engineer" />
@@ -736,14 +736,14 @@ export default function Onboarding() {
                 {!isExperienced && (
                   <Field label="College name">
                     <input style={inp()} value={college}
-                      onChange={e => setCollege(e.target.value)} placeholder="ACE Engineering College" />
+                      onChange={e => setCollege(e.target.value)} placeholder="College name" />
                   </Field>
                 )}
               </>
             )}
 
             {/* Skills — common to both */}
-            <Field label="Technical skills *" error={errors.skills}>
+            <Field label="Technical skills" error={errors.skills}>
               <input style={inp(errors.skills)} value={skills}
                 onChange={e => { setSkills(e.target.value); setErrors(p=>({...p,skills:''})) }}
                 placeholder="Java, React, Python, SQL — comma separated" />
