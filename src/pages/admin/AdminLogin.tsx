@@ -1,44 +1,47 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { supabase } from '../../lib/supabase'
 
 export default function AdminLogin() {
   const { session, profile, profileLoaded, signIn, signOut } = useAuth()
   const navigate = useNavigate()
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
-  const [loading,  setLoading]  = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [waitingOnProfile, setWaitingOnProfile] = useState(false)
   const [error,    setError]    = useState<string | null>(null)
 
+  // Once a fresh profile has loaded after a sign-in attempt, decide where to go.
+  useEffect(() => {
+    if (!waitingOnProfile || !profileLoaded) return
+    setWaitingOnProfile(false)
+    if (profile?.is_admin) {
+      navigate('/admin', { replace: true })
+    } else {
+      setError(`Signed in as ${profile?.email ?? email}, but this account does not have admin access.`)
+      signOut()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waitingOnProfile, profileLoaded, profile])
+
   // Already signed in as admin → straight to panel
-  if (session && profileLoaded && profile?.is_admin) {
+  if (session && profileLoaded && profile?.is_admin && !waitingOnProfile) {
     return <Navigate to="/admin" replace />
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    setError(null); setLoading(true)
+    setError(null); setSubmitting(true)
 
     const { error: signInErr } = await signIn(email.trim(), password)
-    if (signInErr) { setError(signInErr); setLoading(false); return }
+    if (signInErr) { setError(signInErr); setSubmitting(false); return }
 
-    const { data: { session: s } } = await supabase.auth.getSession()
-    if (!s) { setError('Sign in failed.'); setLoading(false); return }
-
-    const { data: p } = await supabase.from('profiles')
-      .select('is_admin').eq('id', s.user.id).maybeSingle()
-
-    if (!p?.is_admin) {
-      await signOut()
-      setError('This account does not have admin access.')
-      setLoading(false)
-      return
-    }
-
-    setLoading(false)
-    navigate('/admin', { replace: true })
+    // signIn succeeded → AuthContext will refetch the profile; wait for it.
+    setSubmitting(false)
+    setWaitingOnProfile(true)
   }
+
+  const loading = submitting || waitingOnProfile
 
   const inp: React.CSSProperties = {
     height: 46, padding: '0 16px', fontSize: 14, color: '#0f0f0f',
