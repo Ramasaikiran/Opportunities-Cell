@@ -77,8 +77,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
       if (session?.user) {
-        setProfileLoaded(false)              // ← reset so routes wait for fresh fetch
-        fetchProfile(session.user.id)
+        // Only block the UI with a fresh-fetch spinner for events that actually
+        // change *who* is signed in. A routine TOKEN_REFRESHED (fires on tab
+        // refocus — e.g. right after picking a file from the OS file picker)
+        // must NOT reset profileLoaded, or every protected page remounts and
+        // any in-progress local state (like a multi-step form) is wiped.
+        if (event !== 'TOKEN_REFRESHED') {
+          setProfileLoaded(false)
+          fetchProfile(session.user.id)
+        }
         if (event === 'SIGNED_IN') supabase.rpc('touch_last_login')
       } else {
         setProfile(null)
