@@ -110,9 +110,38 @@ function isValidGitHub(url: string) {
   return /github\.com\/[a-zA-Z0-9_-]+/i.test(url.trim())
 }
 
+// ── Draft persistence ───────────────────────────────────────────
+// Mobile browsers can fully reload a backgrounded tab (e.g. after the OS
+// file picker opens for resume upload), wiping all React state. Persisting
+// the serializable fields means a reload mid-flow restores exactly where
+// the user left off instead of bouncing them back to step 1.
+const DRAFT_KEY = 'oc_onboarding_draft_v1'
+
+interface OnboardingDraft {
+  step: number; role: UserType | null
+  firstName: string; lastName: string; mobile: string; linkedin: string; github: string
+  country: string; address: string; roleInts: string[]; otherRole: string
+  college: string; degree: string; branch: string; currentYear: string; passoutYear: string
+  cgpa: string; internDone: boolean | null; internDetail: string; skills: string; projects: string
+  yearsExp: string; prevTitle: string; prevCompany: string; prevSalary: string; noticeStr: string
+  resumePath: string | null; resumeName: string | null
+}
+
+function loadDraft(): Partial<OnboardingDraft> {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch { return {} }
+}
+
+function clearDraft() {
+  try { sessionStorage.removeItem(DRAFT_KEY) } catch { /* noop */ }
+}
+
 export default function Onboarding() {
   const { user, profile, refreshProfile } = useAuth()
   const navigate = useNavigate()
+  const draft = useRef(loadDraft()).current
 
   // ── Guard: block re-registration ──────────────────────────────
   useEffect(() => {
@@ -123,47 +152,87 @@ export default function Onboarding() {
     if (profile.user_type) { navigate('/subscription', { replace: true }); return }
   }, [profile, navigate])
 
-  const [step,    setStep]    = useState(1)
-  const [role,    setRole]    = useState<UserType | null>(null)
+  const [step,    setStep]    = useState(draft.step ?? 1)
+  const [role,    setRole]    = useState<UserType | null>(draft.role ?? null)
   const [errors,  setErrors]  = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState<string | null>(null)
 
   // ── Step 2: Personal info ─────────────────────────────────────
-  const [firstName, setFirstName] = useState('')
-  const [lastName,  setLastName]  = useState('')
-  const [mobile,    setMobile]    = useState('')
-  const [linkedin,  setLinkedin]  = useState('')
-  const [github,    setGithub]    = useState('')
-  const [country,   setCountry]   = useState('India')
-  const [address,   setAddress]   = useState('')
-  const [roleInts,  setRoleInts]  = useState<string[]>([])
+  const [firstName, setFirstName] = useState(draft.firstName ?? '')
+  const [lastName,  setLastName]  = useState(draft.lastName ?? '')
+  const [mobile,    setMobile]    = useState(draft.mobile ?? '')
+  const [linkedin,  setLinkedin]  = useState(draft.linkedin ?? '')
+  const [github,    setGithub]    = useState(draft.github ?? '')
+  const [country,   setCountry]   = useState(draft.country ?? 'India')
+  const [address,   setAddress]   = useState(draft.address ?? '')
+  const [roleInts,  setRoleInts]  = useState<string[]>(draft.roleInts ?? [])
+  const [otherRole, setOtherRole] = useState(draft.otherRole ?? '')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 
   // ── Step 3: Academic / professional ─────────────────────────
   // Student
-  const [college,      setCollege]      = useState('')
-  const [degree,       setDegree]       = useState('')
-  const [branch,       setBranch]       = useState('')
-  const [currentYear,  setCurrentYear]  = useState('')
-  const [passoutYear,  setPassoutYear]  = useState('')
-  const [cgpa,         setCgpa]         = useState('')
-  const [internDone,   setInternDone]   = useState<boolean | null>(null)
-  const [internDetail, setInternDetail] = useState('')
-  const [skills,       setSkills]       = useState('')
-  const [projects,     setProjects]     = useState('')
+  const [college,      setCollege]      = useState(draft.college ?? '')
+  const [degree,       setDegree]       = useState(draft.degree ?? '')
+  const [branch,       setBranch]       = useState(draft.branch ?? '')
+  const [currentYear,  setCurrentYear]  = useState(draft.currentYear ?? '')
+  const [passoutYear,  setPassoutYear]  = useState(draft.passoutYear ?? '')
+  const [cgpa,         setCgpa]         = useState(draft.cgpa ?? '')
+  const [internDone,   setInternDone]   = useState<boolean | null>(draft.internDone ?? null)
+  const [internDetail, setInternDetail] = useState(draft.internDetail ?? '')
+  const [skills,       setSkills]       = useState(draft.skills ?? '')
+  const [projects,     setProjects]     = useState(draft.projects ?? '')
 
   // Professional
-  const [yearsExp,      setYearsExp]     = useState('')
-  const [prevTitle,     setPrevTitle]    = useState('')
-  const [prevCompany,   setPrevCompany]  = useState('')
-  const [prevSalary,    setPrevSalary]   = useState('')
-  const [noticeStr,     setNoticeStr]    = useState('')
+  const [yearsExp,      setYearsExp]     = useState(draft.yearsExp ?? '')
+  const [prevTitle,     setPrevTitle]    = useState(draft.prevTitle ?? '')
+  const [prevCompany,   setPrevCompany]  = useState(draft.prevCompany ?? '')
+  const [prevSalary,    setPrevSalary]   = useState(draft.prevSalary ?? '')
+  const [noticeStr,     setNoticeStr]    = useState(draft.noticeStr ?? '')
 
   // ── Step 4: Resume ─────────────────────────────────────────
-  const [resumeFile, setResumeFile] = useState<File | null>(null)
+  // Uploaded immediately on selection (not deferred to final submit) so the
+  // file itself survives even if the tab fully reloads afterward — only the
+  // resulting storage path (a string) needs to be remembered, and strings
+  // persist fine in sessionStorage.
+  const [resumePath, setResumePath] = useState<string | null>(draft.resumePath ?? null)
+  const [resumeName, setResumeName] = useState<string | null>(draft.resumeName ?? null)
+  const [resumeUploading, setResumeUploading] = useState(false)
+  const [resumeUploadErr, setResumeUploadErr] = useState<string | null>(null)
   const photoRef = useRef<HTMLInputElement>(null)
+
+  // ── Persist draft on every relevant change ──────────────────────
+  useEffect(() => {
+    const d: OnboardingDraft = {
+      step, role, firstName, lastName, mobile, linkedin, github, country, address,
+      roleInts, otherRole, college, degree, branch, currentYear, passoutYear, cgpa,
+      internDone, internDetail, skills, projects, yearsExp, prevTitle, prevCompany,
+      prevSalary, noticeStr, resumePath, resumeName,
+    }
+    try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(d)) } catch { /* noop */ }
+  }, [step, role, firstName, lastName, mobile, linkedin, github, country, address,
+      roleInts, otherRole, college, degree, branch, currentYear, passoutYear, cgpa,
+      internDone, internDetail, skills, projects, yearsExp, prevTitle, prevCompany,
+      prevSalary, noticeStr, resumePath, resumeName])
+
+  async function handleResumeSelect(file: File | null) {
+    if (!file || !user) return
+    if (file.type !== 'application/pdf') { setResumeUploadErr('PDF only.'); return }
+    if (file.size > 5 * 1024 * 1024)      { setResumeUploadErr('Max 5MB.'); return }
+    setResumeUploadErr(null); setResumeUploading(true)
+    try {
+      const path = `${user.id}/${Date.now()}-${file.name}`
+      const { error: upErr } = await supabase.storage.from('resumes').upload(path, file, { upsert: true })
+      if (upErr) throw upErr
+      setResumePath(path)
+      setResumeName(file.name)
+    } catch (err) {
+      setResumeUploadErr(`Upload failed: ${(err as Error).message}. You can retry or skip and add it later.`)
+    } finally {
+      setResumeUploading(false)
+    }
+  }
 
   const totalSteps = 4
   const isExperienced = role === 'professional' && Number(yearsExp) >= 2
@@ -216,7 +285,7 @@ export default function Onboarding() {
 
     const skillsArr  = skills.split(',').map(s => s.trim()).filter(Boolean)
     const noticeDays = noticeStr === 'Immediately' ? 0 : noticeStr ? parseInt(noticeStr) : null
-    let resumeUrl: string | null = null
+    const resumeUrl: string | null = resumePath   // already uploaded the moment it was selected
     let photoUrl:  string | null = null
 
     // ── Upload photo (never block on failure) ─────────────────────
@@ -230,16 +299,6 @@ export default function Onboarding() {
           console.warn('Photo upload skipped:', upErr.message)
         }
       } catch (e) { console.warn('Photo upload error:', e) }
-    }
-
-    // ── Upload resume (never block on failure) ────────────────────
-    if (resumeFile) {
-      try {
-        const path = `${user.id}/${Date.now()}-${resumeFile.name}`
-        const { error: upErr } = await supabase.storage.from('resumes').upload(path, resumeFile, { upsert: true })
-        if (!upErr) resumeUrl = path
-        else console.warn('Resume upload skipped:', upErr.message)
-      } catch (e) { console.warn('Resume upload error:', e) }
     }
 
     // ── Update profile ─────────────────────────────────────────────
@@ -256,7 +315,9 @@ export default function Onboarding() {
         github_url:     github.trim()   || null,
         country,
         address:        address.trim() || null,
-        role_interests: roleInts,
+        role_interests: roleInts.includes('Other') && otherRole.trim()
+          ? roleInts.filter(r => r !== 'Other').concat(otherRole.trim())
+          : roleInts,
         user_type:      role,
         account_status: 'active',
         photo_url:      photoUrl,
@@ -314,6 +375,7 @@ export default function Onboarding() {
 
     // ── Only navigate once everything actually saved ────────────────
     setLoading(false)
+    clearDraft()
     await refreshProfile()
     navigate('/subscription')
   }
@@ -490,6 +552,11 @@ export default function Onboarding() {
                   </button>
                 ))}
               </div>
+              {roleInts.includes('Other') && (
+                <input style={{ ...inp(), marginTop: 10 }} value={otherRole}
+                  onChange={e => setOtherRole(e.target.value)}
+                  placeholder="Tell us which role — e.g. Solutions Architect" />
+              )}
               {errors.roleInts && <p style={{ marginTop: 5, fontSize: 12, color: '#ef4444' }}>{errors.roleInts}</p>}
             </Field>
 
@@ -705,17 +772,24 @@ export default function Onboarding() {
             <label style={{
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               gap: 12, padding: '36px 24px',
-              background: resumeFile ? '#f0fdf4' : '#f7f7f7',
-              border: `2px dashed ${resumeFile ? '#22c55e' : '#e5e5e5'}`,
-              borderRadius: 16, cursor: 'pointer', transition: 'all 0.2s',
+              background: resumePath ? '#f0fdf4' : '#f7f7f7',
+              border: `2px dashed ${resumePath ? '#22c55e' : '#e5e5e5'}`,
+              borderRadius: 16, cursor: resumeUploading ? 'wait' : 'pointer', transition: 'all 0.2s',
             }}>
-              {resumeFile ? (
+              {resumeUploading ? (
+                <>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%',
+                    border: '3px solid #e5e5e5', borderTopColor: '#0f0f0f',
+                    animation: 'spin 0.8s linear infinite' }} />
+                  <p style={{ fontSize: 14, color: '#6b6b6b' }}>Uploading…</p>
+                </>
+              ) : resumePath ? (
                 <>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
-                  <p style={{ fontSize: 15, fontWeight: 600, color: '#16a34a' }}>{resumeFile.name}</p>
-                  <p style={{ fontSize: 13, color: '#9b9b9b' }}>Click to change</p>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: '#16a34a' }}>{resumeName}</p>
+                  <p style={{ fontSize: 13, color: '#9b9b9b' }}>Uploaded · click to replace</p>
                 </>
               ) : (
                 <>
@@ -733,9 +807,12 @@ export default function Onboarding() {
                   </div>
                 </>
               )}
-              <input type="file" accept=".pdf" style={{ display: 'none' }}
-                onChange={e => setResumeFile(e.target.files?.[0] ?? null)} />
+              <input type="file" accept=".pdf" style={{ display: 'none' }} disabled={resumeUploading}
+                onChange={e => handleResumeSelect(e.target.files?.[0] ?? null)} />
             </label>
+            {resumeUploadErr && (
+              <p style={{ fontSize: 13, color: '#dc2626', marginTop: -10 }}>⚠ {resumeUploadErr}</p>
+            )}
 
             <div style={{ background: '#f7f7f7', borderRadius: 12, padding: '14px 16px',
               display: 'flex', gap: 10, alignItems: 'flex-start' }}>
@@ -749,12 +826,12 @@ export default function Onboarding() {
               </p>
             </div>
 
-            <button type="submit" disabled={loading}
-              style={{ ...btn, opacity: loading ? 0.5 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}>
+            <button type="submit" disabled={loading || resumeUploading}
+              style={{ ...btn, opacity: (loading || resumeUploading) ? 0.5 : 1, cursor: (loading || resumeUploading) ? 'not-allowed' : 'pointer' }}>
               {loading ? 'Setting up your account…' : "I'm ready — start applying 🚀"}
             </button>
 
-            {!resumeFile && !loading && (
+            {!resumePath && !loading && (
               <button type="button" onClick={handleFinish as never} style={ghostBtn}>
                 Skip for now →
               </button>
