@@ -17,7 +17,7 @@ export default function AdminUsers() {
  const [loading, setLoading] = useState(true)
  const [search, setSearch] = useState('')
  const [roleFilter, setRoleFilter] = useState<'all' | 'student' | 'professional'>('all')
- const [subFilter, setSubFilter] = useState<SubFilter>('all')
+ const [subFilter, setSubFilter] = useState<SubFilter>('active')
 
  useEffect(() => { load() }, [])
 
