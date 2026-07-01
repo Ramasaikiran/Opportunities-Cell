@@ -35,22 +35,22 @@ const PLANS: {
  {
  id: 'monthly', label: '1 Month', price: 399, duration: '30 days',
  perMonth: '₹399/mo', saving: null, color: '#0f0f0f',
- features: ['Admin applies on your behalf', 'Skill-based job matching', 'Application tracker', 'Email updates'],
+ features: ['Admin applies on your behalf', 'Skill-based job matching', 'WhatsApp updates on every application', 'Dedicated account manager', 'Application tracker dashboard'],
  },
  {
  id: 'quarterly', label: '3 Months', price: 1099, duration: '90 days',
  perMonth: '₹366/mo', saving: '~8% off', color: '#1d4ed8',
- features: ['Everything in 1 Month', 'Priority job matching', '3× more applications', 'WhatsApp updates'],
+ features: ['Admin applies on your behalf', 'Priority job matching', 'WhatsApp updates on every application', 'Dedicated account manager', '3× more applications per day'],
  },
  {
  id: 'halfyearly', label: '6 Months', price: 1999, duration: '180 days',
  perMonth: '₹333/mo', saving: '~16% off', color: '#7c3aed',
- features: ['Everything in 3 Months', 'Dedicated account manager', 'Resume optimisation tips', 'Interview alerts'],
+ features: ['Admin applies on your behalf', 'Priority job matching', 'WhatsApp updates on every application', 'Dedicated account manager', 'Resume optimisation tips', 'Interview alerts'],
  },
  {
  id: 'yearly', label: '12 Months', price: 3599, duration: '365 days',
  perMonth: '₹300/mo', saving: '~25% off', color: '#059669',
- features: ['Everything in 6 Months', 'Unlimited applications', 'Resume rewrite (1×)', 'Career strategy call'],
+ features: ['Admin applies on your behalf', 'Priority job matching', 'WhatsApp updates on every application', 'Dedicated account manager', 'Resume rewrite (1×)', 'Career strategy call'],
  },
 ]
 
