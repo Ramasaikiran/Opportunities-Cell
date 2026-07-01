@@ -50,23 +50,33 @@ function Field({ label, error, children, half }: {
  )
 }
 
+const STEP_LABELS = ['Basics', 'Education', 'Skills', 'Resume']
+
 function ProgressBar({ step, total }: { step: number; total: number }) {
- return (
- <div style={{ marginBottom: 40 }}>
- <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
- <span style={{ fontSize: 12, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.06em' }}>
- STEP {step} OF {total}
- </span>
- <span style={{ fontSize: 12, color: '#b5b5b5' }}>{Math.round((step / total) * 100)}% complete</span>
- </div>
- <div style={{ height: 4, background: '#f0f0f0', borderRadius: 99, overflow: 'hidden' }}>
- <div style={{
- height: '100%', borderRadius: 99, background: '#0f0f0f',
- width: `${(step / total) * 100}%`, transition: 'width 0.4s cubic-bezier(0.16,1,0.3,1)',
- }} />
- </div>
- </div>
- )
+  return (
+    <div style={{ marginBottom: 40 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.06em' }}>
+          STEP {step} OF {total} — {STEP_LABELS[step - 1]?.toUpperCase()}
+        </span>
+        <span style={{ fontSize: 12, color: '#b5b5b5' }}>{Math.round((step / total) * 100)}% complete</span>
+      </div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 2 }}>
+        {Array.from({ length: total }).map((_, i) => (
+          <div key={i} style={{
+            flex: 1, height: 4, borderRadius: 99, overflow: 'hidden', background: '#f0f0f0',
+          }}>
+            <div style={{
+              height: '100%', borderRadius: 99,
+              background: i < step ? '#0f0f0f' : 'transparent',
+              width: i < step ? '100%' : '0%',
+              transition: 'width 0.4s cubic-bezier(0.16,1,0.3,1)',
+            }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 const ROLES = ['SDE / Software Engineer','Frontend Engineer','Backend Engineer','Full Stack Engineer',

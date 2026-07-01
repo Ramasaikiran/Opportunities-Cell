@@ -287,6 +287,37 @@ export default function Landing() {
  </div>
  </section>
 
+ {/* ── TRUST / PROOF ─────────────────────────────────────── */}
+ <section style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px 96px' }}>
+ <div style={{ background: '#fafafa', border: '1px solid #f0f0f0', borderRadius: 16,
+ padding: '40px 32px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 28 }}>
+ <div>
+ <p style={{ fontSize: 13, fontWeight: 700, color: '#0f0f0f', marginBottom: 6 }}>
+ Who applies
+ </p>
+ <p style={{ fontSize: 13.5, color: '#7a7a7a', lineHeight: 1.6 }}>
+ A real admin on our team. Not a bot, not auto-fill.
+ </p>
+ </div>
+ <div>
+ <p style={{ fontSize: 13, fontWeight: 700, color: '#0f0f0f', marginBottom: 6 }}>
+ How matches are chosen
+ </p>
+ <p style={{ fontSize: 13.5, color: '#7a7a7a', lineHeight: 1.6 }}>
+ Skills, role preference, and location from your profile.
+ </p>
+ </div>
+ <div>
+ <p style={{ fontSize: 13, fontWeight: 700, color: '#0f0f0f', marginBottom: 6 }}>
+ What you get
+ </p>
+ <p style={{ fontSize: 13.5, color: '#7a7a7a', lineHeight: 1.6 }}>
+ 10–15 tailored applications daily. WhatsApp update for each one.
+ </p>
+ </div>
+ </div>
+ </section>
+
  {/* ── PRICING ───────────────────────────────────────────── */}
  <section style={{ background: '#fafafa', borderTop: '1px solid #f0f0f0', maxWidth: '100%', margin: 0, padding: '96px 24px' }}>
  <div style={{ maxWidth: 960, margin: '0 auto' }}>

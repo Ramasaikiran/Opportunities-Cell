@@ -20,6 +20,7 @@ export default function AdminJobs() {
   const [showForm,setShowForm]= useState(false)
   const [editId,  setEditId]  = useState<string | null>(null)
   const [error,   setError]   = useState<string | null>(null)
+  const [search,  setSearch]  = useState('')
 
   useEffect(() => { load() }, [])
 
@@ -29,6 +30,18 @@ export default function AdminJobs() {
     setJobs((data as Job[]) ?? [])
     setLoading(false)
   }
+
+  const filteredJobs = jobs.filter(j => {
+    const q = search.trim().toLowerCase()
+    if (!q) return true
+    return j.title.toLowerCase().includes(q) || j.company.toLowerCase().includes(q) ||
+      (j.location ?? '').toLowerCase().includes(q)
+  })
+
+  const urlCounts = jobs.reduce<Record<string, number>>((acc, j) => {
+    if (j.apply_url) acc[j.apply_url] = (acc[j.apply_url] ?? 0) + 1
+    return acc
+  }, {})
 
   function openNew() {
     setForm(BLANK); setSkillsInput(''); setEditId(null); setError(null); setShowForm(true)
@@ -214,11 +227,25 @@ export default function AdminJobs() {
         )}
 
         {/* ── Job list ────────────────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 28, fontWeight: 400, color: '#0f0f0f' }}>
-            Jobs ({jobs.length})
+            Jobs ({filteredJobs.length}{search ? ` of ${jobs.length}` : ''})
           </h1>
         </div>
+
+        {jobs.length > 0 && (
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by title, company, or location…"
+            style={{
+              width: '100%', height: 42, padding: '0 14px', marginBottom: 20,
+              fontSize: 14, fontFamily: "'Inter',sans-serif", color: '#0f0f0f',
+              background: '#fff', border: '1.5px solid #e5e5e5', borderRadius: 10,
+              outline: 'none', boxSizing: 'border-box',
+            }}
+          />
+        )}
 
         {loading ? (
           <div style={{ textAlign: 'center', padding: '60px 0', fontSize: 14, color: '#b5b5b5' }}>Loading…</div>
@@ -231,9 +258,13 @@ export default function AdminJobs() {
               cursor: 'pointer', fontFamily: "'Inter',sans-serif",
             }}>Add first job →</button>
           </div>
+        ) : filteredJobs.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', fontSize: 14, color: '#b5b5b5' }}>
+            No jobs match "{search}".
+          </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {jobs.map(job => (
+            {filteredJobs.map(job => (
               <div key={job.id} style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 padding: '16px 20px', background: '#fff',
@@ -242,7 +273,16 @@ export default function AdminJobs() {
                 opacity: job.is_active ? 1 : 0.65,
               }}>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 15, fontWeight: 500, color: '#0f0f0f', marginBottom: 3 }}>{job.title}</p>
+                  <p style={{ fontSize: 15, fontWeight: 500, color: '#0f0f0f', marginBottom: 3,
+                    display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {job.title}
+                    {job.apply_url && urlCounts[job.apply_url] > 1 && (
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#b45309',
+                        background: '#fef3c7', padding: '2px 8px', borderRadius: 99 }}>
+                        DUPLICATE URL
+                      </span>
+                    )}
+                  </p>
                   <p style={{ fontSize: 13, color: '#9b9b9b', marginBottom: 6 }}>
                     {job.company} · {job.job_type} · {job.location || 'Remote'}
                     {job.required_experience_min > 0 && ` · ${job.required_experience_min}${job.required_experience_max ? `–${job.required_experience_max}` : '+'}y exp`}

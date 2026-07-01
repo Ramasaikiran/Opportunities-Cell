@@ -386,7 +386,20 @@ export default function Subscription() {
  )}
  </button>
 
- <p style={{ textAlign: 'center', fontSize: 12, color: '#b5b5b5', marginTop: 14 }}>
+ <div style={{ display: 'flex', justifyContent: 'center', gap: 18, flexWrap: 'wrap',
+ marginTop: 16, marginBottom: 4 }}>
+ {['Real admin applies daily', 'WhatsApp proof of every application', 'Cancel anytime'].map(t => (
+ <span key={t} style={{ fontSize: 12, color: '#6b6b6b', display: 'flex',
+ alignItems: 'center', gap: 5 }}>
+ <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="3">
+ <polyline points="20 6 9 17 4 12"/>
+ </svg>
+ {t}
+ </span>
+ ))}
+ </div>
+
+ <p style={{ textAlign: 'center', fontSize: 12, color: '#b5b5b5', marginTop: 6 }}>
  Secured by Razorpay · UPI · Cards · Net banking · No auto-renewal
  </p>
  </div>

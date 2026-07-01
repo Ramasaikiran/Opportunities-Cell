@@ -313,7 +313,6 @@ export default function Dashboard() {
  ) : apps.length === 0 ? (
  <div style={{ background: '#fff', border: '1px solid #f0f0f0', borderRadius: 12,
  padding: '48px 24px', textAlign: 'center' }}>
- <p style={{ fontSize: 20, marginBottom: 8 }}></p>
  <p style={{ fontSize: 15, fontWeight: 600, color: '#0f0f0f', marginBottom: 6 }}>
  No applications yet
  </p>
@@ -347,7 +346,7 @@ export default function Dashboard() {
  <div key={app.id} style={{
  display: 'grid', gridTemplateColumns: '1fr 160px 120px 100px',
  padding: '14px 16px', gap: 12, background: '#fff',
- border: '1px solid #f0f0f0', borderRadius: 10,
+ border: '1px solid #f0f0f0', borderLeft: `3px solid ${st.color}`, borderRadius: 10,
  alignItems: 'center',
  }}>
  <div>
@@ -367,7 +366,11 @@ export default function Dashboard() {
  </div>
  <span style={{ fontSize: 12, fontWeight: 600, padding: '4px 10px',
  background: st.bg, color: st.color, borderRadius: 99,
- textAlign: 'center', display: 'inline-block' }}>{st.label}</span>
+ textAlign: 'center', display: 'inline-flex', alignItems: 'center',
+ justifyContent: 'center', gap: 5 }}>
+ <span style={{ width: 6, height: 6, borderRadius: '50%', background: st.color }} />
+ {st.label}
+ </span>
  </div>
  )
  })}
