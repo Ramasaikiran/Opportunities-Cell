@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout'
 import { useAuth } from '../contexts/AuthContext'
+import { useRateLimit } from '../hooks/useRateLimit'
 
 export default function ForgotPassword() {
   const { requestPasswordReset } = useAuth()
@@ -9,17 +10,17 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { blocked, blockMessage, recordAttempt } = useRateLimit('oc_fp_rl')
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
+    if (blocked) { setError(blockMessage); return }
     setLoading(true)
+    recordAttempt()
     const { error } = await requestPasswordReset(email.trim().toLowerCase())
     setLoading(false)
-    if (error) {
-      setError(error)
-      return
-    }
+    if (error) { setError(error); return }
     setSent(true)
   }
 
@@ -40,9 +41,9 @@ export default function ForgotPassword() {
     >
       {!sent && (
         <form onSubmit={handleSubmit} className="space-y-5">
-          {error && (
+          {(error || blockMessage) && (
             <div className="rounded-xl border border-clay-700/20 bg-clay-50 px-4 py-3 text-[13px] text-clay-700">
-              {error}
+              {error || blockMessage}
             </div>
           )}
           <div>
@@ -58,8 +59,8 @@ export default function ForgotPassword() {
               autoFocus
             />
           </div>
-          <button type="submit" disabled={loading} className="btn-primary">
-            {loading ? 'Sending…' : 'Send reset link'}
+          <button type="submit" disabled={loading || blocked} className="btn-primary">
+            {loading ? 'Sending…' : blocked ? (blockMessage ?? 'Blocked') : 'Send reset link'}
           </button>
         </form>
       )}

@@ -4,6 +4,7 @@ import AuthLayout from '../components/AuthLayout'
 import GoogleIcon from '../components/GoogleIcon'
 import PasswordStrength, { passwordRequirementsMet } from '../components/PasswordStrength'
 import { useAuth } from '../contexts/AuthContext'
+import { useRateLimit } from '../hooks/useRateLimit'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -34,6 +35,7 @@ function ShowHideToggle({ show, onToggle }: { show: boolean; onToggle: () => voi
 
 export default function SignUp() {
   const { signUp, signInWithGoogle } = useAuth()
+  const { blocked, blockMessage, recordAttempt } = useRateLimit('oc_su_rl')
   const navigate = useNavigate()
 
   const [step, setStep]           = useState<'email' | 'details'>('email')
@@ -76,7 +78,9 @@ export default function SignUp() {
     e.preventDefault()
     setFormError(null)
     if (!validateDetails()) return
+    if (blocked) { setFormError(blockMessage); return }
     setLoading(true)
+    recordAttempt()
     const { error } = await signUp(fullName.trim(), email.trim().toLowerCase(), password)
     setLoading(false)
     if (error) { setFormError(error); return }
@@ -193,8 +197,8 @@ export default function SignUp() {
             {errors.confirmPassword && <p className="oc-field-error">{errors.confirmPassword}</p>}
           </div>
 
-          <button type="submit" disabled={loading} className="oc-btn-primary" style={{ marginTop: 4 }}>
-            {loading ? 'Creating your account…' : 'Create account →'}
+          <button type="submit" disabled={loading || blocked} className="oc-btn-primary" style={{ marginTop: 4 }}>
+            {loading ? 'Creating your account…' : blocked ? (blockMessage ?? 'Blocked') : 'Create account →'}
           </button>
         </form>
       )}
