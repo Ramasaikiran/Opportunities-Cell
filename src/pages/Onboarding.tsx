@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, type UserType } from '../lib/supabase'
 
@@ -141,6 +141,8 @@ function clearDraft() {
 export default function Onboarding() {
  const { user, profile, refreshProfile, signOut } = useAuth()
  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const editMode = searchParams.get('edit') === 'resume'
  const draft = useRef(loadDraft()).current
 
  // ── Guard: block re-registration ──────────────────────────────
@@ -149,10 +151,11 @@ export default function Onboarding() {
  // Admin should never be in onboarding
  if (profile.is_admin) { navigate('/admin', { replace: true }); return }
  // Already onboarded → skip to next step
+    if (editMode) return
  if (profile.user_type) { navigate('/subscription', { replace: true }); return }
  }, [profile, navigate])
 
- const [step, setStep] = useState(draft.step ?? 1)
+  const [step, setStep] = useState(editMode ? 4 : (draft.step ?? 1))
  const [role, setRole] = useState<UserType | null>(draft.role ?? null)
  const [errors, setErrors] = useState<Record<string, string>>({})
  const [loading, setLoading] = useState(false)
