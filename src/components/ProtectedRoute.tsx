@@ -29,7 +29,9 @@ export default function ProtectedRoute({ children, requireSub = false }: {
   }
 
   // ── Already onboarded → block access to /onboarding ───────────
-  if (location.pathname === '/onboarding' && profile?.user_type) {
+  // Exception: allow edit mode (e.g. ?edit=resume from Subscription's Back button)
+  const isEditMode = new URLSearchParams(location.search).has('edit')
+  if (location.pathname === '/onboarding' && profile?.user_type && !isEditMode) {
     return <Navigate to={subscription ? '/dashboard' : '/subscription'} replace />
   }
 

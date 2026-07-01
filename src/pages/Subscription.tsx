@@ -200,8 +200,8 @@ export default function Subscription() {
  </div>
  {/* Step indicator */}
  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 14 }}>
- <button onClick={() => navigate('/onboarding?edit=resume')} style={{ background: 'none', border: 'none',
- fontSize: 13, color: '#666', cursor: 'pointer', fontWeight: 500,
+ <button onClick={() => success && navigate('/onboarding?edit=resume')} disabled={!success} style={{ background: 'none', border: 'none',
+ fontSize: 13, color: success ? '#666' : '#ccc', cursor: success ? 'pointer' : 'not-allowed', fontWeight: 500,
  display: 'flex', alignItems: 'center', gap: 4 }}>
  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
  Back
