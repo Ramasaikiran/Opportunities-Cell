@@ -217,13 +217,18 @@ export default function Onboarding() {
  prevSalary, noticeStr, resumePath, resumeName])
 
  async function handleResumeSelect(file: File | null) {
- if (!file || !user) return
+ if (!file) return
  const looksLikePdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
  if (!looksLikePdf) { setResumeUploadErr('PDF only.'); return }
  if (file.size > 5 * 1024 * 1024) { setResumeUploadErr('Max 5MB.'); return }
  setResumeUploadErr(null); setResumeUploading(true)
  try {
- const path = `${user.id}/${Date.now()}-${file.name}`
+ // Auth can lag a beat after an OS file-picker remount. Pull the live
+ // session directly instead of trusting stale context user.
+ const { data: { session } } = await supabase.auth.getSession()
+ const uid = session?.user?.id ?? user?.id
+ if (!uid) throw new Error('Session expired. Please sign in again.')
+ const path = `${uid}/${Date.now()}-${file.name}`
  const { error: upErr } = await supabase.storage.from('resumes').upload(path, file, { upsert: true })
  if (upErr) throw upErr
  setResumePath(path)

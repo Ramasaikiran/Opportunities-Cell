@@ -33,24 +33,9 @@ const PLANS: {
  features: string[]
 }[] = [
  {
- id: 'monthly', label: '1 Month', price: 399, duration: '30 days',
- perMonth: '₹399/mo', saving: null, color: '#0f0f0f',
- features: ['Admin applies on your behalf', 'Skill-based job matching', 'WhatsApp updates on every application', 'Dedicated account manager', 'Application tracker dashboard'],
- },
- {
- id: 'quarterly', label: '3 Months', price: 1099, duration: '90 days',
- perMonth: '₹366/mo', saving: '~8% off', color: '#1d4ed8',
- features: ['Admin applies on your behalf', 'Priority job matching', 'WhatsApp updates on every application', 'Dedicated account manager', '3× more applications per day'],
- },
- {
- id: 'halfyearly', label: '6 Months', price: 1999, duration: '180 days',
- perMonth: '₹333/mo', saving: '~16% off', color: '#7c3aed',
- features: ['Admin applies on your behalf', 'Priority job matching', 'WhatsApp updates on every application', 'Dedicated account manager', 'Resume optimisation tips', 'Interview alerts'],
- },
- {
- id: 'yearly', label: '12 Months', price: 3599, duration: '365 days',
- perMonth: '₹300/mo', saving: '~25% off', color: '#059669',
- features: ['Admin applies on your behalf', 'Priority job matching', 'WhatsApp updates on every application', 'Dedicated account manager', 'Resume rewrite (1×)', 'Career strategy call'],
+ id: 'monthly', label: '1 Month', price: 3599, duration: '30 days',
+ perMonth: '₹3,599/mo', saving: null, color: '#0f0f0f',
+ features: ['Admin applies on your behalf', 'Priority job matching', 'WhatsApp updates on every application', 'Dedicated account manager', 'Interview scheduled within 30 days', 'Resume rewrite + career strategy call'],
  },
 ]
 
@@ -215,6 +200,12 @@ export default function Subscription() {
  </div>
  {/* Step indicator */}
  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 14 }}>
+ <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none',
+ fontSize: 13, color: '#666', cursor: 'pointer', fontWeight: 500,
+ display: 'flex', alignItems: 'center', gap: 4 }}>
+ <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+ Back
+ </button>
  <button onClick={() => signOut()} style={{ background: 'none', border: 'none',
  fontSize: 13, color: '#666', cursor: 'pointer', fontWeight: 500 }}>
  Logout
@@ -268,8 +259,19 @@ export default function Subscription() {
  We match jobs to your skills and apply on your behalf. Cancel anytime.
  </p>
 
- {/* 4 plan cards — 2×2 grid on desktop, stack on mobile */}
- <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 28 }}>
+ {/* Single plan — one month, all-in */}
+ <div style={{ marginBottom: 20 }}>
+ <h2 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 22,
+ color: '#0f0f0f', lineHeight: 1.3, marginBottom: 6 }}>
+ One month. That's all it takes.
+ </h2>
+ <p style={{ fontSize: 14, color: '#6b6b6b', lineHeight: 1.5 }}>
+ We schedule your interviews within 30 days. Why stretch this across
+ 3, 6, or 12 months when you could land the job now?
+ </p>
+ </div>
+
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 14, marginBottom: 28, maxWidth: 380 }}>
  {PLANS.map(plan => {
  const isSelected = selected === plan.id
  return (
