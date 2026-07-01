@@ -4,494 +4,490 @@ import { useAuth } from '../contexts/AuthContext'
 
 /* ── tiny helpers ─────────────────────────────────────────────── */
 const TICK = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" style={{ flexShrink: 0, marginTop: 2 }}>
-    <polyline points="20 6 9 17 4 12"/>
-  </svg>
+ <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" style={{ flexShrink: 0, marginTop: 2 }}>
+ <polyline points="20 6 9 17 4 12"/>
+ </svg>
 )
 const CROSS = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" style={{ flexShrink: 0, marginTop: 2 }}>
-    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-  </svg>
+ <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" style={{ flexShrink: 0, marginTop: 2 }}>
+ <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+ </svg>
 )
 
 export default function Landing() {
-  const { session, subscription, profile } = useAuth()
-  const navigate = useNavigate()
-  const [showSticky, setShowSticky] = useState(false)
-  const [openFaq, setOpenFaq]       = useState<number | null>(null)
+ const { session, subscription, profile } = useAuth()
+ const navigate = useNavigate()
+ const [showSticky, setShowSticky] = useState(false)
+ const [openFaq, setOpenFaq] = useState<number | null>(null)
 
-  /* auth redirect */
-  useEffect(() => {
-    if (!session) return
-    if (profile === null) return
-    if (profile?.is_admin)   { navigate('/admin',        { replace: true }); return }
-    if (!profile?.user_type) { navigate('/onboarding',   { replace: true }); return }
-    if (!subscription)       { navigate('/subscription', { replace: true }); return }
-    navigate('/dashboard', { replace: true })
-  }, [session, profile, subscription])
+ /* auth redirect */
+ useEffect(() => {
+ if (!session) return
+ if (profile === null) return
+ if (profile?.is_admin) { navigate('/admin', { replace: true }); return }
+ if (!profile?.user_type) { navigate('/onboarding', { replace: true }); return }
+ if (!subscription) { navigate('/subscription', { replace: true }); return }
+ navigate('/dashboard', { replace: true })
+ }, [session, profile, subscription])
 
-  /* sticky bar */
-  useEffect(() => {
-    const onScroll = () => setShowSticky(window.scrollY > 600)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+ /* sticky bar */
+ useEffect(() => {
+ const onScroll = () => setShowSticky(window.scrollY > 600)
+ window.addEventListener('scroll', onScroll, { passive: true })
+ return () => window.removeEventListener('scroll', onScroll)
+ }, [])
 
-  const goSignUp = () => navigate('/sign-up')
+ const goSignUp = () => navigate('/sign-up')
 
-  const FAQS = [
-    {
-      q: 'Is this live? How do I know you\'ll actually apply?',
-      a: 'We\'re onboarding our first founding members right now. Once your profile is active, your dashboard shows every single application — company, role, date, matched skills, and status. Full transparency from day one.',
-    },
-    {
-      q: 'Do you write generic cover letters or tailored ones?',
-      a: 'Every application is tailored to the JD. We match your skills, highlight relevant projects, and write a cover letter specific to that company.',
-    },
-    {
-      q: 'How many applications per day?',
-      a: '10–15 applications daily once your profile is active. That\'s 300–450/month while you focus on interview prep and DSA.',
-    },
-    {
-      q: 'Can I cancel anytime?',
-      a: 'Yes. No auto-renewal, no lock-in. Plans are one-time payments. When your period ends, you decide if you want to continue.',
-    },
-    {
-      q: 'I\'m a fresher with no experience. Will this work?',
-      a: 'Built especially for freshers. We highlight your projects, college, skills, and internships, and target fresher-friendly roles at companies that actively hire from colleges.',
-    },
-    {
-      q: 'Why join now instead of waiting?',
-      a: 'Founding member pricing is locked for early sign-ups and we\'re limiting our first batch so every profile gets proper attention from our team. Once a batch fills, pricing moves to standard rates.',
-    },
-  ]
+ const FAQS = [
+ {
+ q: 'Is this live? How do I know you\'ll actually apply?',
+ a: 'We\'re onboarding our first founding members right now. Once your profile is active, your dashboard shows every single application — company, role, date, matched skills, and status. Full transparency from day one.',
+ },
+ {
+ q: 'Do you write generic cover letters or tailored ones?',
+ a: 'Every application is tailored to the JD. We match your skills, highlight relevant projects, and write a cover letter specific to that company.',
+ },
+ {
+ q: 'How many applications per day?',
+ a: '10–15 applications daily once your profile is active. That\'s 300–450/month while you focus on interview prep and DSA.',
+ },
+ {
+ q: 'Can I cancel anytime?',
+ a: 'Yes. No auto-renewal, no lock-in. Plans are one-time payments. When your period ends, you decide if you want to continue.',
+ },
+ {
+ q: 'I\'m a fresher with no experience. Will this work?',
+ a: 'Built especially for freshers. We highlight your projects, college, skills, and internships, and target fresher-friendly roles at companies that actively hire from colleges.',
+ },
+ {
+ q: 'Why join now instead of waiting?',
+ a: 'Founding member pricing is locked for early sign-ups and we\'re limiting our first batch so every profile gets proper attention from our team. Once a batch fills, pricing moves to standard rates.',
+ },
+ ]
 
-  return (
-    <div style={{ fontFamily: "'Inter',-apple-system,sans-serif", background: '#fff', color: '#0f0f0f' }}>
+ return (
+ <div style={{ fontFamily: "'Inter',-apple-system,sans-serif", background: '#fff', color: '#0f0f0f' }}>
 
-      {/* ── ANNOUNCEMENT BAR ──────────────────────────────────── */}
-      <div style={{ background: '#0f0f0f', padding: '10px 24px', textAlign: 'center' }}>
-        <span style={{ fontSize: 13, color: '#fff', fontWeight: 500 }}>
-          🚀 <strong>Now open for founding members</strong> — limited first batch, locked-in pricing
-        </span>
-      </div>
+ {/* ── ANNOUNCEMENT BAR ──────────────────────────────────── */}
+ <div style={{ background: '#0f0f0f', padding: '10px 24px', textAlign: 'center' }}>
+ <span style={{ fontSize: 13, color: '#fff', fontWeight: 500 }}>
+ <strong>Now open for founding members</strong> — limited first batch, locked-in pricing
+ </span>
+ </div>
 
-      {/* ── NAV ───────────────────────────────────────────────── */}
-      <nav style={{ position: 'sticky', top: 0, left: 0, right: 0, zIndex: 100,
-        background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid #f0f0f0' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px',
-          height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-            <div style={{ width: 30, height: 30, borderRadius: 8, background: '#0f0f0f',
-              display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff"/>
-              </svg>
-            </div>
-            <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.02em' }}>Opportunities Cell</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 13, color: '#22c55e', fontWeight: 600,
-              background: '#f0fdf4', padding: '4px 12px', borderRadius: 99,
-              border: '1px solid #bbf7d0' }}>
-              ₹399/mo
-            </span>
-            <button onClick={() => navigate('/sign-in')} style={{
-              background: 'none', border: 'none', fontSize: 14, color: '#6b6b6b',
-              cursor: 'pointer', fontFamily: "'Inter',sans-serif", padding: '8px 12px',
-            }}>Sign in</button>
-            <button onClick={goSignUp} style={{
-              background: '#0f0f0f', color: '#fff', border: 'none',
-              padding: '9px 20px', borderRadius: 8, fontSize: 14, fontWeight: 600,
-              cursor: 'pointer', fontFamily: "'Inter',sans-serif",
-            }}>Get started →</button>
-          </div>
-        </div>
-      </nav>
+ {/* ── NAV ───────────────────────────────────────────────── */}
+ <nav style={{ position: 'sticky', top: 0, left: 0, right: 0, zIndex: 100,
+ background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(16px)',
+ borderBottom: '1px solid #f0f0f0' }}>
+ <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px',
+ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+ <div style={{ width: 30, height: 30, borderRadius: 8, background: '#0f0f0f',
+ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+ <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+ <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff"/>
+ </svg>
+ </div>
+ <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.02em' }}>Opportunities Cell</span>
+ </div>
+ <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+ <span style={{ fontSize: 13, color: '#22c55e', fontWeight: 600,
+ background: '#f0fdf4', padding: '4px 12px', borderRadius: 99,
+ border: '1px solid #bbf7d0' }}>
+ ₹399/mo
+ </span>
+ <button onClick={() => navigate('/sign-in')} style={{
+ background: 'none', border: 'none', fontSize: 14, color: '#6b6b6b',
+ cursor: 'pointer', fontFamily: "'Inter',sans-serif", padding: '8px 12px',
+ }}>Sign in</button>
+ <button onClick={goSignUp} style={{
+ background: '#0f0f0f', color: '#fff', border: 'none',
+ padding: '9px 20px', borderRadius: 8, fontSize: 14, fontWeight: 600,
+ cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+ }}>Get started →</button>
+ </div>
+ </div>
+ </nav>
 
-      {/* ── HERO ──────────────────────────────────────────────── */}
-      <section style={{ maxWidth: 780, margin: '0 auto', padding: '100px 24px 80px', textAlign: 'center' }}>
+ {/* ── HERO ──────────────────────────────────────────────── */}
+ <section style={{ maxWidth: 780, margin: '0 auto', padding: '100px 24px 80px', textAlign: 'center' }}>
 
-        {/* Early access pill */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8,
-          background: '#fff7ed', border: '1px solid #fed7aa',
-          borderRadius: 99, padding: '7px 16px', marginBottom: 32 }}>
-          <span style={{ fontSize: 13 }}>⚡</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#c2410c' }}>
-            Founding member pricing — limited first batch
-          </span>
-        </div>
+ {/* Early access pill */}
+ <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8,
+ background: '#fff7ed', border: '1px solid #fed7aa',
+ borderRadius: 99, padding: '7px 16px', marginBottom: 32 }}>
+ <span style={{ fontSize: 13 }}></span>
+ <span style={{ fontSize: 13, fontWeight: 600, color: '#c2410c' }}>
+ Founding member pricing — limited first batch
+ </span>
+ </div>
 
-        <h1 style={{
-          fontFamily: "'Instrument Serif',Georgia,serif",
-          fontSize: 'clamp(44px, 8vw, 76px)',
-          fontWeight: 400, lineHeight: 1.04,
-          letterSpacing: '-0.03em', color: '#0f0f0f',
-          marginBottom: 28,
-        }}>
-          Stop wasting 3 hours<br />
-          applying to jobs<br />
-          <span style={{ color: '#9b9b9b' }}>nobody replies to.</span>
-        </h1>
+ <h1 style={{
+ fontFamily: "'Instrument Serif',Georgia,serif",
+ fontSize: 'clamp(44px, 8vw, 76px)',
+ fontWeight: 400, lineHeight: 1.04,
+ letterSpacing: '-0.03em', color: '#0f0f0f',
+ marginBottom: 28,
+ }}>
+ Stop wasting 3 hours<br />
+ applying to jobs<br />
+ <span style={{ color: '#9b9b9b' }}>nobody replies to.</span>
+ </h1>
 
-        <p style={{ fontSize: 20, color: '#6b6b6b', lineHeight: 1.65,
-          maxWidth: 560, margin: '0 auto 16px', fontWeight: 400 }}>
-          You've sent 200+ applications. Got 3 replies.
-          The problem isn't your skills.
-        </p>
-        <p style={{ fontSize: 20, color: '#0f0f0f', lineHeight: 1.65,
-          maxWidth: 560, margin: '0 auto 44px', fontWeight: 600 }}>
-          It's that you're applying alone.
-        </p>
+ <p style={{ fontSize: 20, color: '#6b6b6b', lineHeight: 1.65,
+ maxWidth: 560, margin: '0 auto 16px', fontWeight: 400 }}>
+ You've sent 200+ applications. Got 3 replies.
+ The problem isn't your skills.
+ </p>
+ <p style={{ fontSize: 20, color: '#0f0f0f', lineHeight: 1.65,
+ maxWidth: 560, margin: '0 auto 44px', fontWeight: 600 }}>
+ It's that you're applying alone.
+ </p>
 
-        {/* Primary CTA */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-          <button onClick={goSignUp} style={{
-            background: '#0f0f0f', color: '#fff', border: 'none',
-            padding: '18px 52px', borderRadius: 14, fontSize: 17, fontWeight: 700,
-            cursor: 'pointer', fontFamily: "'Inter',sans-serif",
-            letterSpacing: '-0.02em',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
-          }}>
-            Join as a founding member — ₹399/mo →
-          </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <span style={{ fontSize: 13, color: '#9b9b9b' }}>✓ Setup in 4 minutes</span>
-            <span style={{ fontSize: 13, color: '#9b9b9b' }}>✓ No auto-renewal</span>
-            <span style={{ fontSize: 13, color: '#9b9b9b' }}>✓ Cancel anytime</span>
-          </div>
-        </div>
-      </section>
+ {/* Primary CTA */}
+ <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+ <button onClick={goSignUp} style={{
+ background: '#0f0f0f', color: '#fff', border: 'none',
+ padding: '18px 52px', borderRadius: 14, fontSize: 17, fontWeight: 700,
+ cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+ letterSpacing: '-0.02em',
+ boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+ }}>
+ Join as a founding member — ₹399/mo →
+ </button>
+ <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+ <span style={{ fontSize: 13, color: '#9b9b9b' }}> Setup in 4 minutes</span>
+ <span style={{ fontSize: 13, color: '#9b9b9b' }}> No auto-renewal</span>
+ <span style={{ fontSize: 13, color: '#9b9b9b' }}> Cancel anytime</span>
+ </div>
+ </div>
+ </section>
 
-      {/* ── PAIN vs GAIN ──────────────────────────────────────── */}
-      <section style={{ background: '#fff', borderTop: '1px solid #f0f0f0' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '88px 24px',
-          display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60 }}>
-          <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#ef4444',
-              letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>
-              WITHOUT OPPORTUNITIES CELL
-            </p>
-            {[
-              'Spend 3 hours daily copy-pasting the same application',
-              'Generic cover letters recruiters skip in 2 seconds',
-              'Apply to 5 jobs/day — get 0 replies in 2 weeks',
-              'No idea which companies even saw your profile',
-              'Give up and settle for a role you didn\'t want',
-            ].map(t => (
-              <div key={t} style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'flex-start' }}>
-                <CROSS /><p style={{ fontSize: 14, color: '#6b6b6b', lineHeight: 1.6 }}>{t}</p>
-              </div>
-            ))}
+ {/* ── PAIN vs GAIN ──────────────────────────────────────── */}
+ <section style={{ background: '#fff', borderTop: '1px solid #f0f0f0' }}>
+ <div style={{ maxWidth: 1000, margin: '0 auto', padding: '88px 24px',
+ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60 }}>
+ <div>
+ <p style={{ fontSize: 11, fontWeight: 700, color: '#ef4444',
+ letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>
+ WITHOUT OPPORTUNITIES CELL
+ </p>
+ {[
+ 'Spend 3 hours daily copy-pasting the same application',
+ 'Generic cover letters recruiters skip in 2 seconds',
+ 'Apply to 5 jobs/day — get 0 replies in 2 weeks',
+ 'No idea which companies even saw your profile',
+ 'Give up and settle for a role you didn\'t want',
+ ].map(t => (
+ <div key={t} style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'flex-start' }}>
+ <CROSS /><p style={{ fontSize: 14, color: '#6b6b6b', lineHeight: 1.6 }}>{t}</p>
+ </div>
+ ))}
 
-            <div style={{ marginTop: 24, padding: '16px 18px', background: '#fef2f2',
-              border: '1px solid #fecaca', borderRadius: 12 }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 4 }}>
-                💸 The real cost of waiting
-              </p>
-              <p style={{ fontSize: 13, color: '#7f1d1d', lineHeight: 1.6 }}>
-                Every month unemployed = ₹30,000–50,000 in lost salary.
-                ₹399/month to fix it isn't a cost. It's the best ROI of your life.
-              </p>
-            </div>
-          </div>
+ <div style={{ marginTop: 24, padding: '16px 18px', background: '#fef2f2',
+ border: '1px solid #fecaca', borderRadius: 12 }}>
+ <p style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 4 }}>
+ The real cost of waiting
+ </p>
+ <p style={{ fontSize: 13, color: '#7f1d1d', lineHeight: 1.6 }}>
+ Every month unemployed = ₹30,000–50,000 in lost salary.
+ ₹399/month to fix it isn't a cost. It's the best ROI of your life.
+ </p>
+ </div>
+ </div>
 
-          <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#22c55e',
-              letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>
-              WITH OPPORTUNITIES CELL
-            </p>
-            {[
-              'Fill your profile once. We apply to 10–15 jobs every single day',
-              'Tailored applications matched exactly to your skills and role',
-              '300–450 applications/month while you focus on interview prep',
-              'Dashboard shows every job applied, status, matched skills',
-              'You\'re among the first to get this advantage — before everyone else catches on',
-            ].map(t => (
-              <div key={t} style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'flex-start' }}>
-                <TICK /><p style={{ fontSize: 14, color: '#0f0f0f', lineHeight: 1.6 }}>{t}</p>
-              </div>
-            ))}
+ <div>
+ <p style={{ fontSize: 11, fontWeight: 700, color: '#22c55e',
+ letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>
+ WITH OPPORTUNITIES CELL
+ </p>
+ {[
+ 'Fill your profile once. We apply to 10–15 jobs every single day',
+ 'Tailored applications matched exactly to your skills and role',
+ '300–450 applications/month while you focus on interview prep',
+ 'Dashboard shows every job applied, status, matched skills',
+ 'You\'re among the first to get this advantage — before everyone else catches on',
+ ].map(t => (
+ <div key={t} style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'flex-start' }}>
+ <TICK /><p style={{ fontSize: 14, color: '#0f0f0f', lineHeight: 1.6 }}>{t}</p>
+ </div>
+ ))}
 
-            <div style={{ marginTop: 24, padding: '16px 18px', background: '#f0fdf4',
-              border: '1px solid #bbf7d0', borderRadius: 12 }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#15803d', marginBottom: 4 }}>
-                🎯 Founding member advantage
-              </p>
-              <p style={{ fontSize: 13, color: '#166534', lineHeight: 1.6 }}>
-                Join the first batch and lock in early pricing before it moves to standard rates.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+ <div style={{ marginTop: 24, padding: '16px 18px', background: '#f0fdf4',
+ border: '1px solid #bbf7d0', borderRadius: 12 }}>
+ <p style={{ fontSize: 13, fontWeight: 700, color: '#15803d', marginBottom: 4 }}>
+ Founding member advantage
+ </p>
+ <p style={{ fontSize: 13, color: '#166534', lineHeight: 1.6 }}>
+ Join the first batch and lock in early pricing before it moves to standard rates.
+ </p>
+ </div>
+ </div>
+ </div>
+ </section>
 
-      {/* ── HOW IT WORKS ──────────────────────────────────────── */}
-      <section style={{ maxWidth: 900, margin: '0 auto', padding: '96px 24px' }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: '#b5b5b5',
-          letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'center', marginBottom: 12 }}>
-          HOW IT WORKS
-        </p>
-        <h2 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 40,
-          fontWeight: 400, textAlign: 'center', letterSpacing: '-0.025em',
-          color: '#0f0f0f', marginBottom: 16 }}>
-          4 minutes setup. Applications for months.
-        </h2>
-        <p style={{ fontSize: 16, color: '#9b9b9b', textAlign: 'center', marginBottom: 56, maxWidth: 500, margin: '0 auto 56px' }}>
-          You set up once. We do the grind. You focus on being ready when they call.
-        </p>
+ {/* ── HOW IT WORKS ──────────────────────────────────────── */}
+ <section style={{ maxWidth: 900, margin: '0 auto', padding: '96px 24px' }}>
+ <p style={{ fontSize: 11, fontWeight: 700, color: '#b5b5b5',
+ letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'center', marginBottom: 12 }}>
+ HOW IT WORKS
+ </p>
+ <h2 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 40,
+ fontWeight: 400, textAlign: 'center', letterSpacing: '-0.025em',
+ color: '#0f0f0f', marginBottom: 16 }}>
+ 4 minutes setup. Applications for months.
+ </h2>
+ <p style={{ fontSize: 16, color: '#9b9b9b', textAlign: 'center', marginBottom: 56, maxWidth: 500, margin: '0 auto 56px' }}>
+ You set up once. We do the grind. You focus on being ready when they call.
+ </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 2,
-          background: '#f0f0f0', borderRadius: 16, overflow: 'hidden' }}>
-          {[
-            {
-              step: '01', title: 'Fill your profile', time: '4 min',
-              desc: 'Skills, resume, preferred roles, location. One time. Never repeat.',
-              icon: '📋',
-            },
-            {
-              step: '02', title: 'Pick a plan', time: '2 min',
-              desc: 'From ₹399/month. No hidden charges. Cancel any time instantly.',
-              icon: '⚡',
-            },
-            {
-              step: '03', title: 'We apply daily', time: 'Ongoing',
-              desc: 'Our team finds matches and applies with tailored cover letters. You get notified of every single one.',
-              icon: '🚀',
-            },
-          ].map((s, i) => (
-            <div key={s.step} style={{ background: i === 1 ? '#0f0f0f' : '#fff', padding: '36px 30px' }}>
-              <div style={{ fontSize: 28, marginBottom: 20 }}>{s.icon}</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between',
-                alignItems: 'flex-start', marginBottom: 16 }}>
-                <span style={{ fontSize: 11, fontWeight: 700,
-                  color: i === 1 ? 'rgba(255,255,255,0.4)' : '#b5b5b5',
-                  letterSpacing: '0.08em' }}>{s.step}</span>
-                <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 99,
-                  background: i === 1 ? 'rgba(255,255,255,0.1)' : '#f5f5f5',
-                  color: i === 1 ? 'rgba(255,255,255,0.6)' : '#9b9b9b' }}>{s.time}</span>
-              </div>
-              <p style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 22,
-                color: i === 1 ? '#fff' : '#0f0f0f', marginBottom: 10 }}>{s.title}</p>
-              <p style={{ fontSize: 14, color: i === 1 ? 'rgba(255,255,255,0.55)' : '#9b9b9b',
-                lineHeight: 1.65 }}>{s.desc}</p>
-            </div>
-          ))}
-        </div>
+ <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 2,
+ background: '#f0f0f0', borderRadius: 16, overflow: 'hidden' }}>
+ {[
+ {
+ step: '01', title: 'Fill your profile', time: '4 min',
+ desc: 'Skills, resume, preferred roles, location. One time. Never repeat.',
+ },
+ {
+ step: '02', title: 'Pick a plan', time: '2 min',
+ desc: 'From ₹399/month. No hidden charges. Cancel any time instantly.',
+ },
+ {
+ step: '03', title: 'We apply daily', time: 'Ongoing',
+ desc: 'Our team finds matches and applies with tailored cover letters. You get notified of every single one.',
+ },
+ ].map((s, i) => (
+ <div key={s.step} style={{ background: i === 1 ? '#0f0f0f' : '#fff', padding: '36px 30px' }}>
+ <div style={{ display: 'flex', justifyContent: 'space-between',
+ alignItems: 'flex-start', marginBottom: 16 }}>
+ <span style={{ fontSize: 11, fontWeight: 700,
+ color: i === 1 ? 'rgba(255,255,255,0.4)' : '#b5b5b5',
+ letterSpacing: '0.08em' }}>{s.step}</span>
+ <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 99,
+ background: i === 1 ? 'rgba(255,255,255,0.1)' : '#f5f5f5',
+ color: i === 1 ? 'rgba(255,255,255,0.6)' : '#9b9b9b' }}>{s.time}</span>
+ </div>
+ <p style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 22,
+ color: i === 1 ? '#fff' : '#0f0f0f', marginBottom: 10 }}>{s.title}</p>
+ <p style={{ fontSize: 14, color: i === 1 ? 'rgba(255,255,255,0.55)' : '#9b9b9b',
+ lineHeight: 1.65 }}>{s.desc}</p>
+ </div>
+ ))}
+ </div>
 
-        <div style={{ textAlign: 'center', marginTop: 32 }}>
-          <button onClick={goSignUp} style={{
-            background: '#0f0f0f', color: '#fff', border: 'none',
-            padding: '14px 36px', borderRadius: 10, fontSize: 15, fontWeight: 600,
-            cursor: 'pointer', fontFamily: "'Inter',sans-serif",
-          }}>
-            Start today →
-          </button>
-        </div>
-      </section>
+ <div style={{ textAlign: 'center', marginTop: 32 }}>
+ <button onClick={goSignUp} style={{
+ background: '#0f0f0f', color: '#fff', border: 'none',
+ padding: '14px 36px', borderRadius: 10, fontSize: 15, fontWeight: 600,
+ cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+ }}>
+ Start today →
+ </button>
+ </div>
+ </section>
 
-      {/* ── PRICING ───────────────────────────────────────────── */}
-      <section style={{ background: '#fafafa', borderTop: '1px solid #f0f0f0', maxWidth: '100%', margin: 0, padding: '96px 24px' }}>
-        <div style={{ maxWidth: 960, margin: '0 auto' }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: '#b5b5b5',
-          letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'center', marginBottom: 12 }}>
-          FOUNDING MEMBER PRICING
-        </p>
-        <h2 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 40,
-          fontWeight: 400, textAlign: 'center', letterSpacing: '-0.025em',
-          color: '#0f0f0f', marginBottom: 8 }}>
-          Less than one Swiggy order a day.
-        </h2>
-        <p style={{ fontSize: 16, color: '#9b9b9b', textAlign: 'center', marginBottom: 56 }}>
-          ₹399/month = ₹13/day to get 10–15 applications sent while you sleep.
-        </p>
+ {/* ── PRICING ───────────────────────────────────────────── */}
+ <section style={{ background: '#fafafa', borderTop: '1px solid #f0f0f0', maxWidth: '100%', margin: 0, padding: '96px 24px' }}>
+ <div style={{ maxWidth: 960, margin: '0 auto' }}>
+ <p style={{ fontSize: 11, fontWeight: 700, color: '#b5b5b5',
+ letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'center', marginBottom: 12 }}>
+ FOUNDING MEMBER PRICING
+ </p>
+ <h2 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 40,
+ fontWeight: 400, textAlign: 'center', letterSpacing: '-0.025em',
+ color: '#0f0f0f', marginBottom: 8 }}>
+ Less than one Swiggy order a day.
+ </h2>
+ <p style={{ fontSize: 16, color: '#9b9b9b', textAlign: 'center', marginBottom: 56 }}>
+ ₹399/month = ₹13/day to get 10–15 applications sent while you sleep.
+ </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
-          {[
-            { label: '1 Month',  price: '₹399',   sub: '₹399/mo',  highlight: false, popular: false, saving: null,        color: '#0f0f0f' },
-            { label: '3 Months', price: '₹1,099', sub: '₹366/mo',  highlight: false, popular: false, saving: '~8% off',  color: '#1d4ed8' },
-            { label: '6 Months', price: '₹1,999', sub: '₹333/mo',  highlight: true,  popular: true,  saving: '~16% off', color: '#7c3aed' },
-            { label: '12 Months',price: '₹3,599', sub: '₹300/mo',  highlight: false, popular: false, saving: '~25% off', color: '#059669' },
-          ].map(p => (
-            <div key={p.label} style={{
-              background: p.highlight ? p.color : '#fff',
-              border: `2px solid ${p.highlight ? p.color : '#e8e8e8'}`,
-              borderRadius: 16, padding: '28px 20px', position: 'relative', textAlign: 'center',
-              boxShadow: p.highlight ? `0 16px 48px ${p.color}33` : '0 1px 4px rgba(0,0,0,0.04)',
-              transform: p.highlight ? 'scale(1.04)' : 'none',
-            }}>
-              {p.popular && (
-                <span style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
-                  fontSize: 11, fontWeight: 700, padding: '4px 12px',
-                  background: '#f59e0b', color: '#fff', borderRadius: 99, whiteSpace: 'nowrap' }}>
-                  MOST POPULAR
-                </span>
-              )}
-              {p.saving && !p.popular && (
-                <span style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)',
-                  fontSize: 11, fontWeight: 700, padding: '3px 10px',
-                  background: '#fef9c3', color: '#92400e', borderRadius: 99, whiteSpace: 'nowrap' }}>
-                  {p.saving}
-                </span>
-              )}
-              <p style={{ fontSize: 13, color: p.highlight ? 'rgba(255,255,255,0.55)' : '#9b9b9b', marginBottom: 8 }}>
-                {p.label}
-              </p>
-              <p style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 32,
-                color: p.highlight ? '#fff' : '#0f0f0f', marginBottom: 4 }}>{p.price}</p>
-              <p style={{ fontSize: 12, color: p.highlight ? 'rgba(255,255,255,0.5)' : '#b5b5b5', marginBottom: 20 }}>{p.sub}</p>
-              <button onClick={goSignUp} style={{
-                width: '100%', padding: '10px 0', borderRadius: 8,
-                border: p.highlight ? '1px solid rgba(255,255,255,0.25)' : '1px solid #e8e8e8',
-                background: p.highlight ? 'rgba(255,255,255,0.15)' : '#f5f5f5',
-                color: p.highlight ? '#fff' : '#0f0f0f',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'Inter',sans-serif",
-              }}>
-                Get started →
-              </button>
-            </div>
-          ))}
-        </div>
+ <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
+ {[
+ { label: '1 Month', price: '₹399', sub: '₹399/mo', highlight: false, popular: false, saving: null, color: '#0f0f0f' },
+ { label: '3 Months', price: '₹1,099', sub: '₹366/mo', highlight: false, popular: false, saving: '~8% off', color: '#1d4ed8' },
+ { label: '6 Months', price: '₹1,999', sub: '₹333/mo', highlight: true, popular: true, saving: '~16% off', color: '#7c3aed' },
+ { label: '12 Months',price: '₹3,599', sub: '₹300/mo', highlight: false, popular: false, saving: '~25% off', color: '#059669' },
+ ].map(p => (
+ <div key={p.label} style={{
+ background: p.highlight ? p.color : '#fff',
+ border: `2px solid ${p.highlight ? p.color : '#e8e8e8'}`,
+ borderRadius: 16, padding: '28px 20px', position: 'relative', textAlign: 'center',
+ boxShadow: p.highlight ? `0 16px 48px ${p.color}33` : '0 1px 4px rgba(0,0,0,0.04)',
+ transform: p.highlight ? 'scale(1.04)' : 'none',
+ }}>
+ {p.popular && (
+ <span style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
+ fontSize: 11, fontWeight: 700, padding: '4px 12px',
+ background: '#f59e0b', color: '#fff', borderRadius: 99, whiteSpace: 'nowrap' }}>
+ MOST POPULAR
+ </span>
+ )}
+ {p.saving && !p.popular && (
+ <span style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)',
+ fontSize: 11, fontWeight: 700, padding: '3px 10px',
+ background: '#fef9c3', color: '#92400e', borderRadius: 99, whiteSpace: 'nowrap' }}>
+ {p.saving}
+ </span>
+ )}
+ <p style={{ fontSize: 13, color: p.highlight ? 'rgba(255,255,255,0.55)' : '#9b9b9b', marginBottom: 8 }}>
+ {p.label}
+ </p>
+ <p style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 32,
+ color: p.highlight ? '#fff' : '#0f0f0f', marginBottom: 4 }}>{p.price}</p>
+ <p style={{ fontSize: 12, color: p.highlight ? 'rgba(255,255,255,0.5)' : '#b5b5b5', marginBottom: 20 }}>{p.sub}</p>
+ <button onClick={goSignUp} style={{
+ width: '100%', padding: '10px 0', borderRadius: 8,
+ border: p.highlight ? '1px solid rgba(255,255,255,0.25)' : '1px solid #e8e8e8',
+ background: p.highlight ? 'rgba(255,255,255,0.15)' : '#f5f5f5',
+ color: p.highlight ? '#fff' : '#0f0f0f',
+ fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+ }}>
+ Get started →
+ </button>
+ </div>
+ ))}
+ </div>
 
-        <p style={{ textAlign: 'center', fontSize: 13, color: '#b5b5b5', marginTop: 28 }}>
-          🔒 Secured by Razorpay · UPI · Cards · Net banking · No auto-renewal
-        </p>
-        </div>
-      </section>
+ <p style={{ textAlign: 'center', fontSize: 13, color: '#b5b5b5', marginTop: 28 }}>
+ Secured by Razorpay · UPI · Cards · Net banking · No auto-renewal
+ </p>
+ </div>
+ </section>
 
-      {/* ── FAQ ───────────────────────────────────────────────── */}
-      <section style={{ background: '#fff', padding: '96px 24px' }}>
-        <div style={{ maxWidth: 680, margin: '0 auto' }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#b5b5b5',
-            letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'center', marginBottom: 12 }}>
-            FAQ
-          </p>
-          <h2 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 40,
-            fontWeight: 400, textAlign: 'center', letterSpacing: '-0.025em',
-            color: '#0f0f0f', marginBottom: 52 }}>
-            Every question you have.
-          </h2>
+ {/* ── FAQ ───────────────────────────────────────────────── */}
+ <section style={{ background: '#fff', padding: '96px 24px' }}>
+ <div style={{ maxWidth: 680, margin: '0 auto' }}>
+ <p style={{ fontSize: 11, fontWeight: 700, color: '#b5b5b5',
+ letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'center', marginBottom: 12 }}>
+ FAQ
+ </p>
+ <h2 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 40,
+ fontWeight: 400, textAlign: 'center', letterSpacing: '-0.025em',
+ color: '#0f0f0f', marginBottom: 52 }}>
+ Every question you have.
+ </h2>
 
-          {FAQS.map((faq, i) => (
-            <div key={i} style={{ borderBottom: '1px solid #ebebeb' }}>
-              <button
-                onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                style={{
-                  width: '100%', background: 'none', border: 'none', padding: '22px 0',
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  cursor: 'pointer', textAlign: 'left', fontFamily: "'Inter',sans-serif",
-                }}>
-                <span style={{ fontSize: 16, fontWeight: 600, color: '#0f0f0f', paddingRight: 24 }}>
-                  {faq.q}
-                </span>
-                <span style={{ fontSize: 22, color: '#9b9b9b', flexShrink: 0,
-                  transform: openFaq === i ? 'rotate(45deg)' : 'none',
-                  transition: 'transform 0.2s', display: 'block' }}>+</span>
-              </button>
-              {openFaq === i && (
-                <p style={{ fontSize: 15, color: '#6b6b6b', lineHeight: 1.7,
-                  paddingBottom: 22, paddingRight: 32 }}>
-                  {faq.a}
-                </p>
-              )}
-            </div>
-          ))}
+ {FAQS.map((faq, i) => (
+ <div key={i} style={{ borderBottom: '1px solid #ebebeb' }}>
+ <button
+ onClick={() => setOpenFaq(openFaq === i ? null : i)}
+ style={{
+ width: '100%', background: 'none', border: 'none', padding: '22px 0',
+ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+ cursor: 'pointer', textAlign: 'left', fontFamily: "'Inter',sans-serif",
+ }}>
+ <span style={{ fontSize: 16, fontWeight: 600, color: '#0f0f0f', paddingRight: 24 }}>
+ {faq.q}
+ </span>
+ <span style={{ fontSize: 22, color: '#9b9b9b', flexShrink: 0,
+ transform: openFaq === i ? 'rotate(45deg)' : 'none',
+ transition: 'transform 0.2s', display: 'block' }}>+</span>
+ </button>
+ {openFaq === i && (
+ <p style={{ fontSize: 15, color: '#6b6b6b', lineHeight: 1.7,
+ paddingBottom: 22, paddingRight: 32 }}>
+ {faq.a}
+ </p>
+ )}
+ </div>
+ ))}
 
-          <div style={{ textAlign: 'center', marginTop: 48 }}>
-            <button onClick={goSignUp} style={{
-              background: '#0f0f0f', color: '#fff', border: 'none',
-              padding: '16px 40px', borderRadius: 12, fontSize: 15, fontWeight: 700,
-              cursor: 'pointer', fontFamily: "'Inter',sans-serif",
-            }}>
-              I'm ready — count me in →
-            </button>
-          </div>
-        </div>
-      </section>
+ <div style={{ textAlign: 'center', marginTop: 48 }}>
+ <button onClick={goSignUp} style={{
+ background: '#0f0f0f', color: '#fff', border: 'none',
+ padding: '16px 40px', borderRadius: 12, fontSize: 15, fontWeight: 700,
+ cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+ }}>
+ I'm ready — count me in →
+ </button>
+ </div>
+ </div>
+ </section>
 
-      {/* ── FINAL CTA ─────────────────────────────────────────── */}
-      <section style={{ background: '#0f0f0f', padding: '100px 24px', textAlign: 'center' }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.35)',
-          letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 20 }}>
-          YOUR MOVE
-        </p>
-        <h2 style={{ fontFamily: "'Instrument Serif',Georgia,serif",
-          fontSize: 'clamp(36px,6vw,64px)', fontWeight: 400,
-          color: '#fff', lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: 16 }}>
-          Every day you wait<br />
-          <span style={{ color: 'rgba(255,255,255,0.35)' }}>is a day someone else</span><br />
-          gets the role you wanted.
-        </h2>
-        <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.55)', marginBottom: 48, maxWidth: 480, margin: '0 auto 48px' }}>
-          ₹399. 4 minutes. Founding member pricing. What are you waiting for?
-        </p>
-        <button onClick={goSignUp} style={{
-          background: '#fff', color: '#0f0f0f', border: 'none',
-          padding: '20px 56px', borderRadius: 14, fontSize: 18, fontWeight: 800,
-          cursor: 'pointer', fontFamily: "'Inter',sans-serif", letterSpacing: '-0.02em',
-          boxShadow: '0 8px 40px rgba(255,255,255,0.15)',
-        }}>
-          Join as a founding member →
-        </button>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 18 }}>
-          Setup in 4 min · ₹399/month · No auto-renewal · Cancel anytime
-        </p>
-      </section>
+ {/* ── FINAL CTA ─────────────────────────────────────────── */}
+ <section style={{ background: '#0f0f0f', padding: '100px 24px', textAlign: 'center' }}>
+ <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.35)',
+ letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 20 }}>
+ YOUR MOVE
+ </p>
+ <h2 style={{ fontFamily: "'Instrument Serif',Georgia,serif",
+ fontSize: 'clamp(36px,6vw,64px)', fontWeight: 400,
+ color: '#fff', lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: 16 }}>
+ Every day you wait<br />
+ <span style={{ color: 'rgba(255,255,255,0.35)' }}>is a day someone else</span><br />
+ gets the role you wanted.
+ </h2>
+ <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.55)', marginBottom: 48, maxWidth: 480, margin: '0 auto 48px' }}>
+ ₹399. 4 minutes. Founding member pricing. What are you waiting for?
+ </p>
+ <button onClick={goSignUp} style={{
+ background: '#fff', color: '#0f0f0f', border: 'none',
+ padding: '20px 56px', borderRadius: 14, fontSize: 18, fontWeight: 800,
+ cursor: 'pointer', fontFamily: "'Inter',sans-serif", letterSpacing: '-0.02em',
+ boxShadow: '0 8px 40px rgba(255,255,255,0.15)',
+ }}>
+ Join as a founding member →
+ </button>
+ <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 18 }}>
+ Setup in 4 min · ₹399/month · No auto-renewal · Cancel anytime
+ </p>
+ </section>
 
-      {/* ── FOOTER ────────────────────────────────────────────── */}
-      <footer style={{ background: '#0f0f0f', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '32px 24px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 26, height: 26, borderRadius: 6, background: '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#0f0f0f"/>
-              </svg>
-            </div>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>
-              Opportunities Cell
-            </span>
-          </div>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>© 2025 · All rights reserved</p>
-        </div>
-      </footer>
+ {/* ── FOOTER ────────────────────────────────────────────── */}
+ <footer style={{ background: '#0f0f0f', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '32px 24px' }}>
+ <div style={{ maxWidth: 900, margin: '0 auto',
+ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+ <div style={{ width: 26, height: 26, borderRadius: 6, background: '#fff',
+ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+ <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+ <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#0f0f0f"/>
+ </svg>
+ </div>
+ <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>
+ Opportunities Cell
+ </span>
+ </div>
+ <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>© 2025 · All rights reserved</p>
+ </div>
+ </footer>
 
-      {/* ── STICKY CTA BAR ────────────────────────────────────── */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200,
-        background: '#0f0f0f', borderTop: '1px solid rgba(255,255,255,0.1)',
-        padding: '14px 24px',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24,
-        transform: showSticky ? 'translateY(0)' : 'translateY(100%)',
-        transition: 'transform 0.3s ease',
-        boxShadow: '0 -8px 32px rgba(0,0,0,0.3)',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e',
-            display: 'block', boxShadow: '0 0 0 3px rgba(34,197,94,0.25)' }} />
-          <span style={{ fontSize: 14, color: '#fff', fontWeight: 500 }}>
-            <strong>Founding member pricing.</strong> Limited spots.
-          </span>
-        </div>
-        <button onClick={goSignUp} style={{
-          background: '#fff', color: '#0f0f0f', border: 'none',
-          padding: '10px 28px', borderRadius: 8, fontSize: 14, fontWeight: 700,
-          cursor: 'pointer', fontFamily: "'Inter',sans-serif", whiteSpace: 'nowrap',
-        }}>
-          Start for ₹399 →
-        </button>
-      </div>
+ {/* ── STICKY CTA BAR ────────────────────────────────────── */}
+ <div style={{
+ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200,
+ background: '#0f0f0f', borderTop: '1px solid rgba(255,255,255,0.1)',
+ padding: '14px 24px',
+ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24,
+ transform: showSticky ? 'translateY(0)' : 'translateY(100%)',
+ transition: 'transform 0.3s ease',
+ boxShadow: '0 -8px 32px rgba(0,0,0,0.3)',
+ }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+ <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e',
+ display: 'block', boxShadow: '0 0 0 3px rgba(34,197,94,0.25)' }} />
+ <span style={{ fontSize: 14, color: '#fff', fontWeight: 500 }}>
+ <strong>Founding member pricing.</strong> Limited spots.
+ </span>
+ </div>
+ <button onClick={goSignUp} style={{
+ background: '#fff', color: '#0f0f0f', border: 'none',
+ padding: '10px 28px', borderRadius: 8, fontSize: 14, fontWeight: 700,
+ cursor: 'pointer', fontFamily: "'Inter',sans-serif", whiteSpace: 'nowrap',
+ }}>
+ Start for ₹399 →
+ </button>
+ </div>
 
-      <style>{`
-        @media (max-width: 768px) {
-          div[style*="repeat(4,1fr)"] { grid-template-columns: 1fr 1fr !important; }
-          div[style*="repeat(3,1fr)"] { grid-template-columns: 1fr !important; }
-          div[style*="1fr 1fr"]       { grid-template-columns: 1fr !important; }
-          div[style*="gridTemplateColumns: '1fr 1fr'"] { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-    </div>
-  )
+ <style>{`
+ @media (max-width: 768px) {
+ div[style*="repeat(4,1fr)"] { grid-template-columns: 1fr 1fr !important; }
+ div[style*="repeat(3,1fr)"] { grid-template-columns: 1fr !important; }
+ div[style*="1fr 1fr"] { grid-template-columns: 1fr !important; }
+ div[style*="gridTemplateColumns: '1fr 1fr'"] { grid-template-columns: 1fr !important; }
+ }
+ `}</style>
+ </div>
+ )
 }

@@ -116,7 +116,7 @@ export default function SignUp() {
 
       <div className="oc-divider" style={{ margin: '24px 0' }}><span>or use email</span></div>
 
-      {formError && <div className="oc-error">⚠ {formError}</div>}
+      {formError && <div className="oc-error">{formError}</div>}
 
       {/* Step 1 — full name + email */}
       {step === 'email' && (
