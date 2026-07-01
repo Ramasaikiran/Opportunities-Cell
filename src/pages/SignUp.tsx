@@ -80,6 +80,23 @@ export default function SignUp() {
     if (!validateDetails()) return
     if (blocked) { setFormError(blockMessage); return }
     setLoading(true)
+
+    // Server-side IP check — blocks bots/DDoS even if localStorage cleared
+    try {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-signup-rate-limit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY },
+      })
+      const data = await res.json()
+      if (!data.allowed) {
+        const secs = data.retry_after_seconds ?? 0
+        const human = secs >= 3600 ? `${Math.ceil(secs / 3600)}h` : secs >= 60 ? `${Math.ceil(secs / 60)}m` : `${secs}s`
+        setFormError(`Too many attempts. Try again in ${human}.`)
+        setLoading(false)
+        return
+      }
+    } catch { /* fail-open if edge function unreachable */ }
+
     recordAttempt()
     const { error } = await signUp(fullName.trim(), email.trim().toLowerCase(), password)
     setLoading(false)
