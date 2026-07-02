@@ -28,12 +28,15 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
+drop policy if exists "Users can view their own profile" on public.profiles;
 create policy "Users can view their own profile"
   on public.profiles for select using (auth.uid() = id);
 
+drop policy if exists "Users can update their own profile" on public.profiles;
 create policy "Users can update their own profile"
   on public.profiles for update using (auth.uid() = id);
 
+drop policy if exists "Admins can view all profiles" on public.profiles;
 create policy "Admins can view all profiles"
   on public.profiles for select
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true));
@@ -108,9 +111,11 @@ create table if not exists public.student_details (
 );
 
 alter table public.student_details enable row level security;
+drop policy if exists "Users manage their student details" on public.student_details;
 create policy "Users manage their student details"
   on public.student_details for all
   using (auth.uid() = id) with check (auth.uid() = id);
+drop policy if exists "Admins view all student details" on public.student_details;
 create policy "Admins view all student details"
   on public.student_details for select
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
@@ -130,9 +135,11 @@ create table if not exists public.professional_details (
 );
 
 alter table public.professional_details enable row level security;
+drop policy if exists "Users manage their professional details" on public.professional_details;
 create policy "Users manage their professional details"
   on public.professional_details for all
   using (auth.uid() = id) with check (auth.uid() = id);
+drop policy if exists "Admins view all professional details" on public.professional_details;
 create policy "Admins view all professional details"
   on public.professional_details for select
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
@@ -154,10 +161,13 @@ create table if not exists public.subscriptions (
 );
 
 alter table public.subscriptions enable row level security;
+drop policy if exists "Users view own subscriptions" on public.subscriptions;
 create policy "Users view own subscriptions"
   on public.subscriptions for select using (auth.uid() = user_id);
+drop policy if exists "Users insert own subscriptions" on public.subscriptions;
 create policy "Users insert own subscriptions"
   on public.subscriptions for insert with check (auth.uid() = user_id);
+drop policy if exists "Admins view all subscriptions" on public.subscriptions;
 create policy "Admins view all subscriptions"
   on public.subscriptions for select
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
@@ -193,8 +203,10 @@ create table if not exists public.jobs (
 );
 
 alter table public.jobs enable row level security;
+drop policy if exists "All authenticated users view active jobs" on public.jobs;
 create policy "All authenticated users view active jobs"
   on public.jobs for select using (auth.uid() is not null and is_active = true);
+drop policy if exists "Admins manage all jobs" on public.jobs;
 create policy "Admins manage all jobs"
   on public.jobs for all
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
@@ -215,8 +227,10 @@ create table if not exists public.job_applications (
 );
 
 alter table public.job_applications enable row level security;
+drop policy if exists "Users view own applications" on public.job_applications;
 create policy "Users view own applications"
   on public.job_applications for select using (auth.uid() = user_id);
+drop policy if exists "Admins manage all applications" on public.job_applications;
 create policy "Admins manage all applications"
   on public.job_applications for all
   using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
@@ -267,23 +281,28 @@ $$;
 insert into storage.buckets (id, name, public) values ('resumes', 'resumes', false) on conflict (id) do nothing;
 insert into storage.buckets (id, name, public) values ('photos', 'photos', true)    on conflict (id) do nothing;
 
+drop policy if exists "Users upload own resume" on storage.objects;
 create policy "Users upload own resume"
   on storage.objects for insert
   with check (bucket_id = 'resumes' and auth.uid()::text = (storage.foldername(name))[1]);
 
+drop policy if exists "Users read own resume" on storage.objects;
 create policy "Users read own resume"
   on storage.objects for select
   using (bucket_id = 'resumes' and auth.uid()::text = (storage.foldername(name))[1]);
 
+drop policy if exists "Admins read all resumes" on storage.objects;
 create policy "Admins read all resumes"
   on storage.objects for select
   using (bucket_id = 'resumes' and
     exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
 
+drop policy if exists "Users upload own photo" on storage.objects;
 create policy "Users upload own photo"
   on storage.objects for insert
   with check (bucket_id = 'photos' and auth.uid()::text = (storage.foldername(name))[1]);
 
+drop policy if exists "Anyone can view photos" on storage.objects;
 create policy "Anyone can view photos"
   on storage.objects for select using (bucket_id = 'photos');
 
