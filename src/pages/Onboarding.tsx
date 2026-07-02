@@ -252,6 +252,7 @@ export default function Onboarding() {
  setResumePath(path)
  setResumeName(file.name)
  } catch (err) {
+ console.error('Resume upload error:', err)
  setResumeUploadErr(`Upload failed: ${(err as Error).message}. You can retry or skip and add it later.`)
  } finally {
  setResumeUploading(false)
