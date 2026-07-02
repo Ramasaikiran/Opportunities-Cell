@@ -1,13 +1,24 @@
 import { useEffect, useState } from 'react'
-import { supabase, type Job } from '../../lib/supabase'
+import { supabase, type Job, type JobStatus, type SubscriptionPlan } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import AdminNav from './AdminNav'
 
-const BLANK: Omit<Job,'id'|'posted_at'> = {
+const BLANK: Omit<Job,'id'|'posted_at'|'updated_at'> = {
   title: '', company: '', description: '', required_skills: [],
   required_experience_min: 0, required_experience_max: null,
-  job_type: 'full-time', role_category: '', location: '', country: 'India',
-  salary_min: null, salary_max: null, apply_url: '', is_active: true,
+  job_type: 'full-time', work_mode: null, role_category: '', location: '', country: 'India',
+  salary_min: null, salary_max: null, apply_url: '', last_date: null,
+  plan_visibility: ['basic', 'pro', 'maxpro'], status: 'draft', is_active: true,
+}
+
+const STATUS_META: Record<JobStatus, { label: string; color: string; bg: string }> = {
+  draft:     { label: 'Draft',     color: '#9b9b9b', bg: '#f5f5f5' },
+  published: { label: 'Published', color: '#16a34a', bg: '#f0fdf4' },
+  inactive:  { label: 'Inactive',  color: '#dc2626', bg: '#fef2f2' },
+}
+
+const PLAN_LABELS: Record<SubscriptionPlan, string> = {
+  basic: 'Basic', pro: 'Pro', maxpro: 'Max Pro',
 }
 
 export default function AdminJobs() {
@@ -21,6 +32,7 @@ export default function AdminJobs() {
   const [editId,  setEditId]  = useState<string | null>(null)
   const [error,   setError]   = useState<string | null>(null)
   const [search,  setSearch]  = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | JobStatus>('all')
 
   useEffect(() => { load() }, [])
 
@@ -33,9 +45,10 @@ export default function AdminJobs() {
 
   const filteredJobs = jobs.filter(j => {
     const q = search.trim().toLowerCase()
-    if (!q) return true
-    return j.title.toLowerCase().includes(q) || j.company.toLowerCase().includes(q) ||
-      (j.location ?? '').toLowerCase().includes(q)
+    const matchesSearch = !q || j.title.toLowerCase().includes(q) ||
+      j.company.toLowerCase().includes(q) || (j.location ?? '').toLowerCase().includes(q)
+    const matchesStatus = statusFilter === 'all' || j.status === statusFilter
+    return matchesSearch && matchesStatus
   })
 
   const urlCounts = jobs.reduce<Record<string, number>>((acc, j) => {
@@ -52,19 +65,22 @@ export default function AdminJobs() {
       title: job.title, company: job.company, description: job.description ?? '',
       required_skills: job.required_skills, required_experience_min: job.required_experience_min,
       required_experience_max: job.required_experience_max, job_type: job.job_type,
-      role_category: job.role_category ?? '', location: job.location ?? '', country: job.country ?? 'India',
-      salary_min: job.salary_min, salary_max: job.salary_max, apply_url: job.apply_url ?? '',
-      is_active: job.is_active,
+      work_mode: job.work_mode, role_category: job.role_category ?? '', location: job.location ?? '',
+      country: job.country ?? 'India', salary_min: job.salary_min, salary_max: job.salary_max,
+      apply_url: job.apply_url ?? '', last_date: job.last_date,
+      plan_visibility: job.plan_visibility?.length ? job.plan_visibility : ['basic', 'pro', 'maxpro'],
+      status: job.status, is_active: job.is_active,
     })
     setSkillsInput(job.required_skills.join(', '))
     setEditId(job.id); setError(null); setShowForm(true)
   }
 
-  async function handleSave() {
+  async function handleSave(publishNow?: boolean) {
     if (!form.title.trim() || !form.company.trim()) { setError('Title and company are required.'); return }
     setSaving(true); setError(null)
     const payload = {
       ...form,
+      status: publishNow ? 'published' : form.status,
       required_skills: skillsInput.split(',').map(s => s.trim()).filter(Boolean),
       created_by: profile?.id,
     }
@@ -76,9 +92,24 @@ export default function AdminJobs() {
     await load()
   }
 
-  async function toggleActive(job: Job) {
-    await supabase.from('jobs').update({ is_active: !job.is_active }).eq('id', job.id)
-    setJobs(prev => prev.map(j => j.id === job.id ? { ...j, is_active: !j.is_active } : j))
+  async function setStatus(job: Job, status: JobStatus) {
+    await supabase.from('jobs').update({ status }).eq('id', job.id)
+    setJobs(prev => prev.map(j => j.id === job.id ? { ...j, status } : j))
+  }
+
+  async function deleteJob(job: Job) {
+    if (!confirm(`Delete "${job.title}" at ${job.company}? This can't be undone.`)) return
+    await supabase.from('jobs').delete().eq('id', job.id)
+    setJobs(prev => prev.filter(j => j.id !== job.id))
+  }
+
+  function togglePlanVisibility(plan: SubscriptionPlan) {
+    setForm(p => ({
+      ...p,
+      plan_visibility: p.plan_visibility.includes(plan)
+        ? p.plan_visibility.filter(v => v !== plan)
+        : [...p.plan_visibility, plan],
+    }))
   }
 
   const inp: React.CSSProperties = {
@@ -102,7 +133,6 @@ export default function AdminJobs() {
 
       <div style={{ maxWidth: 960, margin: '0 auto', padding: '36px 24px' }}>
 
-        {/* ── Job form modal ─────────────────────────────── */}
         {showForm && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 20 }}>
@@ -142,7 +172,7 @@ export default function AdminJobs() {
 
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#6b6b6b', marginBottom: 5 }}>
-                    Required skills (comma-separated)
+                    Required skills / tags (comma-separated)
                   </label>
                   <input style={inp} value={skillsInput}
                     onChange={e => setSkillsInput(e.target.value)}
@@ -166,6 +196,9 @@ export default function AdminJobs() {
                       value={form.required_experience_max ?? ''}
                       onChange={e => setForm(p => ({ ...p, required_experience_max: e.target.value ? parseFloat(e.target.value) : null }))} />
                   </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#6b6b6b', marginBottom: 5 }}>
                       Min salary (₹)
@@ -184,13 +217,34 @@ export default function AdminJobs() {
                   </div>
                 </div>
 
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#6b6b6b', marginBottom: 5 }}>Job type</label>
+                    <select value={form.job_type ?? 'full-time'}
+                      onChange={e => setForm(p => ({ ...p, job_type: e.target.value }))}
+                      style={{ ...inp, appearance: 'none' as const }}>
+                      {['full-time','internship','contract','part-time'].map(t => <option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#6b6b6b', marginBottom: 5 }}>Work mode</label>
+                    <select value={form.work_mode ?? ''}
+                      onChange={e => setForm(p => ({ ...p, work_mode: (e.target.value || null) as typeof form.work_mode }))}
+                      style={{ ...inp, appearance: 'none' as const }}>
+                      <option value="">Not specified</option>
+                      <option value="remote">Remote</option>
+                      <option value="hybrid">Hybrid</option>
+                      <option value="onsite">Onsite</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#6b6b6b', marginBottom: 5 }}>Job type</label>
-                  <select value={form.job_type ?? 'full-time'}
-                    onChange={e => setForm(p => ({ ...p, job_type: e.target.value }))}
-                    style={{ ...inp, appearance: 'none' as const }}>
-                    {['full-time','internship','contract','part-time'].map(t => <option key={t}>{t}</option>)}
-                  </select>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#6b6b6b', marginBottom: 5 }}>
+                    Last date to apply
+                  </label>
+                  <input style={inp} type="date" value={form.last_date ?? ''}
+                    onChange={e => setForm(p => ({ ...p, last_date: e.target.value || null }))} />
                 </div>
 
                 <div>
@@ -201,50 +255,101 @@ export default function AdminJobs() {
                     style={{ ...inp, height: 'auto', padding: '10px 14px', resize: 'vertical', lineHeight: 1.6 }} />
                 </div>
 
-                <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', fontSize: 14, color: '#0f0f0f' }}>
-                  <input type="checkbox" checked={form.is_active}
-                    onChange={e => setForm(p => ({ ...p, is_active: e.target.checked }))} />
-                  Active (visible to admin for matching)
-                </label>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#6b6b6b', marginBottom: 8 }}>
+                    Plan visibility — which plans see this job
+                  </label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {(['basic', 'pro', 'maxpro'] as SubscriptionPlan[]).map(plan => {
+                      const on = form.plan_visibility.includes(plan)
+                      return (
+                        <button key={plan} type="button" onClick={() => togglePlanVisibility(plan)} style={{
+                          flex: 1, padding: '9px 0', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                          cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+                          background: on ? '#0f0f0f' : '#f5f5f5',
+                          color: on ? '#fff' : '#9b9b9b',
+                          border: 'none',
+                        }}>{PLAN_LABELS[plan]}</button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#6b6b6b', marginBottom: 8 }}>
+                    Status
+                  </label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {(['draft', 'published', 'inactive'] as JobStatus[]).map(s => {
+                      const on = form.status === s
+                      return (
+                        <button key={s} type="button" onClick={() => setForm(p => ({ ...p, status: s }))} style={{
+                          flex: 1, padding: '9px 0', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                          cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+                          background: on ? STATUS_META[s].color : '#f5f5f5',
+                          color: on ? '#fff' : '#9b9b9b',
+                          border: 'none',
+                        }}>{STATUS_META[s].label}</button>
+                      )
+                    })}
+                  </div>
+                </div>
 
                 <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-                  <button onClick={handleSave} disabled={saving} style={{
-                    flex: 1, height: 46, background: saving ? '#6b6b6b' : '#0f0f0f', color: '#fff',
+                  <button onClick={() => handleSave()} disabled={saving} style={{
+                    flex: 1, height: 46, background: saving ? '#6b6b6b' : '#f5f5f5', color: '#0f0f0f',
                     border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600,
                     cursor: saving ? 'not-allowed' : 'pointer', fontFamily: "'Inter',sans-serif",
                   }}>
-                    {saving ? 'Saving…' : editId ? 'Save changes' : 'Add job'}
+                    {saving ? 'Saving…' : 'Save as draft'}
                   </button>
-                  <button onClick={() => setShowForm(false)} style={{
-                    flex: 1, height: 46, background: '#f5f5f5', color: '#6b6b6b',
-                    border: 'none', borderRadius: 10, fontSize: 14, cursor: 'pointer',
-                    fontFamily: "'Inter',sans-serif",
-                  }}>Cancel</button>
+                  <button onClick={() => handleSave(true)} disabled={saving} style={{
+                    flex: 1, height: 46, background: saving ? '#6b6b6b' : '#16a34a', color: '#fff',
+                    border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600,
+                    cursor: saving ? 'not-allowed' : 'pointer', fontFamily: "'Inter',sans-serif",
+                  }}>
+                    {saving ? 'Publishing…' : 'Publish now'}
+                  </button>
                 </div>
+                <button onClick={() => setShowForm(false)} style={{
+                  height: 40, background: 'none', color: '#9b9b9b',
+                  border: 'none', fontSize: 13, cursor: 'pointer',
+                  fontFamily: "'Inter',sans-serif",
+                }}>Cancel</button>
               </div>
             </div>
           </div>
         )}
 
-        {/* ── Job list ────────────────────────────────────── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 28, fontWeight: 400, color: '#0f0f0f' }}>
-            Jobs ({filteredJobs.length}{search ? ` of ${jobs.length}` : ''})
+            Jobs ({filteredJobs.length}{search || statusFilter !== 'all' ? ` of ${jobs.length}` : ''})
           </h1>
         </div>
 
         {jobs.length > 0 && (
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search by title, company, or location…"
-            style={{
-              width: '100%', height: 42, padding: '0 14px', marginBottom: 20,
-              fontSize: 14, fontFamily: "'Inter',sans-serif", color: '#0f0f0f',
-              background: '#fff', border: '1.5px solid #e5e5e5', borderRadius: 10,
-              outline: 'none', boxSizing: 'border-box',
-            }}
-          />
+          <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search by title, company, or location…"
+              style={{
+                flex: 1, height: 42, padding: '0 14px',
+                fontSize: 14, fontFamily: "'Inter',sans-serif", color: '#0f0f0f',
+                background: '#fff', border: '1.5px solid #e5e5e5', borderRadius: 10,
+                outline: 'none', boxSizing: 'border-box',
+              }}
+            />
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as typeof statusFilter)}
+              style={{ height: 42, padding: '0 12px', fontSize: 14, fontFamily: "'Inter',sans-serif",
+                color: '#0f0f0f', background: '#fff', border: '1.5px solid #e5e5e5', borderRadius: 10,
+                outline: 'none' }}>
+              <option value="all">All statuses</option>
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
         )}
 
         {loading ? (
@@ -260,61 +365,81 @@ export default function AdminJobs() {
           </div>
         ) : filteredJobs.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0', fontSize: 14, color: '#b5b5b5' }}>
-            No jobs match "{search}".
+            No jobs match your filters.
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {filteredJobs.map(job => (
-              <div key={job.id} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '16px 20px', background: '#fff',
-                border: `1.5px solid ${job.is_active ? '#f0f0f0' : '#fecaca'}`,
-                borderRadius: 12, gap: 12,
-                opacity: job.is_active ? 1 : 0.65,
-              }}>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 15, fontWeight: 500, color: '#0f0f0f', marginBottom: 3,
-                    display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {job.title}
-                    {job.apply_url && urlCounts[job.apply_url] > 1 && (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#b45309',
-                        background: '#fef3c7', padding: '2px 8px', borderRadius: 99 }}>
-                        DUPLICATE URL
+            {filteredJobs.map(job => {
+              const st = STATUS_META[job.status]
+              return (
+                <div key={job.id} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '16px 20px', background: '#fff',
+                  border: `1.5px solid #f0f0f0`, borderLeft: `3px solid ${st.color}`,
+                  borderRadius: 12, gap: 12,
+                  opacity: job.status === 'inactive' ? 0.65 : 1,
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 15, fontWeight: 500, color: '#0f0f0f', marginBottom: 3,
+                      display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      {job.title}
+                      <span style={{ fontSize: 10, fontWeight: 700, color: st.color,
+                        background: st.bg, padding: '2px 8px', borderRadius: 99 }}>
+                        {st.label.toUpperCase()}
                       </span>
+                      {job.apply_url && urlCounts[job.apply_url] > 1 && (
+                        <span style={{ fontSize: 10, fontWeight: 700, color: '#b45309',
+                          background: '#fef3c7', padding: '2px 8px', borderRadius: 99 }}>
+                          DUPLICATE URL
+                        </span>
+                      )}
+                    </p>
+                    <p style={{ fontSize: 13, color: '#9b9b9b', marginBottom: 6 }}>
+                      {job.company} · {job.job_type} · {job.location || 'Remote'}
+                      {job.required_experience_min > 0 && ` · ${job.required_experience_min}${job.required_experience_max ? `–${job.required_experience_max}` : '+'}y exp`}
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
+                      {job.required_skills.slice(0, 6).map(s => (
+                        <span key={s} style={{ fontSize: 11, padding: '2px 8px', background: '#f0f0f0',
+                          color: '#6b6b6b', borderRadius: 99 }}>{s}</span>
+                      ))}
+                      {job.required_skills.length > 6 && (
+                        <span style={{ fontSize: 11, color: '#b5b5b5' }}>+{job.required_skills.length - 6} more</span>
+                      )}
+                    </div>
+                    <p style={{ fontSize: 11, color: '#b5b5b5' }}>
+                      Visible to: {job.plan_visibility.map(p => PLAN_LABELS[p]).join(', ') || 'None'}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', maxWidth: 200, justifyContent: 'flex-end' }}>
+                    <button onClick={() => openEdit(job)} style={{
+                      padding: '7px 14px', background: '#f5f5f5', color: '#0f0f0f',
+                      border: 'none', borderRadius: 7, fontSize: 13, cursor: 'pointer',
+                      fontFamily: "'Inter',sans-serif",
+                    }}>Edit</button>
+                    {job.status !== 'published' && (
+                      <button onClick={() => setStatus(job, 'published')} style={{
+                        padding: '7px 14px', background: '#f0fdf4', color: '#16a34a',
+                        border: 'none', borderRadius: 7, fontSize: 13, cursor: 'pointer',
+                        fontFamily: "'Inter',sans-serif",
+                      }}>Publish</button>
                     )}
-                  </p>
-                  <p style={{ fontSize: 13, color: '#9b9b9b', marginBottom: 6 }}>
-                    {job.company} · {job.job_type} · {job.location || 'Remote'}
-                    {job.required_experience_min > 0 && ` · ${job.required_experience_min}${job.required_experience_max ? `–${job.required_experience_max}` : '+'}y exp`}
-                  </p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                    {job.required_skills.slice(0, 6).map(s => (
-                      <span key={s} style={{ fontSize: 11, padding: '2px 8px', background: '#f0f0f0',
-                        color: '#6b6b6b', borderRadius: 99 }}>{s}</span>
-                    ))}
-                    {job.required_skills.length > 6 && (
-                      <span style={{ fontSize: 11, color: '#b5b5b5' }}>+{job.required_skills.length - 6} more</span>
+                    {job.status === 'published' && (
+                      <button onClick={() => setStatus(job, 'draft')} style={{
+                        padding: '7px 14px', background: '#f5f5f5', color: '#6b6b6b',
+                        border: 'none', borderRadius: 7, fontSize: 13, cursor: 'pointer',
+                        fontFamily: "'Inter',sans-serif",
+                      }}>Unpublish</button>
                     )}
+                    <button onClick={() => deleteJob(job)} style={{
+                      padding: '7px 14px', background: '#fef2f2', color: '#dc2626',
+                      border: 'none', borderRadius: 7, fontSize: 13, cursor: 'pointer',
+                      fontFamily: "'Inter',sans-serif",
+                    }}>Delete</button>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                  <button onClick={() => openEdit(job)} style={{
-                    padding: '7px 14px', background: '#f5f5f5', color: '#0f0f0f',
-                    border: 'none', borderRadius: 7, fontSize: 13, cursor: 'pointer',
-                    fontFamily: "'Inter',sans-serif",
-                  }}>Edit</button>
-                  <button onClick={() => toggleActive(job)} style={{
-                    padding: '7px 14px',
-                    background: job.is_active ? '#fef2f2' : '#f0fdf4',
-                    color:      job.is_active ? '#dc2626' : '#16a34a',
-                    border: 'none', borderRadius: 7, fontSize: 13, cursor: 'pointer',
-                    fontFamily: "'Inter',sans-serif",
-                  }}>
-                    {job.is_active ? 'Deactivate' : 'Activate'}
-                  </button>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

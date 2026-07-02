@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase, PLANS, type AppStats, type JobApplication } from '../lib/supabase'
+import { supabase, PLANS, type AppStats, type JobApplication, type Job } from '../lib/supabase'
 
 type Period = '7' | '30' | '90' | '365'
 
@@ -44,9 +44,37 @@ export default function Dashboard() {
  const [resumeUrl, setResumeUrl] = useState<string | null>(null)
  const [resumeUploading, setResumeUploading] = useState(false)
  const [resumeError, setResumeError] = useState<string | null>(null)
+ const [availableJobs, setAvailableJobs] = useState<Job[]>([])
+ const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+ const [jobTab, setJobTab] = useState<'available' | 'saved'>('available')
+ const [jobsLoading, setJobsLoading] = useState(true)
 
  useEffect(() => { if (profile) load() }, [profile])
  useEffect(() => { if (profile) loadResume() }, [profile])
+ useEffect(() => { if (profile && subscription?.plan === 'basic') loadJobs() }, [profile, subscription])
+
+ async function loadJobs() {
+ if (!profile) return
+ setJobsLoading(true)
+ const [jobsRes, savedRes] = await Promise.all([
+ supabase.rpc('get_eligible_jobs'),
+ supabase.from('saved_jobs').select('job_id').eq('user_id', profile.id),
+ ])
+ setAvailableJobs((jobsRes.data as Job[]) ?? [])
+ setSavedIds(new Set((savedRes.data ?? []).map(r => r.job_id as string)))
+ setJobsLoading(false)
+ }
+
+ async function toggleSave(jobId: string) {
+ if (!profile) return
+ if (savedIds.has(jobId)) {
+ await supabase.from('saved_jobs').delete().eq('user_id', profile.id).eq('job_id', jobId)
+ setSavedIds(prev => { const next = new Set(prev); next.delete(jobId); return next })
+ } else {
+ await supabase.from('saved_jobs').insert({ user_id: profile.id, job_id: jobId })
+ setSavedIds(prev => new Set(prev).add(jobId))
+ }
+ }
 
  async function loadResume() {
  if (!profile) return
@@ -260,6 +288,76 @@ export default function Dashboard() {
  </div>
  </div>
 
+ {/* Available Jobs — Basic plan self-serve job feed */}
+ {subscription?.plan === 'basic' && (
+ <div style={{ marginBottom: 24 }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 14 }}>
+ <p style={{ fontSize: 13, fontWeight: 600, color: '#0f0f0f' }}>Jobs</p>
+ <div style={{ display: 'flex', gap: 4, background: '#f0f0f0', borderRadius: 8, padding: 3 }}>
+ {(['available', 'saved'] as const).map(t => (
+ <button key={t} onClick={() => setJobTab(t)} style={{
+ padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600,
+ border: 'none', cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+ background: jobTab === t ? '#fff' : 'transparent',
+ color: jobTab === t ? '#0f0f0f' : '#9b9b9b',
+ }}>{t === 'available' ? 'Available' : 'Saved'}</button>
+ ))}
+ </div>
+ </div>
+
+ {jobsLoading ? (
+ <div style={{ fontSize: 13, color: '#b5b5b5', textAlign: 'center', padding: '32px 0' }}>Loading…</div>
+ ) : (() => {
+ const shown = jobTab === 'available' ? availableJobs : availableJobs.filter(j => savedIds.has(j.id))
+ if (shown.length === 0) {
+ return (
+ <div style={{ background: '#fff', border: '1px solid #f0f0f0', borderRadius: 12,
+ padding: '32px 24px', textAlign: 'center', fontSize: 13, color: '#9b9b9b' }}>
+ {jobTab === 'available' ? 'No jobs published for your plan yet. Check back soon.' : 'No saved jobs yet.'}
+ </div>
+ )
+ }
+ return (
+ <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+ {shown.map(job => (
+ <div key={job.id} style={{
+ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+ padding: '14px 16px', background: '#fff', border: '1px solid #f0f0f0', borderRadius: 10,
+ }}>
+ <div style={{ flex: 1, minWidth: 0 }}>
+ <p style={{ fontSize: 14, fontWeight: 500, color: '#0f0f0f', marginBottom: 2 }}>{job.title}</p>
+ <p style={{ fontSize: 12, color: '#9b9b9b', marginBottom: 6 }}>
+ {job.company} · {job.location || 'Remote'} · {new Date(job.posted_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+ </p>
+ <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+ {job.required_skills.slice(0, 4).map(s => (
+ <span key={s} style={{ fontSize: 11, padding: '2px 7px', background: '#f0f0f0',
+ color: '#6b6b6b', borderRadius: 99 }}>{s}</span>
+ ))}
+ </div>
+ </div>
+ <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+ <button onClick={() => toggleSave(job.id)} style={{
+ padding: '7px 12px', background: savedIds.has(job.id) ? '#fef3c7' : '#f5f5f5',
+ color: savedIds.has(job.id) ? '#92400e' : '#6b6b6b',
+ border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+ fontFamily: "'Inter',sans-serif",
+ }}>{savedIds.has(job.id) ? 'Saved' : 'Save'}</button>
+ {job.apply_url && (
+ <a href={job.apply_url} target="_blank" rel="noreferrer" style={{
+ padding: '7px 14px', background: '#0f0f0f', color: '#fff', borderRadius: 7,
+ fontSize: 12, fontWeight: 600, textDecoration: 'none', fontFamily: "'Inter',sans-serif",
+ }}>Apply →</a>
+ )}
+ </div>
+ </div>
+ ))}
+ </div>
+ )
+ })()}
+ </div>
+ )}
+
  {/* Stats — period dropdown */}
  <div style={{ marginBottom: 20 }}>
  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -406,10 +504,12 @@ export default function Dashboard() {
  </div>
  </div>
  <button onClick={() => navigate('/subscription')} style={{
- background: 'none', border: '1px solid #e5e5e5', padding: '8px 16px',
- borderRadius: 7, fontSize: 13, color: '#0f0f0f', cursor: 'pointer',
- fontFamily: "'Inter',sans-serif",
- }}>Manage plan</button>
+ background: isUrgent ? '#dc2626' : 'none',
+ border: isUrgent ? 'none' : '1px solid #e5e5e5',
+ color: isUrgent ? '#fff' : '#0f0f0f',
+ padding: '8px 16px', borderRadius: 7, fontSize: 13, fontWeight: isUrgent ? 600 : 400,
+ cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+ }}>{isUrgent ? 'Renew now →' : 'Manage plan'}</button>
  </div>
  </div>
  )}

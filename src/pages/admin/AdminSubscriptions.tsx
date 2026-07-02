@@ -50,8 +50,7 @@ export default function AdminSubscriptions() {
         await supabase.from('subscriptions').update({ status: 'cancelled' }).eq('id', s.id)
       }
       if (action === 'renew') {
-        const months = PLANS[s.plan].months.match(/\d+/)?.[0] ?? '1'
-        const newEnd = new Date(); newEnd.setMonth(newEnd.getMonth() + parseInt(months))
+        const newEnd = new Date(); newEnd.setDate(newEnd.getDate() + 30)
         await supabase.from('subscriptions').update({
           status: 'active', starts_at: new Date().toISOString(), ends_at: newEnd.toISOString(),
         }).eq('id', s.id)
@@ -64,7 +63,7 @@ export default function AdminSubscriptions() {
         await supabase.from('profiles').update({ account_status: 'active' }).eq('id', s.user_id)
       }
       if (action === 'upgrade') {
-        const order: SubscriptionPlan[] = ['monthly', 'quarterly', 'halfyearly', 'yearly']
+        const order: SubscriptionPlan[] = ['basic', 'pro', 'maxpro']
         const next = order[Math.min(order.indexOf(s.plan) + 1, order.length - 1)]
         await supabase.from('subscriptions').update({ plan: next }).eq('id', s.id)
       }

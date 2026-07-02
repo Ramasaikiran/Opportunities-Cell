@@ -19,7 +19,7 @@ export const supabase = createClient(url, key, {
 // ── Types ──────────────────────────────────────────────────────────
 export type UserType      = 'student' | 'professional'
 export type AccountStatus = 'pending_onboarding' | 'active' | 'suspended'
-export type SubscriptionPlan = 'monthly' | 'quarterly' | 'halfyearly' | 'yearly'
+export type SubscriptionPlan = 'basic' | 'pro' | 'maxpro'
 export type SubStatus = 'pending' | 'active' | 'expired' | 'cancelled' | 'failed'
 export type AppStatus = 'applied' | 'assessment' | 'interview' | 'hr_round' | 'rejected' | 'offer' | 'joined'
   | 'shortlisted' | 'hired' // legacy values, still readable
@@ -94,6 +94,9 @@ export interface Subscription {
   created_at: string
 }
 
+export type JobStatus = 'draft' | 'published' | 'inactive'
+export type WorkMode = 'remote' | 'hybrid' | 'onsite'
+
 export interface Job {
   id: string
   title: string
@@ -103,14 +106,26 @@ export interface Job {
   required_experience_min: number
   required_experience_max: number | null
   job_type: string | null
+  work_mode: WorkMode | null
   role_category: string | null
   location: string | null
   country: string | null
   salary_min: number | null
   salary_max: number | null
   apply_url: string | null
+  last_date: string | null
+  plan_visibility: SubscriptionPlan[]
+  status: JobStatus
   is_active: boolean
   posted_at: string
+  updated_at: string
+}
+
+export interface SavedJob {
+  id: string
+  user_id: string
+  job_id: string
+  created_at: string
 }
 
 export interface JobApplication {
@@ -174,10 +189,24 @@ export interface AppStats {
   hired:         number
 }
 
-// Subscription plan metadata
-export const PLANS: Record<SubscriptionPlan, { label: string; amount: number; months: string }> = {
-  monthly:    { label: '₹399 / month',   amount: 399,  months: '1 month'  },
-  quarterly:  { label: '₹1,099 / 3 months', amount: 1099, months: '3 months' },
-  halfyearly: { label: '₹1,999 / 6 months', amount: 1999, months: '6 months' },
-  yearly:     { label: '₹3,599 / year',  amount: 3599, months: '12 months' },
+// Subscription plan metadata — all 1 month, differ by service level
+export const PLANS: Record<SubscriptionPlan, {
+  label: string; amount: number; tagline: string; whoApplies: 'self' | 'admin'
+  features: string[]
+}> = {
+  basic: {
+    label: 'Basic', amount: 399, tagline: 'You apply. We surface the jobs.',
+    whoApplies: 'self',
+    features: ['Daily job feed matched to your skills', 'Save & track jobs yourself', 'WhatsApp job alerts'],
+  },
+  pro: {
+    label: 'Pro', amount: 1999, tagline: 'We apply for you.',
+    whoApplies: 'admin',
+    features: ['Everything in Basic', 'Admin applies on your behalf', 'Application tracker with live status', 'Priority job matching'],
+  },
+  maxpro: {
+    label: 'Max Pro', amount: 3599, tagline: 'We apply + get you interview-ready.',
+    whoApplies: 'admin',
+    features: ['Everything in Pro', 'Resume rewrite (1×)', 'Interview scheduling support', 'Career strategy call'],
+  },
 }

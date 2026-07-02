@@ -95,7 +95,7 @@ export default function Landing() {
  <span style={{ fontSize: 13, color: '#22c55e', fontWeight: 600,
  background: '#f0fdf4', padding: '4px 12px', borderRadius: 99,
  border: '1px solid #bbf7d0' }}>
- ₹3,599/mo
+ ₹399/mo
  </span>
  <button onClick={() => navigate('/sign-in')} style={{
  background: 'none', border: 'none', fontSize: 14, color: '#6b6b6b',
@@ -154,7 +154,7 @@ export default function Landing() {
  letterSpacing: '-0.02em',
  boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
  }}>
- Join as a founding member — ₹3,599/mo →
+ Join as a founding member — ₹399/mo →
  </button>
  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
  <span style={{ fontSize: 13, color: '#9b9b9b' }}> Setup in 4 minutes</span>
@@ -192,7 +192,7 @@ export default function Landing() {
  </p>
  <p style={{ fontSize: 13, color: '#7f1d1d', lineHeight: 1.6 }}>
  Every month unemployed = ₹30,000–50,000 in lost salary.
- ₹3,599/month to fix it isn't a cost. It's the best ROI of your life.
+ ₹399/month to fix it isn't a cost. It's the best ROI of your life.
  </p>
  </div>
  </div>
@@ -251,7 +251,7 @@ export default function Landing() {
  },
  {
  step: '02', title: 'Pick a plan', time: '2 min',
- desc: 'From ₹3,599/month. No hidden charges. Cancel any time instantly.',
+ desc: 'From ₹399/month. No hidden charges. Cancel any time instantly.',
  },
  {
  step: '03', title: 'We apply daily', time: 'Ongoing',
@@ -296,7 +296,7 @@ export default function Landing() {
  Who applies
  </p>
  <p style={{ fontSize: 13.5, color: '#7a7a7a', lineHeight: 1.6 }}>
- A real admin on our team. Not a bot, not auto-fill.
+ Basic: you apply. Pro & Max Pro: a real admin applies for you.
  </p>
  </div>
  <div>
@@ -328,15 +328,17 @@ export default function Landing() {
  <h2 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 40,
  fontWeight: 400, textAlign: 'center', letterSpacing: '-0.025em',
  color: '#0f0f0f', marginBottom: 8 }}>
-          One month. That's all it takes.
+          One plan for how you want to job hunt.
  </h2>
  <p style={{ fontSize: 16, color: '#9b9b9b', textAlign: 'center', marginBottom: 56 }}>
-          We schedule your interviews within 30 days. Why stretch this across 3, 6, or 12 months when you could land the job now?
+          All plans run 30 days. Pick how much of the work you want off your plate.
  </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12, maxWidth: 340, margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, maxWidth: 900, margin: '0 auto' }}>
  {[
-            { label: '1 Month', price: '₹3,599', sub: '₹3,599/mo', highlight: true, popular: false, saving: null, color: '#0f0f0f' },
+            { label: 'Basic', tagline: 'You apply. We surface the jobs.', price: '₹399', sub: 'Job feed + WhatsApp alerts', highlight: false, popular: false, saving: null, color: '#0f0f0f' },
+            { label: 'Pro', tagline: 'We apply for you.', price: '₹1,999', sub: 'Admin applies + tracker', highlight: true, popular: true, saving: null, color: '#1d4ed8' },
+            { label: 'Max Pro', tagline: 'We apply + get you interview-ready.', price: '₹3,599', sub: 'Resume rewrite + strategy call', highlight: false, popular: false, saving: null, color: '#7c3aed' },
  ].map(p => (
  <div key={p.label} style={{
  background: p.highlight ? p.color : '#fff',
@@ -359,8 +361,11 @@ export default function Landing() {
  {p.saving}
  </span>
  )}
- <p style={{ fontSize: 13, color: p.highlight ? 'rgba(255,255,255,0.55)' : '#9b9b9b', marginBottom: 8 }}>
+ <p style={{ fontSize: 13, fontWeight: 600, color: p.highlight ? '#fff' : '#0f0f0f', marginBottom: 6 }}>
  {p.label}
+ </p>
+ <p style={{ fontSize: 12, color: p.highlight ? 'rgba(255,255,255,0.7)' : '#9b9b9b', marginBottom: 14, lineHeight: 1.4, minHeight: 32 }}>
+ {p.tagline}
  </p>
  <p style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 32,
  color: p.highlight ? '#fff' : '#0f0f0f', marginBottom: 4 }}>{p.price}</p>
@@ -448,7 +453,7 @@ export default function Landing() {
  gets the role you wanted.
  </h2>
  <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.55)', marginBottom: 48, maxWidth: 480, margin: '0 auto 48px' }}>
- ₹3,599. 4 minutes. Founding member pricing. What are you waiting for?
+ ₹399. 4 minutes. Founding member pricing. What are you waiting for?
  </p>
  <button onClick={goSignUp} style={{
  background: '#fff', color: '#0f0f0f', border: 'none',
@@ -459,7 +464,7 @@ export default function Landing() {
  Join as a founding member →
  </button>
  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 18 }}>
- Setup in 4 min · ₹3,599/month · No auto-renewal · Cancel anytime
+ Setup in 4 min · ₹399/month · No auto-renewal · Cancel anytime
  </p>
  </section>
 
@@ -504,7 +509,7 @@ export default function Landing() {
  padding: '10px 28px', borderRadius: 8, fontSize: 14, fontWeight: 700,
  cursor: 'pointer', fontFamily: "'Inter',sans-serif", whiteSpace: 'nowrap',
  }}>
- Start for ₹3,599 →
+ Start for ₹399 →
  </button>
  </div>
 

@@ -23,20 +23,34 @@ function loadRazorpay(): Promise<boolean> {
 
 /* ── Plan definitions ──────────────────────────────────────────── */
 const PLANS: {
- id: SubscriptionPlan
- label: string
- price: number
- duration: string
- perMonth: string
- saving: string | null
- color: string
- features: string[]
+  id: SubscriptionPlan
+  label: string
+  price: number
+  duration: string
+  tagline: string
+  whoApplies: string
+  saving: string | null
+  color: string
+  features: string[]
 }[] = [
- {
- id: 'monthly', label: '1 Month', price: 3599, duration: '30 days',
- perMonth: '₹3,599/mo', saving: null, color: '#0f0f0f',
- features: ['Admin applies on your behalf', 'Priority job matching', 'WhatsApp updates on every application', 'Dedicated account manager', 'Interview scheduled within 30 days', 'Resume rewrite + career strategy call'],
- },
+  {
+    id: 'basic', label: 'Basic', price: 399, duration: '30 days',
+    tagline: 'You apply. We surface the jobs.', whoApplies: 'You apply yourself',
+    saving: null, color: '#0f0f0f',
+    features: ['Daily job feed matched to your skills', 'Save & track jobs yourself', 'WhatsApp job alerts'],
+  },
+  {
+    id: 'pro', label: 'Pro', price: 1999, duration: '30 days',
+    tagline: 'We apply for you.', whoApplies: 'Admin applies for you',
+    saving: null, color: '#1d4ed8',
+    features: ['Everything in Basic', 'Admin applies on your behalf', 'Application tracker with live status', 'Priority job matching'],
+  },
+  {
+    id: 'maxpro', label: 'Max Pro', price: 3599, duration: '30 days',
+    tagline: 'We apply + get you interview-ready.', whoApplies: 'Admin applies + preps you',
+    saving: null, color: '#7c3aed',
+    features: ['Everything in Pro', 'Resume rewrite (1×)', 'Interview scheduling support', 'Career strategy call'],
+  },
 ]
 
 function fmt(date: string) {
@@ -49,7 +63,7 @@ export default function Subscription() {
  const [params] = useSearchParams()
  const isExpired = params.get('reason') === 'expired'
 
- const [selected, setSelected] = useState<SubscriptionPlan>('monthly')
+ const [selected, setSelected] = useState<SubscriptionPlan>('basic')
  const [loading, setLoading] = useState(false)
  const [error, setError] = useState<string | null>(null)
  const [success, setSuccess] = useState<{ plan: typeof PLANS[0]; endsAt: string } | null>(null)
@@ -256,22 +270,21 @@ export default function Subscription() {
  Choose your plan
  </h1>
  <p style={{ fontSize: 15, color: '#9b9b9b', marginBottom: 36 }}>
- We match jobs to your skills and apply on your behalf. Cancel anytime.
+ All plans run 30 days. The difference is who does the applying.
  </p>
 
- {/* Single plan — one month, all-in */}
  <div style={{ marginBottom: 20 }}>
  <h2 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 22,
  color: '#0f0f0f', lineHeight: 1.3, marginBottom: 6 }}>
- One month. That's all it takes.
+ Pick your service level.
  </h2>
  <p style={{ fontSize: 14, color: '#6b6b6b', lineHeight: 1.5 }}>
- We schedule your interviews within 30 days. Why stretch this across
- 3, 6, or 12 months when you could land the job now?
+ Basic — you apply, we surface the jobs. Pro — we apply for you.
+ Max Pro — we apply and get you interview-ready.
  </p>
  </div>
 
- <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 14, marginBottom: 28, maxWidth: 380 }}>
+ <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 28 }}>
  {PLANS.map(plan => {
  const isSelected = selected === plan.id
  return (
@@ -291,11 +304,11 @@ export default function Subscription() {
  }}>{plan.saving}</span>
  )}
 
- {/* Duration label */}
+ {/* Who applies */}
  <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em',
  color: isSelected ? 'rgba(255,255,255,0.6)' : '#b5b5b5',
  textTransform: 'uppercase', marginBottom: 6 }}>
- {plan.duration}
+ {plan.whoApplies}
  </p>
 
  {/* Plan name */}
@@ -310,7 +323,7 @@ export default function Subscription() {
  ₹{plan.price.toLocaleString('en-IN')}
  </p>
  <p style={{ fontSize: 12, color: isSelected ? 'rgba(255,255,255,0.55)' : '#9b9b9b', marginBottom: 18 }}>
- {plan.perMonth}
+ {plan.tagline}
  </p>
 
  {/* Features */}
@@ -353,8 +366,8 @@ export default function Subscription() {
  </p>
  </div>
  <div style={{ textAlign: 'right' }}>
- <p style={{ fontSize: 13, color: '#9b9b9b', marginBottom: 2 }}>Per month</p>
- <p style={{ fontSize: 15, fontWeight: 600, color: '#0f0f0f' }}>{selectedPlan.perMonth}</p>
+ <p style={{ fontSize: 13, color: '#9b9b9b', marginBottom: 2 }}>Who applies</p>
+ <p style={{ fontSize: 15, fontWeight: 600, color: '#0f0f0f' }}>{selectedPlan.whoApplies}</p>
  </div>
  </div>
 

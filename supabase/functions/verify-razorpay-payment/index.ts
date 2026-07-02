@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { crypto } from 'https://deno.land/std@0.168.0/crypto/mod.ts'
 
 const PLAN_DAYS: Record<string, number> = {
-  monthly: 30, quarterly: 90, halfyearly: 180, yearly: 365,
+  basic: 30, pro: 30, maxpro: 30,
 }
 
 const corsHeaders = {
