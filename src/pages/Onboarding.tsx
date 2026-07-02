@@ -875,22 +875,20 @@ export default function Onboarding() {
  </>
  )}
  <input type="file" accept="application/pdf,.pdf" style={{ display: 'none' }} disabled={resumeUploading}
- onChange={e => handleResumeSelect(e.target.files?.[0] ?? null)} />
+ onChange={e => { console.log('File picked:', e.target.files?.[0]); handleResumeSelect(e.target.files?.[0] ?? null) }} />
  </label>
  {resumeUploadErr && (
  <p style={{ fontSize: 13, color: '#dc2626', marginTop: -10 }}> {resumeUploadErr}</p>
  )}
+ {!resumePath && !resumeUploading && (
+ <p style={{ fontSize: 13, color: '#dc2626', marginTop: -10 }}>Resume required to continue.</p>
+ )}
 
- <button type="submit" disabled={loading || resumeUploading}
- style={{ ...btn, opacity: (loading || resumeUploading) ? 0.5 : 1, cursor: (loading || resumeUploading) ? 'not-allowed' : 'pointer' }}>
+ <button type="submit" disabled={loading || resumeUploading || !resumePath}
+ style={{ ...btn, opacity: (loading || resumeUploading || !resumePath) ? 0.5 : 1,
+ cursor: (loading || resumeUploading || !resumePath) ? 'not-allowed' : 'pointer' }}>
  {loading ? 'Setting up your account…' : "I'm ready — start applying "}
  </button>
-
- {!resumePath && !loading && (
- <button type="button" onClick={handleFinish as never} style={ghostBtn}>
- Skip for now →
- </button>
- )}
  </form>
  )}
  </div>
