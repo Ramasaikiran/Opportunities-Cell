@@ -80,8 +80,7 @@ function ProgressBar({ step, total }: { step: number; total: number }) {
 }
 
 const ROLES = ['SDE / Software Engineer','Frontend Engineer','Backend Engineer','Full Stack Engineer',
- 'ML / AI Engineer','Data Scientist','Data Analyst','DevOps / Cloud Engineer','Product Manager',
- 'UI/UX Designer','QA Engineer','Cybersecurity','Embedded Systems','Other']
+ 'ML / AI Engineer','Data Scientist','Data Analyst']
 
 const COUNTRIES = ['India','United States','United Kingdom','Canada','Australia','Singapore','UAE','Germany','Other']
 const DEGREES = ['B.Tech / B.E.','B.Sc','BCA','M.Tech / M.E.','M.Sc','MCA','MBA','Diploma','Other']
@@ -495,30 +494,6 @@ export default function Onboarding() {
  </button>
  <p style={sectionLabel}>YOUR PROFILE</p>
  <h2 style={serif}>Tell us about yourself</h2>
-
- {/* Photo upload */}
- <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 4 }}>
- <div onClick={() => photoRef.current?.click()} style={{
- width: 72, height: 72, borderRadius: '50%', background: '#f5f5f5',
- border: '2px dashed #e5e5e5', cursor: 'pointer', overflow: 'hidden',
- display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
- }}>
- {photoPreview
- ? <img src={photoPreview} alt="photo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
- : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b5b5b5" strokeWidth="1.8">
- <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
- </svg>
- }
- </div>
- <div>
- <p style={{ fontSize: 14, fontWeight: 500, color: '#0f0f0f', marginBottom: 4 }}>Profile photo</p>
- <button type="button" onClick={() => photoRef.current?.click()}
- style={{ ...ghostBtn, width: 'auto', padding: '0 16px', height: 34, fontSize: 13 }}>
- Upload photo
- </button>
- <input ref={photoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onPhotoChange} />
- </div>
- </div>
 
  {/* Email — pre-filled from signup, read-only */}
  <Field label="Email">
