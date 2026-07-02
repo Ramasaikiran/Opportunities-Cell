@@ -163,7 +163,7 @@ export default function Onboarding() {
  if (profile.is_admin) { navigate('/admin', { replace: true }); return }
  // Already onboarded → skip to next step
     if (editMode) return
- if (profile.user_type) { navigate('/subscription', { replace: true }); return }
+ if (profile.user_type) { navigate('/dashboard', { replace: true }); return }
  }, [profile, navigate])
 
   const [step, setStep] = useState(editMode ? 4 : (draft.step ?? 1))
@@ -411,7 +411,7 @@ export default function Onboarding() {
  setLoading(false)
  clearDraft()
  await refreshProfile()
- navigate('/subscription')
+ navigate('/dashboard')
  }
 
  /* ── Render ─────────────────────────────────────────────────── */
