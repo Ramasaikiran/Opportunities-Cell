@@ -14,7 +14,7 @@ const Spinner = () => (
 export default function ProtectedRoute({ children, requireSub = false }: {
   children: ReactNode; requireSub?: boolean
 }) {
-  const { session, loading, profileLoaded, subscription, profile } = useAuth()
+  const { session, loading, profileLoaded, profile } = useAuth()
   const location = useLocation()
 
   if (loading || (session && !profileLoaded)) return <Spinner />
@@ -23,20 +23,12 @@ export default function ProtectedRoute({ children, requireSub = false }: {
   // ── ADMIN: always go to admin panel, never user flows ──────────
   if (profile?.is_admin) return <Navigate to="/admin" replace />
 
-  // ── Suspended account → force renewal ─────────────────────────
-  if (profile?.account_status === 'suspended') {
-    return <Navigate to="/subscription?reason=expired" replace />
-  }
-
   // ── Already onboarded → block access to /onboarding ───────────
   // Exception: allow edit mode (e.g. ?edit=resume from Subscription's Back button)
   const isEditMode = new URLSearchParams(location.search).has('edit')
   if (location.pathname === '/onboarding' && profile?.user_type && !isEditMode) {
-    return <Navigate to={subscription ? '/dashboard' : '/subscription'} replace />
+    return <Navigate to="/dashboard" replace />
   }
-
-  // ── Dashboard requires active subscription ─────────────────────
-  if (requireSub && !subscription) return <Navigate to="/subscription" replace />
 
   return <>{children}</>
 }

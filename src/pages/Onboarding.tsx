@@ -132,9 +132,10 @@ interface OnboardingDraft {
  firstName: string; lastName: string; mobile: string; linkedin: string; github: string
  country: string; address: string; roleInts: string[]; otherRole: string
  college: string; degree: string; branch: string; currentYear: string; passoutYear: string
- cgpa: string; internDone: boolean | null; internDetail: string; skills: string; projects: string
+ cgpa: string; cgpaScale: '10' | '5'; internDone: boolean | null; internDetail: string; skills: string; projects: string
  yearsExp: string; prevTitle: string; prevCompany: string; prevSalary: string; noticeStr: string
  resumePath: string | null; resumeName: string | null
+ expectedSalary: string; reasonChange: string; prevProjects: string
 }
 
 function loadDraft(): Partial<OnboardingDraft> {
@@ -192,6 +193,8 @@ export default function Onboarding() {
  const [currentYear, setCurrentYear] = useState(draft.currentYear ?? '')
  const [passoutYear, setPassoutYear] = useState(draft.passoutYear ?? '')
  const [cgpa, setCgpa] = useState(draft.cgpa ?? '')
+ const [cgpaScale, setCgpaScale] = useState<'10' | '5'>(draft.cgpaScale ?? '10')
+ const [expectedSalary, setExpectedSalary] = useState(draft.expectedSalary ?? '')
  const [internDone, setInternDone] = useState<boolean | null>(draft.internDone ?? null)
  const [internDetail, setInternDetail] = useState(draft.internDetail ?? '')
  const [skills, setSkills] = useState(draft.skills ?? '')
@@ -202,6 +205,8 @@ export default function Onboarding() {
  const [prevTitle, setPrevTitle] = useState(draft.prevTitle ?? '')
  const [prevCompany, setPrevCompany] = useState(draft.prevCompany ?? '')
  const [prevSalary, setPrevSalary] = useState(draft.prevSalary ?? '')
+ const [reasonChange, setReasonChange] = useState(draft.reasonChange ?? '')
+ const [prevProjects, setPrevProjects] = useState(draft.prevProjects ?? '')
  const [noticeStr, setNoticeStr] = useState(draft.noticeStr ?? '')
 
  // ── Step 4: Resume ─────────────────────────────────────────
@@ -219,15 +224,15 @@ export default function Onboarding() {
  useEffect(() => {
  const d: OnboardingDraft = {
  step, role, firstName, lastName, mobile, linkedin, github, country, address,
- roleInts, otherRole, college, degree, branch, currentYear, passoutYear, cgpa,
+ roleInts, otherRole, college, degree, branch, currentYear, passoutYear, cgpa, cgpaScale,
  internDone, internDetail, skills, projects, yearsExp, prevTitle, prevCompany,
- prevSalary, noticeStr, resumePath, resumeName,
+ prevSalary, noticeStr, resumePath, resumeName, expectedSalary, reasonChange, prevProjects,
  }
  try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(d)) } catch { /* noop */ }
  }, [step, role, firstName, lastName, mobile, linkedin, github, country, address,
- roleInts, otherRole, college, degree, branch, currentYear, passoutYear, cgpa,
+ roleInts, otherRole, college, degree, branch, currentYear, passoutYear, cgpa, cgpaScale,
  internDone, internDetail, skills, projects, yearsExp, prevTitle, prevCompany,
- prevSalary, noticeStr, resumePath, resumeName])
+ prevSalary, noticeStr, resumePath, resumeName, expectedSalary, reasonChange, prevProjects])
 
  async function handleResumeSelect(file: File | null) {
  if (!file) return
@@ -283,15 +288,20 @@ export default function Onboarding() {
  function validate3() {
  const errs: Record<string, string> = {}
  if (!skills.trim()) errs.skills = 'Add at least one skill'
+ if (!expectedSalary.trim()) errs.expectedSalary = 'Required'
  if (role === 'student') {
  if (!college.trim()) errs.college = 'Required'
  if (!degree) errs.degree = 'Required'
  if (!currentYear) errs.currentYear = 'Required'
+ if (!cgpa.trim()) errs.cgpa = 'Required'
  if (internDone === null) errs.internDone = 'Required'
+ if (!projects.trim()) errs.projects = 'Required'
  }
  if (role === 'professional') {
  if (!yearsExp) errs.yearsExp = 'Required'
  if (!prevTitle.trim()) errs.prevTitle = 'Required'
+ if (!prevProjects.trim()) errs.prevProjects = 'Required'
+ if (!reasonChange.trim()) errs.reasonChange = 'Required'
  }
  setErrors(errs)
  return Object.keys(errs).length === 0
@@ -362,10 +372,12 @@ export default function Onboarding() {
  current_year: currentYear || null,
  passout_year: passoutYear ? parseInt(passoutYear) : null,
  cgpa: cgpa ? parseFloat(cgpa) : null,
+ cgpa_scale: cgpaScale,
  internship_done: internDone === true,
  internship_details: internDone ? internDetail.trim() || null : 'NA',
  technical_skills: skillsArr,
  projects: projects.trim() || null,
+ expected_salary: expectedSalary.trim() || null,
  resume_url: resumeUrl,
  })
  if (dErr) { console.error('Student details error:', dErr); detailSaveFailed = true
@@ -377,6 +389,9 @@ export default function Onboarding() {
  previous_job_title: prevTitle.trim() || null,
  previous_company: prevCompany.trim() || null,
  previous_salary: prevSalary ? parseFloat(prevSalary) : null,
+ previous_projects: prevProjects.trim() || null,
+ reason_for_change: reasonChange.trim() || null,
+ expected_salary: expectedSalary.trim() || null,
  notice_period: noticeStr !== '',
  notice_period_days: noticeDays,
  technical_skills: skillsArr,
@@ -677,9 +692,17 @@ export default function Onboarding() {
  </Field>
  </div>
 
- <Field label="CGPA">
- <input style={inp()} type="number" step="0.01" min="0" max="10"
- value={cgpa} onChange={e => setCgpa(e.target.value)} placeholder="e.g. 8.2" />
+ <Field label="CGPA" error={errors.cgpa}>
+ <div style={{ display: 'flex', gap: 10 }}>
+ <input style={{ ...inp(errors.cgpa), flex: 1 }} type="number" step="0.01" min="0" max={cgpaScale}
+ value={cgpa} onChange={e => { setCgpa(e.target.value); setErrors(p=>({...p,cgpa:''})) }}
+ placeholder={cgpaScale === '10' ? 'e.g. 8.2' : 'e.g. 4.1'} />
+ <select value={cgpaScale} onChange={e => setCgpaScale(e.target.value as '10' | '5')}
+ style={{ ...inp(), width: 110, appearance: 'none' as const }}>
+ <option value="10">Out of 10</option>
+ <option value="5">Out of 5</option>
+ </select>
+ </div>
  </Field>
 
  <Field label="Any internship done?" error={errors.internDone}>
@@ -742,6 +765,18 @@ export default function Onboarding() {
  onChange={e => setPrevSalary(e.target.value)} placeholder="600000" />
  </Field>
 
+ <Field label="Projects involved in previous work" error={errors.prevProjects}>
+ <textarea value={prevProjects} onChange={e => { setPrevProjects(e.target.value); setErrors(p=>({...p,prevProjects:''})) }}
+ rows={3} placeholder="Key projects, your role, impact…"
+ style={{ ...inp(errors.prevProjects), height: 'auto', padding: '12px 16px', resize: 'none', lineHeight: 1.6 }} />
+ </Field>
+
+ <Field label="Why are you looking to change?" error={errors.reasonChange}>
+ <textarea value={reasonChange} onChange={e => { setReasonChange(e.target.value); setErrors(p=>({...p,reasonChange:''})) }}
+ rows={2} placeholder="Growth, compensation, relocation…"
+ style={{ ...inp(errors.reasonChange), height: 'auto', padding: '12px 16px', resize: 'none', lineHeight: 1.6 }} />
+ </Field>
+
  <Field label="Notice period">
  <select value={noticeStr} onChange={e => setNoticeStr(e.target.value)}
  style={{ ...inp(), appearance: 'none' as const }}>
@@ -768,12 +803,18 @@ export default function Onboarding() {
  </Field>
 
  {role === 'student' && (
- <Field label="Projects (optional)">
- <textarea value={projects} onChange={e => setProjects(e.target.value)} rows={3}
+ <Field label="Projects" error={errors.projects}>
+ <textarea value={projects} onChange={e => { setProjects(e.target.value); setErrors(p=>({...p,projects:''})) }} rows={3}
  placeholder="Briefly describe your top 2–3 projects…"
- style={{ ...inp(), height: 'auto', padding: '12px 16px', resize: 'none', lineHeight: 1.6 }} />
+ style={{ ...inp(errors.projects), height: 'auto', padding: '12px 16px', resize: 'none', lineHeight: 1.6 }} />
  </Field>
  )}
+
+ <Field label="Expected salary range (annual, ₹)" error={errors.expectedSalary}>
+ <input style={inp(errors.expectedSalary)} value={expectedSalary}
+ onChange={e => { setExpectedSalary(e.target.value); setErrors(p=>({...p,expectedSalary:''})) }}
+ placeholder="e.g. 6,00,000 – 9,00,000" />
+ </Field>
 
  <button type="submit" style={btn}>Continue →</button>
  </form>

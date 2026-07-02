@@ -15,32 +15,24 @@ export default function SignIn() {
  const [gLoading, setGLoading] = useState(false)
  const [error, setError] = useState<string | null>(null)
 
- // Smart routing after login — checks admin, subscription, onboarding
+ // Smart routing after login — checks admin, onboarding
  async function routeAfterLogin() {
  const { data: { session } } = await supabase.auth.getSession()
  if (!session) return
 
  const { data: profile } = await supabase
  .from('profiles')
- .select('is_admin, user_type, account_status')
+ .select('is_admin, user_type')
  .eq('id', session.user.id)
  .maybeSingle()
 
  // Admin → admin panel immediately
  if (profile?.is_admin) { navigate('/admin', { replace: true }); return }
 
- // Suspended → renew
- if (profile?.account_status === 'suspended') { navigate('/subscription?reason=expired', { replace: true }); return }
-
  // Not onboarded → fill profile
  if (!profile?.user_type) { navigate('/onboarding', { replace: true }); return }
 
- // Check subscription
- const { data: sub } = await supabase.from('subscriptions')
- .select('id').eq('user_id', session.user.id)
- .eq('status', 'active').gt('ends_at', new Date().toISOString()).maybeSingle()
-
- navigate(sub ? '/dashboard' : '/subscription', { replace: true })
+ navigate('/dashboard', { replace: true })
  }
 
  async function handleSubmit(e: FormEvent) {

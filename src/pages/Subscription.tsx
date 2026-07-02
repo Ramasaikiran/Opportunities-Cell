@@ -78,7 +78,9 @@ export default function Subscription() {
  const { data: { session } } = await supabase.auth.getSession()
  if (!session) throw new Error('Session expired. Please sign in again.')
 
- const res = await fetch(
+ let res: Response
+ try {
+ res = await fetch(
  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-razorpay-order`,
  {
  method: 'POST',
@@ -86,6 +88,9 @@ export default function Subscription() {
  body: JSON.stringify({ plan: selected }),
  }
  )
+ } catch {
+ throw new Error('Payment server unreachable. Edge function not deployed or Razorpay keys missing.')
+ }
  const order = await res.json()
  if (!res.ok) throw new Error(order.error || 'Could not create order.')
 
