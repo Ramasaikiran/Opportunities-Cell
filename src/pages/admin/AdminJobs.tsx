@@ -408,16 +408,16 @@ export default function AdminJobs() {
                       {job.required_experience_min > 0 && ` · ${job.required_experience_min}${job.required_experience_max ? `–${job.required_experience_max}` : '+'}y exp`}
                     </p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
-                      {job.required_skills.slice(0, 6).map(s => (
+                      {(job.required_skills ?? []).slice(0, 6).map(s => (
                         <span key={s} style={{ fontSize: 11, padding: '2px 8px', background: '#f0f0f0',
                           color: '#6b6b6b', borderRadius: 99 }}>{s}</span>
                       ))}
-                      {job.required_skills.length > 6 && (
+                      {(job.required_skills?.length ?? 0) > 6 && (
                         <span style={{ fontSize: 11, color: '#b5b5b5' }}>+{job.required_skills.length - 6} more</span>
                       )}
                     </div>
                     <p style={{ fontSize: 11, color: '#b5b5b5' }}>
-                      Visible to: {job.plan_visibility.map(p => PLAN_LABELS[p]).join(', ') || 'None'}
+                      Visible to: {(job.plan_visibility ?? []).map(p => PLAN_LABELS[p]).join(', ') || 'None'}
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap', maxWidth: 200, justifyContent: 'flex-end' }}>
