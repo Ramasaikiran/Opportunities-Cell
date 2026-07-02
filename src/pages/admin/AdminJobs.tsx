@@ -379,7 +379,7 @@ export default function AdminJobs() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {filteredJobs.map(job => {
-              const st = STATUS_META[job.status]
+              const st = STATUS_META[job.status] ?? STATUS_META.draft
               return (
                 <div key={job.id} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
