@@ -881,18 +881,6 @@ export default function Onboarding() {
  <p style={{ fontSize: 13, color: '#dc2626', marginTop: -10 }}> {resumeUploadErr}</p>
  )}
 
- <div style={{ background: '#f7f7f7', borderRadius: 12, padding: '14px 16px',
- display: 'flex', gap: 10, alignItems: 'flex-start' }}>
- <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="2"
- style={{ marginTop: 1, flexShrink: 0 }}>
- <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
- <line x1="12" y1="16" x2="12.01" y2="16"/>
- </svg>
- <p style={{ fontSize: 13, color: '#6b6b6b', lineHeight: 1.6 }}>
- You can skip this and upload from your dashboard later. We start applying once your resume is live.
- </p>
- </div>
-
  <button type="submit" disabled={loading || resumeUploading}
  style={{ ...btn, opacity: (loading || resumeUploading) ? 0.5 : 1, cursor: (loading || resumeUploading) ? 'not-allowed' : 'pointer' }}>
  {loading ? 'Setting up your account…' : "I'm ready — start applying "}

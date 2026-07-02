@@ -28,6 +28,12 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
+-- SECURITY DEFINER avoids infinite recursion when policies check is_admin.
+create or replace function public.is_admin()
+returns boolean language sql security definer stable set search_path = public as $$
+  select coalesce((select is_admin from public.profiles where id = auth.uid()), false);
+$$;
+
 drop policy if exists "Users can view their own profile" on public.profiles;
 create policy "Users can view their own profile"
   on public.profiles for select using (auth.uid() = id);
@@ -39,7 +45,7 @@ create policy "Users can update their own profile"
 drop policy if exists "Admins can view all profiles" on public.profiles;
 create policy "Admins can view all profiles"
   on public.profiles for select
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true));
+  using (public.is_admin());
 
 -- ── 2. AUTO-CREATE PROFILE ON SIGNUP ─────────────────────────────
 create or replace function public.handle_new_user()
@@ -118,7 +124,7 @@ create policy "Users manage their student details"
 drop policy if exists "Admins view all student details" on public.student_details;
 create policy "Admins view all student details"
   on public.student_details for select
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
+  using (public.is_admin());
 
 -- ── 6. PROFESSIONAL DETAILS ──────────────────────────────────────
 create table if not exists public.professional_details (
@@ -142,7 +148,7 @@ create policy "Users manage their professional details"
 drop policy if exists "Admins view all professional details" on public.professional_details;
 create policy "Admins view all professional details"
   on public.professional_details for select
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
+  using (public.is_admin());
 
 -- ── 7. SUBSCRIPTIONS ─────────────────────────────────────────────
 create table if not exists public.subscriptions (
@@ -170,7 +176,7 @@ create policy "Users insert own subscriptions"
 drop policy if exists "Admins view all subscriptions" on public.subscriptions;
 create policy "Admins view all subscriptions"
   on public.subscriptions for select
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
+  using (public.is_admin());
 
 -- Helper: get active subscription for a user
 create or replace function public.get_active_subscription(p_user_id uuid)
@@ -209,7 +215,7 @@ create policy "All authenticated users view active jobs"
 drop policy if exists "Admins manage all jobs" on public.jobs;
 create policy "Admins manage all jobs"
   on public.jobs for all
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
+  using (public.is_admin());
 
 -- ── 9. JOB APPLICATIONS ──────────────────────────────────────────
 create table if not exists public.job_applications (
@@ -233,7 +239,7 @@ create policy "Users view own applications"
 drop policy if exists "Admins manage all applications" on public.job_applications;
 create policy "Admins manage all applications"
   on public.job_applications for all
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
+  using (public.is_admin());
 
 -- ── 10. APPLICATION STATS FUNCTION ───────────────────────────────
 create or replace function public.get_application_stats(p_user_id uuid)
@@ -295,7 +301,7 @@ drop policy if exists "Admins read all resumes" on storage.objects;
 create policy "Admins read all resumes"
   on storage.objects for select
   using (bucket_id = 'resumes' and
-    exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin));
+    public.is_admin());
 
 drop policy if exists "Users upload own photo" on storage.objects;
 create policy "Users upload own photo"
