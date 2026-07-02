@@ -42,7 +42,7 @@ export default function Landing() {
  const FAQS = [
  {
  q: 'Is this live? How do I know you\'ll actually apply?',
- a: 'We\'re onboarding our first founding members right now. Once your profile is active, your dashboard shows every single application — company, role, date, matched skills, and status. Full transparency from day one.',
+ a: 'We\'re onboarding our first founding members right now. Once your profile is active, your dashboard shows every single application: company, role, date, matched skills, and status.',
  },
  {
  q: 'Do you write generic cover letters or tailored ones?',
@@ -72,7 +72,7 @@ export default function Landing() {
  {/* ── ANNOUNCEMENT BAR ──────────────────────────────────── */}
  <div style={{ background: '#0f0f0f', padding: '10px 24px', textAlign: 'center' }}>
  <span style={{ fontSize: 13, color: '#fff', fontWeight: 500 }}>
- <strong>Now open for founding members</strong> — limited first batch, locked-in pricing
+ <strong>Now open for founding members</strong>. Limited first batch, locked-in pricing
  </span>
  </div>
 
@@ -119,7 +119,7 @@ export default function Landing() {
  borderRadius: 99, padding: '7px 16px', marginBottom: 32 }}>
  <span style={{ fontSize: 13 }}></span>
  <span style={{ fontSize: 13, fontWeight: 600, color: '#c2410c' }}>
- Founding member pricing — limited first batch
+ Founding member pricing. Limited first batch
  </span>
  </div>
 
@@ -154,7 +154,7 @@ export default function Landing() {
  letterSpacing: '-0.02em',
  boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
  }}>
- Join as a founding member — ₹399/mo →
+ Join as a founding member, ₹399/mo
  </button>
  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
  <span style={{ fontSize: 13, color: '#9b9b9b' }}> Setup in 4 minutes</span>
@@ -176,7 +176,7 @@ export default function Landing() {
  {[
  'Spend 3 hours daily copy-pasting the same application',
  'Generic cover letters recruiters skip in 2 seconds',
- 'Apply to 5 jobs/day — get 0 replies in 2 weeks',
+ 'Apply to 5 jobs/day. Get 0 replies in 2 weeks.',
  'No idea which companies even saw your profile',
  'Give up and settle for a role you didn\'t want',
  ].map(t => (
@@ -207,7 +207,7 @@ export default function Landing() {
  'Tailored applications matched exactly to your skills and role',
  '300–450 applications/month while you focus on interview prep',
  'Dashboard shows every job applied, status, matched skills',
- 'You\'re among the first to get this advantage — before everyone else catches on',
+ 'You\'re among the first to get this advantage, before everyone else catches on',
  ].map(t => (
  <div key={t} style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'flex-start' }}>
  <TICK /><p style={{ fontSize: 14, color: '#0f0f0f', lineHeight: 1.6 }}>{t}</p>
@@ -433,7 +433,7 @@ export default function Landing() {
  padding: '16px 40px', borderRadius: 12, fontSize: 15, fontWeight: 700,
  cursor: 'pointer', fontFamily: "'Inter',sans-serif",
  }}>
- I'm ready — count me in →
+ I'm ready. Count me in
  </button>
  </div>
  </div>
