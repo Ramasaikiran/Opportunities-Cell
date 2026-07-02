@@ -135,12 +135,6 @@ export default function SignUp() {
 
       <TrustStrip />
 
-      <div style={{ background: '#f7f7f7', borderRadius: 10, padding: '12px 16px',
-        fontSize: 12.5, color: '#6b6b6b', lineHeight: 1.6, margin: '16px 0 4px' }}>
-        Free to sign up. Fill your profile, then pick a plan starting at{' '}
-        <strong style={{ color: '#0f0f0f' }}>₹3,599 for 30 days</strong>. No card needed yet.
-      </div>
-
       <div className="oc-divider" style={{ margin: '24px 0' }}><span>or use email</span></div>
 
       {formError && <div className="oc-error">{formError}</div>}

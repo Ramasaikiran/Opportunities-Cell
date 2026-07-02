@@ -268,7 +268,7 @@ export default function Subscription() {
  {/* Header */}
  <p style={{ fontSize: 11, fontWeight: 600, color: '#b5b5b5', letterSpacing: '0.1em',
  textTransform: 'uppercase', marginBottom: 8 }}>
- {isExpired ? 'RENEW SUBSCRIPTION' : 'STEP 2 OF 2 — PAYMENT'}
+ {isExpired ? 'RENEW SUBSCRIPTION' : 'STEP 2 OF 2: PAYMENT'}
  </p>
  <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 36, fontWeight: 400,
  color: '#0f0f0f', letterSpacing: '-0.02em', marginBottom: 8, lineHeight: 1.2 }}>
@@ -284,8 +284,8 @@ export default function Subscription() {
  Pick your service level.
  </h2>
  <p style={{ fontSize: 14, color: '#6b6b6b', lineHeight: 1.5 }}>
- Basic — you apply, we surface the jobs. Pro — we apply for you.
- Max Pro — we apply and get you interview-ready.
+ Basic: you apply, we surface the jobs. Pro: we apply for you.
+ Max Pro: we apply and get you interview-ready.
  </p>
  </div>
 
@@ -367,7 +367,7 @@ export default function Subscription() {
  <div>
  <p style={{ fontSize: 13, color: '#9b9b9b', marginBottom: 2 }}>Selected</p>
  <p style={{ fontSize: 15, fontWeight: 600, color: '#0f0f0f' }}>
- {selectedPlan.label} — ₹{selectedPlan.price.toLocaleString('en-IN')}
+ {selectedPlan.label}: ₹{selectedPlan.price.toLocaleString('en-IN')}
  </p>
  </div>
  <div style={{ textAlign: 'right' }}>
@@ -400,7 +400,7 @@ export default function Subscription() {
  Opening payment…
  </>
  ) : (
- `Pay ₹${selectedPlan.price.toLocaleString('en-IN')} — ${selectedPlan.label} →`
+ `Pay ₹${selectedPlan.price.toLocaleString('en-IN')} for ${selectedPlan.label}`
  )}
  </button>
 

@@ -39,7 +39,7 @@ export default function AuthLayout({ eyebrow, title, subtitle, children, footer 
  borderRadius: 99, padding: '6px 14px', marginBottom: 32 }}>
  <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', display: 'block', flexShrink: 0 }} />
  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>
- Now open — founding members
+ Now open, founding members
  </span>
  </div>
 
