@@ -52,7 +52,7 @@ export default function AuthLayout({ eyebrow, title, subtitle, children, footer 
  <span style={{ color: 'rgba(255,255,255,0.4)' }}>You interview.</span>
  </h1>
  <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.55)', lineHeight: 1.75, maxWidth: 360, marginBottom: 44 }}>
- Tell us your skills once. Our team applies to 10–15 matching jobs every day across LinkedIn, Naukri, Wellfound, and Indeed.
+ Tell us your skills once. We apply to 10–15 matching jobs daily, directly on official career portals.
  </p>
 
  {/* Stats */}
