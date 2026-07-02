@@ -31,14 +31,16 @@ export default function AdminJobs() {
   const [showForm,setShowForm]= useState(false)
   const [editId,  setEditId]  = useState<string | null>(null)
   const [error,   setError]   = useState<string | null>(null)
+  const [loadErr, setLoadErr] = useState<string | null>(null)
   const [search,  setSearch]  = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | JobStatus>('all')
 
   useEffect(() => { load() }, [])
 
   async function load() {
-    setLoading(true)
-    const { data } = await supabase.from('jobs').select('*').order('posted_at', { ascending: false })
+    setLoading(true); setLoadErr(null)
+    const { data, error: err } = await supabase.from('jobs').select('*').order('posted_at', { ascending: false })
+    if (err) { console.error('Jobs load error:', err); setLoadErr(err.message) }
     setJobs((data as Job[]) ?? [])
     setLoading(false)
   }
@@ -326,6 +328,13 @@ export default function AdminJobs() {
             Jobs ({filteredJobs.length}{search || statusFilter !== 'all' ? ` of ${jobs.length}` : ''})
           </h1>
         </div>
+
+        {loadErr && (
+          <div style={{ marginBottom: 16, padding: '12px 14px', background: '#fef2f2',
+            border: '1px solid #fecaca', borderRadius: 10, fontSize: 13, color: '#dc2626' }}>
+            Couldn't load jobs: {loadErr}
+          </div>
+        )}
 
         {jobs.length > 0 && (
           <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
