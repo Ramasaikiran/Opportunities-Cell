@@ -327,7 +327,7 @@ export default function Landing() {
  How matches are chosen
  </p>
  <p style={{ fontSize: 13.5, color: '#7a7a7a', lineHeight: 1.6 }}>
- Skills, role preference, and location from your profile.
+ We apply only when skills and experience match exactly.
  </p>
  </div>
  <div>
