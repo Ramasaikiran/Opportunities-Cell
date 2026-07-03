@@ -64,6 +64,10 @@ export default function Landing() {
  q: 'Why join now instead of waiting?',
  a: 'Founding member pricing is locked for early sign-ups and we\'re limiting our first batch so every profile gets proper attention from our team. Once a batch fills, pricing moves to standard rates.',
  },
+ {
+ q: 'What if I withdraw mid-plan?',
+ a: 'Take the 1-month plan for ₹399. If you leave or land a job in 15 days, we refund the unused 15 days. Only Razorpay\'s 2% gateway fee is non-refundable, that goes to Razorpay, not us.',
+ },
  ]
 
  return (
@@ -73,6 +77,12 @@ export default function Landing() {
  <div style={{ background: '#0f0f0f', padding: '10px 24px', textAlign: 'center' }}>
  <span style={{ fontSize: 13, color: '#fff', fontWeight: 500 }}>
  <strong>Now open for founding members</strong>. Limited first batch, locked-in pricing
+ </span>
+ </div>
+
+ <div style={{ background: '#f7f7f7', padding: '6px 24px', textAlign: 'center' }}>
+ <span style={{ fontSize: 12, color: '#6b6b6b' }}>
+ Billing starts when we start applying, not on signup. No sales calls before payment.
  </span>
  </div>
 
@@ -193,6 +203,16 @@ export default function Landing() {
  <p style={{ fontSize: 13, color: '#7f1d1d', lineHeight: 1.6 }}>
  Every month unemployed = ₹30,000–50,000 in lost salary.
  ₹399/month to fix it isn't a cost. It's the best ROI of your life.
+ </p>
+ </div>
+
+ <div style={{ marginTop: 16, padding: '16px 18px', background: '#f0fdf4',
+ border: '1px solid #bbf7d0', borderRadius: 12 }}>
+ <p style={{ fontSize: 13, fontWeight: 700, color: '#15803d', marginBottom: 4 }}>
+ Less than ₹14 a day
+ </p>
+ <p style={{ fontSize: 13, color: '#166534', lineHeight: 1.6 }}>
+ ₹399 ÷ 30 days = ₹13/day. Cheaper than a cup of chai.
  </p>
  </div>
  </div>
