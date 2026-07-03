@@ -65,8 +65,8 @@ export default function Landing() {
  a: 'Founding member pricing is locked for early sign-ups and we\'re limiting our first batch so every profile gets proper attention from our team. Once a batch fills, pricing moves to standard rates.',
  },
  {
- q: 'What if I withdraw mid-plan?',
- a: 'Take the 1-month plan for ₹399. If you leave or land a job in 15 days, we refund the unused 15 days. Only Razorpay\'s 2% gateway fee is non-refundable, that goes to Razorpay, not us.',
+ q: 'What if I get a job early, or want out?',
+ a: 'Job in 15 days? We keep applying the next 15, for a better offer. No refund there. Want out mid-plan? We refund unused days, minus days used and Razorpay\'s 2% fee.',
  },
  ]
 

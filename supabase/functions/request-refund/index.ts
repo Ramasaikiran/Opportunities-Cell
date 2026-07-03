@@ -14,8 +14,8 @@ serve(async (req) => {
 
   try {
     const { subscription_id, reason } = await req.json()
-    if (!subscription_id || !['withdrawal', 'job_found'].includes(reason)) {
-      return new Response(JSON.stringify({ error: 'subscription_id and valid reason required' }),
+    if (!subscription_id || reason !== 'withdrawal') {
+      return new Response(JSON.stringify({ error: 'Only withdrawal refunds are supported' }),
         { status: 400, headers: corsHeaders })
     }
 

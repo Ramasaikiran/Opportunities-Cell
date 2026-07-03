@@ -8,7 +8,7 @@ type Props = {
 }
 
 export default function RefundModal({ subscriptionId, onClose, onDone }: Props) {
-  const [reason, setReason] = useState<'withdrawal' | 'job_found' | null>(null)
+  const [reason, setReason] = useState<'withdrawal' | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState<any>(null)
@@ -38,7 +38,8 @@ export default function RefundModal({ subscriptionId, onClose, onDone }: Props) 
           <>
             <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Request refund</h3>
             <p style={{ fontSize: 13, color: '#6b6b6b', marginBottom: 16, lineHeight: 1.5 }}>
-              We refund unused days. Razorpay's 2% gateway fee stays with Razorpay, not refundable.
+              Job in 15 days? We apply the next 15 for a better offer, no refund.
+              Want out? We refund unused days, minus Razorpay's 2% fee.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
@@ -48,13 +49,6 @@ export default function RefundModal({ subscriptionId, onClose, onDone }: Props) 
                 background: reason === 'withdrawal' ? '#f7f7f7' : '#fff',
                 fontFamily: "'Inter',sans-serif", fontSize: 13.5, cursor: 'pointer' }}>
                 I want to withdraw
-              </button>
-              <button onClick={() => setReason('job_found')} style={{
-                textAlign: 'left', padding: '12px 14px', borderRadius: 10,
-                border: `1.5px solid ${reason === 'job_found' ? '#0f0f0f' : '#e5e5e5'}`,
-                background: reason === 'job_found' ? '#f7f7f7' : '#fff',
-                fontFamily: "'Inter',sans-serif", fontSize: 13.5, cursor: 'pointer' }}>
-                I got a job
               </button>
             </div>
 
