@@ -171,6 +171,9 @@ export default function Landing() {
  <span style={{ fontSize: 13, color: '#9b9b9b' }}> No auto-renewal</span>
  <span style={{ fontSize: 13, color: '#9b9b9b' }}> Cancel anytime</span>
  </div>
+ <p style={{ fontSize: 12.5, color: '#22c55e', fontWeight: 600 }}>
+ Unused days refunded. No sales calls before payment.
+ </p>
  </div>
  </section>
 
