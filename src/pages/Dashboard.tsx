@@ -40,6 +40,8 @@ export default function Dashboard() {
 
  const [stats, setStats] = useState<AppStats | null>(null)
  const [matched, setMatched] = useState(0)
+ const [matchStats, setMatchStats] = useState<{ jobs_in_domain: number; jobs_matched_skills: number; jobs_applied: number } | null>(null)
+ const [skipped, setSkipped] = useState<any[]>([])
  const [apps, setApps] = useState<JobApplication[]>([])
  const [period, setPeriod] = useState<Period>('30')
  const [loading, setLoading] = useState(true)
@@ -116,15 +118,22 @@ export default function Dashboard() {
  async function load() {
  if (!profile) return
  setLoading(true)
- const [s, m, a] = await Promise.all([
+ const [s, m, a, ms, sk] = await Promise.all([
  supabase.rpc('get_application_stats', { p_user_id: profile.id }),
  supabase.rpc('get_matched_jobs_count', { p_user_id: profile.id }),
  supabase.from('job_applications').select('*')
  .eq('user_id', profile.id).order('applied_at', { ascending: false }).limit(20),
+ supabase.rpc('get_user_match_stats', { p_user_id: profile.id }),
+ supabase.from('job_screening_log')
+ .select('*, jobs(title, company)')
+ .eq('user_id', profile.id).eq('decision', 'rejected')
+ .order('created_at', { ascending: false }).limit(10),
  ])
  if (s.data) setStats(s.data as AppStats)
  if (m.data !== null) setMatched(m.data as number)
  if (a.data) setApps(a.data as JobApplication[])
+ if (ms.data) setMatchStats(ms.data as any)
+ if (sk.data) setSkipped(sk.data)
  setLoading(false)
  }
 
@@ -394,6 +403,9 @@ export default function Dashboard() {
  <StatCard value={matched} label="Jobs match your skills" accent="#2563eb" />
  <StatCard value={stats?.shortlisted ?? 0} label="Shortlisted" accent="#7c3aed" />
  <StatCard value={stats?.hired ?? 0} label="Offers received" accent="#16a34a" />
+ <StatCard value={matchStats?.jobs_in_domain ?? 0} label="Jobs in your domain" accent="#0891b2" />
+ <StatCard value={matchStats?.jobs_matched_skills ?? 0} label="Jobs matched to skills" accent="#2563eb" />
+ <StatCard value={matchStats?.jobs_applied ?? 0} label="Jobs we applied to" accent="#16a34a" />
  </div>
  )}
  </div>
@@ -486,6 +498,29 @@ export default function Dashboard() {
  </div>
  )
  })}
+ </div>
+ )}
+
+ {skipped.length > 0 && (
+ <div style={{ marginTop: 12 }}>
+ <p style={{ fontSize: 12, fontWeight: 600, color: '#b5b5b5',
+ textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+ Jobs we skipped
+ </p>
+ <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+ {skipped.map(row => (
+ <div key={row.id} style={{ padding: '12px 16px', background: '#fff',
+ border: '1px solid #f0f0f0', borderLeft: '3px solid #d97706', borderRadius: 10 }}>
+ <p style={{ fontSize: 13.5, fontWeight: 500, color: '#0f0f0f' }}>
+ {row.jobs?.title || 'Role'} <span style={{ color: '#9b9b9b', fontWeight: 400 }}>· {row.jobs?.company}</span>
+ </p>
+ <p style={{ fontSize: 12, color: '#d97706', marginTop: 4 }}>
+ {(row.missing_metrics ?? []).map((m: string) =>
+ m.charAt(0).toUpperCase() + m.slice(1) + ' is missing').join(', ') || 'Did not meet criteria'}
+ </p>
+ </div>
+ ))}
+ </div>
  </div>
  )}
  </div>
