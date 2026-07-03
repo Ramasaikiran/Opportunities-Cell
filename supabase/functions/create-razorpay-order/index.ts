@@ -33,7 +33,7 @@ serve(async (req) => {
     const { data: allowed } = await supabase.rpc('check_rate_limit', {
       p_identifier:    user.id,
       p_action:        'payment_order',
-      p_max_hits:      5,
+      p_max_hits:      20,
       p_window_minutes: 60,
     })
     if (!allowed) {
