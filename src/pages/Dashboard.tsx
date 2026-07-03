@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, PLANS, type AppStats, type JobApplication, type Job } from '../lib/supabase'
+import RefundModal from '../components/RefundModal'
 
 type Period = '7' | '30' | '90' | '365'
 
@@ -35,6 +36,7 @@ function StatCard({ value, label, sub, accent }: { value: number | string; label
 export default function Dashboard() {
  const { profile, subscription, signOut } = useAuth()
  const navigate = useNavigate()
+ const [showRefund, setShowRefund] = useState(false)
 
  const [stats, setStats] = useState<AppStats | null>(null)
  const [matched, setMatched] = useState(0)
@@ -217,9 +219,21 @@ export default function Dashboard() {
  <p style={{ fontSize: 12, color: '#9b9b9b' }}>
  Next due: <strong style={{ color: isUrgent ? '#dc2626' : '#0f0f0f' }}>{renewDate}</strong>
  </p>
+ <p onClick={(e) => { e.stopPropagation(); setShowRefund(true) }}
+ style={{ fontSize: 11, color: '#9b9b9b', textDecoration: 'underline', marginTop: 4 }}>
+ Request refund
+ </p>
  </div>
  )}
  </div>
+
+ {showRefund && subscription && (
+ <RefundModal
+ subscriptionId={subscription.id}
+ onClose={() => setShowRefund(false)}
+ onDone={() => { setShowRefund(false); window.location.reload() }}
+ />
+ )}
 
  {/* No subscription alert */}
  {!subscription && (
