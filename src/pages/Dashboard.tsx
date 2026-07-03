@@ -400,7 +400,6 @@ export default function Dashboard() {
  ) : (
  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 10 }}>
  <StatCard value={periodVal} label={PERIOD_MAP[period]} sub="applications sent" />
- <StatCard value={matched} label="Jobs match your skills" accent="#2563eb" />
  <StatCard value={stats?.shortlisted ?? 0} label="Shortlisted" accent="#7c3aed" />
  <StatCard value={stats?.hired ?? 0} label="Offers received" accent="#16a34a" />
  <StatCard value={matchStats?.jobs_in_domain ?? 0} label="Jobs in your domain" accent="#0891b2" />
