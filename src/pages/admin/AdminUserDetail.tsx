@@ -32,6 +32,8 @@ export default function AdminUserDetail() {
  const [loading, setLoading] = useState(true)
  const [applying, setApplying] = useState<string | null>(null)
  const [applyErr, setApplyErr] = useState<string | null>(null)
+ const [skipJob, setSkipJob] = useState<Job | null>(null)
+ const [skipMissing, setSkipMissing] = useState<string[]>([])
 
  // Manual "Apply Job" modal
  const [showModal, setShowModal] = useState(false)
@@ -110,12 +112,31 @@ export default function AdminUserDetail() {
  job_url: job.apply_url, admin_id: adminProfile.id, status: 'applied', matched_skills: matchedSkills,
  })
  if (error) throw error
+
+ await supabase.from('job_screening_log').upsert({
+ user_id: id, job_id: job.id, decision: 'applied',
+ industry_matched: true, skills_matched: matchedSkills.length > 0, experience_matched: true,
+ missing_metrics: [],
+ }, { onConflict: 'user_id,job_id' })
+
  await refreshAppsAndStats()
  } catch (err) {
  setApplyErr((err as Error).message)
  } finally {
  setApplying(null)
  }
+ }
+
+ async function confirmSkip() {
+ if (!id || !skipJob) return
+ await supabase.from('job_screening_log').upsert({
+ user_id: id, job_id: skipJob.id, decision: 'rejected',
+ industry_matched: !skipMissing.includes('industry'),
+ skills_matched: !skipMissing.includes('skills'),
+ experience_matched: !skipMissing.includes('experience'),
+ missing_metrics: skipMissing,
+ }, { onConflict: 'user_id,job_id' })
+ setSkipJob(null); setSkipMissing([])
  }
 
  // ── Manual "Apply Job" modal submit ────────────────────────────
@@ -373,15 +394,24 @@ export default function AdminUserDetail() {
  {alreadyApplied ? (
  <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500, flexShrink: 0 }}> Applied</span>
  ) : (
+ <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+ <button onClick={() => setSkipJob(job)} style={{
+ padding: '9px 14px', background: '#fff', color: '#6b6b6b',
+ border: '1px solid #e5e5e5', borderRadius: 8, fontSize: 13, fontWeight: 500,
+ cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+ }}>
+ Skip
+ </button>
  <button onClick={() => applyForUser(job)} disabled={applying === job.id} style={{
  padding: '9px 18px', background: applying === job.id ? '#f0f0f0' : '#0f0f0f',
  color: applying === job.id ? '#9b9b9b' : '#fff',
  border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600,
  cursor: applying === job.id ? 'not-allowed' : 'pointer',
- fontFamily: "'Inter',sans-serif", flexShrink: 0,
+ fontFamily: "'Inter',sans-serif",
  }}>
  {applying === job.id ? 'Applying…' : 'Apply →'}
  </button>
+ </div>
  )}
  </div>
  )
@@ -491,6 +521,37 @@ export default function AdminUserDetail() {
  }}>{submitting ? 'Saving…' : ' Mark as Applied'}</button>
  </div>
  </form>
+ </div>
+ )}
+
+ {skipJob && (
+ <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
+ <div style={{ background: '#fff', borderRadius: 14, padding: 24, maxWidth: 380, width: '100%',
+ fontFamily: "'Inter',sans-serif" }}>
+ <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Skip {skipJob.title}?</h3>
+ <p style={{ fontSize: 13, color: '#6b6b6b', marginBottom: 14 }}>What's missing</p>
+ {['industry', 'skills', 'experience'].map(m => (
+ <label key={m} style={{ display: 'flex', alignItems: 'center', gap: 8,
+ padding: '8px 0', fontSize: 14, cursor: 'pointer', textTransform: 'capitalize' }}>
+ <input type="checkbox" checked={skipMissing.includes(m)}
+ onChange={e => setSkipMissing(prev =>
+ e.target.checked ? [...prev, m] : prev.filter(x => x !== m))} />
+ {m}
+ </label>
+ ))}
+ <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+ <button onClick={() => { setSkipJob(null); setSkipMissing([]) }} style={{
+ flex: 1, height: 40, background: '#f5f5f5', color: '#6b6b6b', border: 'none',
+ borderRadius: 9, fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+ }}>Cancel</button>
+ <button onClick={confirmSkip} disabled={skipMissing.length === 0} style={{
+ flex: 1, height: 40, background: skipMissing.length ? '#0f0f0f' : '#cfcfcf', color: '#fff',
+ border: 'none', borderRadius: 9, fontSize: 13.5, fontWeight: 600,
+ cursor: skipMissing.length ? 'pointer' : 'not-allowed', fontFamily: "'Inter',sans-serif",
+ }}>Confirm skip</button>
+ </div>
+ </div>
  </div>
  )}
  </div>
