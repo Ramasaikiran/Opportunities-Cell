@@ -27,11 +27,11 @@ export default function ForgotPassword() {
   return (
     <AuthLayout
       eyebrow="RESET PASSWORD"
-      title={sent ? 'Check your email' : 'Forgot your password?'}
+      title={sent ? 'Link sent' : 'Reset your password'}
       subtitle={
         sent
-          ? `If an account exists for ${email}, a reset link is on its way.`
-          : 'Enter the email tied to your account and we\u2019ll send a secure reset link.'
+          ? `Check ${email}. Link expires in 1 hour.`
+          : 'Enter your email. Get back in under a minute.'
       }
       footer={
         <Link to="/sign-in" className="font-medium text-ink underline underline-offset-4">
@@ -60,7 +60,7 @@ export default function ForgotPassword() {
             />
           </div>
           <button type="submit" disabled={loading || blocked} className="btn-primary">
-            {loading ? 'Sending…' : blocked ? (blockMessage ?? 'Blocked') : 'Send reset link'}
+            {loading ? 'Sending…' : blocked ? (blockMessage ?? 'Blocked') : 'Send link'}
           </button>
         </form>
       )}
