@@ -73,6 +73,13 @@ export default function SignIn() {
  {gLoading ? 'Redirecting…' : 'Continue with Google'}
  </button>
 
+ <p style={{ fontSize: 11.5, color: '#9b9b9b', textAlign: 'center', margin: '10px 0 0', lineHeight: 1.5 }}>
+ By signing in, you agree to our{' '}
+ <a href="/terms" style={{ color: '#6b6b6b', textDecoration: 'underline' }}>Terms</a>,{' '}
+ <a href="/privacy" style={{ color: '#6b6b6b', textDecoration: 'underline' }}>Privacy Policy</a>, and{' '}
+ <a href="/refund-policy" style={{ color: '#6b6b6b', textDecoration: 'underline' }}>Refund Policy</a>.
+ </p>
+
  <div className="oc-divider" style={{ margin: '24px 0' }}><span>or</span></div>
 
  {error && <div className="oc-error"> {error}</div>}

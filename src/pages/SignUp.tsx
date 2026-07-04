@@ -133,6 +133,13 @@ export default function SignUp() {
         {gLoading ? 'Redirecting…' : 'Continue with Google'}
       </button>
 
+      <p style={{ fontSize: 11.5, color: '#9b9b9b', textAlign: 'center', margin: '10px 0 0', lineHeight: 1.5 }}>
+        By signing up, you agree to our{' '}
+        <a href="/terms" style={{ color: '#6b6b6b', textDecoration: 'underline' }}>Terms</a>,{' '}
+        <a href="/privacy" style={{ color: '#6b6b6b', textDecoration: 'underline' }}>Privacy Policy</a>, and{' '}
+        <a href="/refund-policy" style={{ color: '#6b6b6b', textDecoration: 'underline' }}>Refund Policy</a>.
+      </p>
+
       <TrustStrip />
 
       <div className="oc-divider" style={{ margin: '24px 0' }}><span>or use email</span></div>
