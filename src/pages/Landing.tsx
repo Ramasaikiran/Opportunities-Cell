@@ -175,7 +175,7 @@ export default function Landing() {
  </section>
 
  <a href="tel:+916303728397" style={{
- position: 'fixed', bottom: 90, left: 20, right: 20, zIndex: 90,
+ position: 'fixed', bottom: 90, left: 20, right: 20, zIndex: 150,
  background: '#fff', borderRadius: 999, padding: '14px 22px',
  display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none',
  boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxWidth: 420, margin: '0 auto',
