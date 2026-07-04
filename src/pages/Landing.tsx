@@ -127,19 +127,15 @@ export default function Landing() {
  letterSpacing: '-0.03em', color: '#0f0f0f',
  marginBottom: 28,
  }}>
- Stop wasting 3 hours<br />
- applying to jobs<br />
- <span style={{ color: '#9b9b9b' }}>nobody replies to.</span>
+ Job applications for<br />
+ Indian job seekers.<br />
+ <span style={{ color: '#9b9b9b' }}>Done daily, for you.</span>
  </h1>
 
  <p style={{ fontSize: 20, color: '#6b6b6b', lineHeight: 1.65,
- maxWidth: 560, margin: '0 auto 16px', fontWeight: 400 }}>
- You've sent 200+ applications. Got 3 replies.
- The problem isn't your skills.
- </p>
- <p style={{ fontSize: 20, color: '#0f0f0f', lineHeight: 1.65,
- maxWidth: 560, margin: '0 auto 44px', fontWeight: 600 }}>
- It's that you're applying alone.
+ maxWidth: 560, margin: '0 auto 44px', fontWeight: 400 }}>
+ We apply to 10–15 matching jobs a day on official career portals.
+ You focus on interviews.
  </p>
 
  {/* Primary CTA */}
