@@ -68,9 +68,6 @@ export default function Terms() {
 
       <H2>14. Governing Law</H2>
       <P>Governed by Indian law. Disputes subject to Hyderabad, Telangana courts.</P>
-
-      <H2>15. Contact</H2>
-      <P>Rama Sai Kiran Medam<br />Hyderabad, India<br />+91 63037 28397</P>
     </LegalPage>
   )
 }

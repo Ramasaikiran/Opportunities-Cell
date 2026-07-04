@@ -49,9 +49,6 @@ export default function RefundPolicy() {
 
       <H2>7. No Guarantee of Results</H2>
       <P>We don't guarantee interviews or offers. Outcomes depend on factors beyond our control.</P>
-
-      <H2>8. Contact</H2>
-      <P>Rama Sai Kiran Medam<br />Hyderabad, India<br />+91 63037 28397</P>
     </LegalPage>
   )
 }

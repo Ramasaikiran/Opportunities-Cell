@@ -171,11 +171,26 @@ export default function Landing() {
  <span style={{ fontSize: 13, color: '#9b9b9b' }}> No auto-renewal</span>
  <span style={{ fontSize: 13, color: '#9b9b9b' }}> Cancel anytime</span>
  </div>
- <p style={{ fontSize: 12.5, color: '#22c55e', fontWeight: 600 }}>
- Unused days refunded. No sales calls before payment.
- </p>
  </div>
  </section>
+
+ <a href="tel:+916303728397" style={{
+ position: 'fixed', bottom: 90, left: 20, right: 20, zIndex: 90,
+ background: '#fff', borderRadius: 999, padding: '14px 22px',
+ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none',
+ boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxWidth: 420, margin: '0 auto',
+ }}>
+ <span style={{ width: 40, height: 40, borderRadius: '50%', background: '#0ea5e9',
+ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+ <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff">
+ <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24 11.3 11.3 0 003.55.57 1 1 0 011 1V20a1 1 0 01-1 1C10.4 21 3 13.6 3 4a1 1 0 011-1h3.5a1 1 0 011 1 11.3 11.3 0 00.57 3.55 1 1 0 01-.25 1.02l-2.2 2.2z"/>
+ </svg>
+ </span>
+ <span>
+ <span style={{ display: 'block', fontSize: 12, color: '#6b6b6b' }}>Have questions? Call</span>
+ <span style={{ display: 'block', fontSize: 20, fontWeight: 700, color: '#0f0f0f' }}>+91 63037 28397</span>
+ </span>
+ </a>
 
  {/* ── PAIN vs GAIN ──────────────────────────────────────── */}
  <section style={{ background: '#fff', borderTop: '1px solid #f0f0f0' }}>
