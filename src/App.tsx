@@ -11,6 +11,9 @@ import ResetPassword  from './pages/ResetPassword'
 import SignIn         from './pages/SignIn'
 import SignUp         from './pages/SignUp'
 import Subscription   from './pages/Subscription'
+import Terms          from './pages/Terms'
+import Privacy        from './pages/Privacy'
+import RefundPolicy   from './pages/RefundPolicy'
 import AdminDashboard      from './pages/admin/AdminDashboard'
 import AdminLogin          from './pages/admin/AdminLogin'
 import AdminUsers          from './pages/admin/AdminUsers'
@@ -24,6 +27,9 @@ export default function App() {
   return (
     <Routes>
       <Route path="/"                element={<Landing />} />
+      <Route path="/terms"           element={<Terms />} />
+      <Route path="/privacy"         element={<Privacy />} />
+      <Route path="/refund-policy"   element={<RefundPolicy />} />
       <Route path="/sign-up"         element={<SignUp />} />
       <Route path="/sign-in"         element={<SignIn />} />
       <Route path="/check-inbox"     element={<CheckInbox />} />
