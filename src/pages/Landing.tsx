@@ -30,7 +30,6 @@ export default function Landing() {
  navigate('/dashboard', { replace: true })
  }, [session, profile, subscription])
 
- /* sticky bar */
  useEffect(() => {
  const onScroll = () => setShowSticky(window.scrollY > 600)
  window.addEventListener('scroll', onScroll, { passive: true })

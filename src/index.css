@@ -5,6 +5,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html, body, #root { height: 100%; }
+html, body { overflow-x: hidden; max-width: 100%; }
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
