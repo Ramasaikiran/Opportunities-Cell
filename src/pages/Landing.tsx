@@ -121,7 +121,7 @@ export default function Landing() {
 
  <h1 style={{
  fontFamily: "'Instrument Serif',Georgia,serif",
- fontSize: 'clamp(44px, 8vw, 76px)',
+ fontSize: 'clamp(48px, 9vw, 84px)',
  fontWeight: 400, lineHeight: 1.04,
  letterSpacing: '-0.03em', color: '#0f0f0f',
  marginBottom: 28,
@@ -141,7 +141,7 @@ export default function Landing() {
  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
  <button onClick={goSignUp} style={{
  background: '#0f0f0f', color: '#fff', border: 'none',
- padding: '18px 52px', borderRadius: 14, fontSize: 17, fontWeight: 700,
+ padding: '20px 56px', borderRadius: 14, fontSize: 19, fontWeight: 700,
  cursor: 'pointer', fontFamily: "'Inter',sans-serif",
  letterSpacing: '-0.02em',
  boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
