@@ -498,7 +498,7 @@ export default function Landing() {
  Opportunities Cell
  </span>
  </div>
- <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>© 2025 · All rights reserved</p>
+ <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>© 2026 · All rights reserved</p>
  </div>
  </footer>
 
