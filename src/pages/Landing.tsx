@@ -73,19 +73,6 @@ export default function Landing() {
  return (
  <div style={{ fontFamily: "'Inter',-apple-system,sans-serif", background: '#fff', color: '#0f0f0f' }}>
 
- {/* ── ANNOUNCEMENT BAR ──────────────────────────────────── */}
- <div style={{ background: '#0f0f0f', padding: '10px 24px', textAlign: 'center' }}>
- <span style={{ fontSize: 13, color: '#fff', fontWeight: 500 }}>
- <strong>Now open for founding members</strong>. Limited first batch, locked-in pricing
- </span>
- </div>
-
- <div style={{ background: '#f7f7f7', padding: '6px 24px', textAlign: 'center' }}>
- <span style={{ fontSize: 12, color: '#6b6b6b' }}>
- Billing starts when we start applying, not on signup. No sales calls before payment.
- </span>
- </div>
-
  {/* ── NAV ───────────────────────────────────────────────── */}
  <nav style={{ position: 'sticky', top: 0, left: 0, right: 0, zIndex: 100,
  background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(16px)',
@@ -166,11 +153,6 @@ export default function Landing() {
  }}>
  Join as a founding member, ₹399/mo
  </button>
- <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
- <span style={{ fontSize: 13, color: '#9b9b9b' }}> Setup in 4 minutes</span>
- <span style={{ fontSize: 13, color: '#9b9b9b' }}> No auto-renewal</span>
- <span style={{ fontSize: 13, color: '#9b9b9b' }}> Cancel anytime</span>
- </div>
  </div>
  </section>
 
