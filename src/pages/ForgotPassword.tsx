@@ -7,10 +7,10 @@ import { useRateLimit } from '../hooks/useRateLimit'
 export default function ForgotPassword() {
   const navigate = useNavigate()
   const { requestPasswordReset, verifyRecoveryOtp } = useAuth()
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(() => sessionStorage.getItem('oc_fp_email') ?? '')
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
-  const [sent, setSent] = useState(false)
+  const [sent, setSent] = useState(() => sessionStorage.getItem('oc_fp_sent') === '1')
   const [error, setError] = useState<string | null>(null)
   const { blocked, blockMessage, recordAttempt } = useRateLimit('oc_fp_rl')
 
@@ -23,6 +23,8 @@ export default function ForgotPassword() {
     const { error } = await requestPasswordReset(email.trim().toLowerCase())
     setLoading(false)
     if (error) { setError(error); return }
+    sessionStorage.setItem('oc_fp_email', email.trim().toLowerCase())
+    sessionStorage.setItem('oc_fp_sent', '1')
     setSent(true)
   }
 
@@ -34,6 +36,8 @@ export default function ForgotPassword() {
     const { error } = await verifyRecoveryOtp(email.trim().toLowerCase(), code)
     setLoading(false)
     if (error) { setError(error); return }
+    sessionStorage.removeItem('oc_fp_email')
+    sessionStorage.removeItem('oc_fp_sent')
     navigate('/reset-password', { replace: true })
   }
 
