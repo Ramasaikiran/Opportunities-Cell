@@ -35,7 +35,7 @@ export default function CheckInbox() {
  }
 
  async function handleVerify() {
- if (code.length !== 6) return
+ if (code.length !== 8) return
  setVerifying(true)
  setStatus('idle')
  const { error } = await verifySignupOtp(email, code)
@@ -87,8 +87,8 @@ export default function CheckInbox() {
  <strong style={{ color: '#0f0f0f' }}>{email}</strong>. Enter it below.
  </p>
 
- <input className="oc-input" inputMode="numeric" maxLength={6}
- value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+ <input className="oc-input" inputMode="numeric" maxLength={8}
+ value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
  placeholder="000000" autoFocus
  style={{ textAlign: 'center', fontSize: 24, letterSpacing: '0.4em', fontWeight: 600 }} />
 
@@ -101,12 +101,12 @@ export default function CheckInbox() {
  <div className="oc-error" style={{ margin: '16px 0' }}> {errMsg}</div>
  )}
 
- <button onClick={handleVerify} disabled={code.length !== 6 || verifying}
+ <button onClick={handleVerify} disabled={code.length !== 8 || verifying}
  style={{
  marginTop: status === 'idle' ? 20 : 0, width: '100%', height: 50, background: '#0f0f0f', color: '#fff',
  border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600,
- cursor: code.length === 6 ? 'pointer' : 'not-allowed', fontFamily: "'Inter', sans-serif",
- opacity: code.length === 6 ? 1 : 0.45,
+ cursor: code.length === 8 ? 'pointer' : 'not-allowed', fontFamily: "'Inter', sans-serif",
+ opacity: code.length === 8 ? 1 : 0.45,
  }}>
  {verifying ? 'Verifying…' : 'Verify code'}
  </button>
