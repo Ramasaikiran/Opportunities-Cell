@@ -29,7 +29,7 @@ export default function ForgotPassword() {
   async function handleVerify(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    if (code.length !== 8) return
+    if (code.length !== 6) return
     setLoading(true)
     const { error } = await verifyRecoveryOtp(email.trim().toLowerCase(), code)
     setLoading(false)
@@ -88,15 +88,15 @@ export default function ForgotPassword() {
             <input
               className="input-field"
               inputMode="numeric"
-              maxLength={8}
+              maxLength={6}
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               placeholder="000000"
               autoFocus
               style={{ textAlign: 'center', fontSize: 22, letterSpacing: '0.4em', fontWeight: 600 }}
             />
           </div>
-          <button type="submit" disabled={loading || code.length !== 8} className="btn-primary">
+          <button type="submit" disabled={loading || code.length !== 6} className="btn-primary">
             {loading ? 'Verifying…' : 'Continue'}
           </button>
         </form>
