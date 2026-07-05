@@ -40,10 +40,10 @@ export default function ForgotPassword() {
   return (
     <AuthLayout
       eyebrow="RESET PASSWORD"
-      title={sent ? 'Enter code' : 'Reset your password'}
+      title={sent ? 'Check your inbox' : 'Reset your password'}
       subtitle={
         sent
-          ? `Check ${email}. Enter the 6-digit code below.`
+          ? `Code sent to ${email}. Valid for 10 minutes.`
           : 'Enter your email. Get back in under a minute.'
       }
       footer={
@@ -97,7 +97,7 @@ export default function ForgotPassword() {
             />
           </div>
           <button type="submit" disabled={loading || code.length !== 6} className="btn-primary">
-            {loading ? 'Verifying…' : 'Verify code'}
+            {loading ? 'Verifying…' : 'Continue'}
           </button>
         </form>
       )}
