@@ -16,7 +16,9 @@ interface AuthContextValue {
   signIn:               (email: string, password: string)                   => Promise<{ error: string | null }>
   signInWithGoogle:     ()                                                  => Promise<{ error: string | null }>
   resendVerification:   (email: string)                                     => Promise<{ error: string | null }>
+  verifySignupOtp:      (email: string, token: string)                      => Promise<{ error: string | null }>
   requestPasswordReset: (email: string)                                     => Promise<{ error: string | null }>
+  verifyRecoveryOtp:    (email: string, token: string)                      => Promise<{ error: string | null }>
   updatePassword:       (password: string)                                  => Promise<{ error: string | null }>
   signOut:        () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -118,17 +120,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function resendVerification(email: string) {
-    const { error } = await supabase.auth.resend({
-      type: 'signup', email,
-      options: { emailRedirectTo: `${SITE_URL}/auth/callback` },
-    })
+    const { error } = await supabase.auth.resend({ type: 'signup', email })
+    return { error: error?.message ?? null }
+  }
+
+  async function verifySignupOtp(email: string, token: string) {
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'signup' })
     return { error: error?.message ?? null }
   }
 
   async function requestPasswordReset(email: string) {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${SITE_URL}/auth/reset-password`,
-    })
+    const { error } = await supabase.auth.resetPasswordForEmail(email)
+    return { error: error?.message ?? null }
+  }
+
+  async function verifyRecoveryOtp(email: string, token: string) {
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'recovery' })
     return { error: error?.message ?? null }
   }
 
@@ -147,8 +154,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{
       session, user: session?.user ?? null, profile, subscription,
       loading, profileLoaded, isAdmin: profile?.is_admin ?? false,
-      signUp, signIn, signInWithGoogle, resendVerification,
-      requestPasswordReset, updatePassword, signOut, refreshProfile,
+      signUp, signIn, signInWithGoogle, resendVerification, verifySignupOtp,
+      requestPasswordReset, verifyRecoveryOtp, updatePassword, signOut, refreshProfile,
     }}>
       {children}
     </AuthContext.Provider>

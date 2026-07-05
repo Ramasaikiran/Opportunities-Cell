@@ -7,7 +7,7 @@ const COOLDOWN = 45
 export default function CheckInbox() {
  const location = useLocation()
  const navigate = useNavigate()
- const { resendVerification } = useAuth()
+ const { resendVerification, verifySignupOtp } = useAuth()
 
  const initialEmail = (location.state as { email?: string })?.email ?? ''
  const [email, setEmail] = useState(initialEmail)
@@ -15,6 +15,8 @@ export default function CheckInbox() {
  const [cooldown, setCooldown] = useState(initialEmail ? COOLDOWN : 0)
  const [status, setStatus] = useState<'idle'|'sending'|'sent'|'error'>('idle')
  const [errMsg, setErrMsg] = useState('')
+ const [code, setCode] = useState('')
+ const [verifying, setVerifying] = useState(false)
 
  useEffect(() => {
  if (cooldown <= 0) return
@@ -30,6 +32,16 @@ export default function CheckInbox() {
  const { error } = await resendVerification(email)
  if (error) { setStatus('error'); setErrMsg(error); return }
  setStatus('sent'); setCooldown(COOLDOWN)
+ }
+
+ async function handleVerify() {
+ if (code.length !== 6) return
+ setVerifying(true)
+ setStatus('idle')
+ const { error } = await verifySignupOtp(email, code)
+ setVerifying(false)
+ if (error) { setStatus('error'); setErrMsg(error); return }
+ navigate('/onboarding', { replace: true })
  }
 
  return (
@@ -65,51 +77,48 @@ export default function CheckInbox() {
  onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoFocus />
  <button onClick={() => { if (email) { setEditing(false); handleResend() } }}
  style={{ marginTop: 14, width: '100%', height: 50, background: '#0f0f0f', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: "'Inter', sans-serif" }}>
- Send verification link
+ Send verification code
  </button>
  </div>
  ) : (
  <>
- <p style={{ fontSize: 15, color: '#6b6b6b', lineHeight: 1.65, marginBottom: 28 }}>
- We sent a verification link to{' '}
- <strong style={{ color: '#0f0f0f' }}>{email}</strong>. Click the link to activate your account.
+ <p style={{ fontSize: 15, color: '#6b6b6b', lineHeight: 1.65, marginBottom: 24 }}>
+ We sent a 6-digit code to{' '}
+ <strong style={{ color: '#0f0f0f' }}>{email}</strong>. Enter it below.
  </p>
 
- {/* Steps */}
- <div style={{ background: '#f7f7f7', borderRadius: 14, padding: '18px 20px', marginBottom: 28 }}>
- {[
- "Open the email from Opportunities Cell",
- 'Click "Verify my email"',
- "You'll be taken straight to your dashboard",
- ].map((s, i) => (
- <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: i < 2 ? 14 : 0 }}>
- <div style={{
- width: 24, height: 24, borderRadius: '50%', background: '#0f0f0f', flexShrink: 0,
- display: 'flex', alignItems: 'center', justifyContent: 'center',
- fontSize: 11, fontWeight: 700, color: '#fff',
- }}>{i + 1}</div>
- <p style={{ fontSize: 14, color: '#3f3f3f', lineHeight: 1.5, paddingTop: 3 }}>{s}</p>
- </div>
- ))}
- </div>
+ <input className="oc-input" inputMode="numeric" maxLength={6}
+ value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+ placeholder="000000" autoFocus
+ style={{ textAlign: 'center', fontSize: 24, letterSpacing: '0.4em', fontWeight: 600 }} />
 
  {status === 'sent' && (
- <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '12px 14px', fontSize: 13.5, color: '#16a34a', marginBottom: 16 }}>
- Email resent. Check your inbox (and spam folder).
+ <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '12px 14px', fontSize: 13.5, color: '#16a34a', margin: '16px 0' }}>
+ Code resent. Check your inbox (and spam folder).
  </div>
  )}
  {status === 'error' && (
- <div className="oc-error" style={{ marginBottom: 16 }}> {errMsg}</div>
+ <div className="oc-error" style={{ margin: '16px 0' }}> {errMsg}</div>
  )}
+
+ <button onClick={handleVerify} disabled={code.length !== 6 || verifying}
+ style={{
+ marginTop: status === 'idle' ? 20 : 0, width: '100%', height: 50, background: '#0f0f0f', color: '#fff',
+ border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600,
+ cursor: code.length === 6 ? 'pointer' : 'not-allowed', fontFamily: "'Inter', sans-serif",
+ opacity: code.length === 6 ? 1 : 0.45,
+ }}>
+ {verifying ? 'Verifying…' : 'Verify code'}
+ </button>
 
  <button onClick={handleResend} disabled={cooldown > 0 || status === 'sending'}
  style={{
- width: '100%', height: 50, background: '#0f0f0f', color: '#fff',
- border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600,
+ marginTop: 12, width: '100%', height: 44, background: 'none',
+ border: '1.5px solid #e5e5e5', borderRadius: 12, fontSize: 14,
  cursor: cooldown > 0 ? 'not-allowed' : 'pointer', fontFamily: "'Inter', sans-serif",
- opacity: cooldown > 0 ? 0.45 : 1, transition: 'opacity 0.15s',
+ color: '#6b6b6b', opacity: cooldown > 0 ? 0.6 : 1,
  }}>
- {status === 'sending' ? 'Sending…' : cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend email'}
+ {status === 'sending' ? 'Sending…' : cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend code'}
  </button>
 
  <button onClick={() => setEditing(true)}
