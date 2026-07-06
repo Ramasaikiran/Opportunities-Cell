@@ -23,14 +23,16 @@ export default function AdminActivityLog() {
  const [loading, setLoading] = useState(true)
  const [filter, setFilter] = useState<'all' | keyof typeof ACTION_LABEL>('all')
  const [search, setSearch] = useState('')
+ const [loadErr, setLoadErr] = useState<string | null>(null)
 
  useEffect(() => { load() }, [])
 
  async function load() {
- setLoading(true)
- const { data: logs } = await supabase.from('admin_activity_log')
+ setLoading(true); setLoadErr(null)
+ const { data: logs, error } = await supabase.from('admin_activity_log')
  .select('*').order('created_at', { ascending: false }).limit(200)
 
+ if (error) { console.error('Activity log load error:', error); setLoadErr(error.message); setLoading(false); return }
  if (!logs || logs.length === 0) { setFeed([]); setLoading(false); return }
 
  const ids = Array.from(new Set([
@@ -71,6 +73,13 @@ export default function AdminActivityLog() {
  <div style={{ maxWidth: 920, margin: '0 auto', padding: '36px 24px' }}>
  <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 28, fontWeight: 400,
  color: '#0f0f0f', marginBottom: 20 }}>Activity log</h1>
+
+ {loadErr && (
+ <div style={{ marginBottom: 16, padding: '12px 14px', background: '#fef2f2',
+ border: '1px solid #fecaca', borderRadius: 10, fontSize: 13, color: '#dc2626' }}>
+ Couldn't load activity log: {loadErr}
+ </div>
+ )}
 
  <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
  <input style={{ ...inp, width: 260 }} placeholder="Search admin, user, details…"

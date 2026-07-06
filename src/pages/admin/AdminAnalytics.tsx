@@ -8,12 +8,14 @@ const OFFER_STATUSES     = ['offer', 'joined', 'hired']
 export default function AdminAnalytics() {
   const [apps,    setApps]    = useState<JobApplication[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadErr, setLoadErr] = useState<string | null>(null)
 
   useEffect(() => { load() }, [])
 
   async function load() {
-    setLoading(true)
-    const { data } = await supabase.from('job_applications').select('*')
+    setLoading(true); setLoadErr(null)
+    const { data, error } = await supabase.from('job_applications').select('*')
+    if (error) { console.error('Analytics load error:', error); setLoadErr(error.message) }
     setApps((data as JobApplication[]) ?? [])
     setLoading(false)
   }
@@ -109,6 +111,13 @@ export default function AdminAnalytics() {
       <div style={{ maxWidth: 1040, margin: '0 auto', padding: '36px 24px' }}>
         <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 28, fontWeight: 400,
           color: '#0f0f0f', marginBottom: 24 }}>Analytics</h1>
+
+        {loadErr && (
+          <div style={{ marginBottom: 16, padding: '12px 14px', background: '#fef2f2',
+            border: '1px solid #fecaca', borderRadius: 10, fontSize: 13, color: '#dc2626' }}>
+            Couldn't load analytics: {loadErr}
+          </div>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14, marginBottom: 28 }}>
           {[

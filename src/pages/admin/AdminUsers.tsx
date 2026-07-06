@@ -18,15 +18,17 @@ export default function AdminUsers() {
  const [search, setSearch] = useState('')
  const [roleFilter, setRoleFilter] = useState<'all' | 'student' | 'professional'>('all')
  const [subFilter, setSubFilter] = useState<SubFilter>('active')
+ const [loadErr, setLoadErr] = useState<string | null>(null)
 
  useEffect(() => { load() }, [])
 
  async function load() {
- setLoading(true)
- const { data: profiles } = await supabase
+ setLoading(true); setLoadErr(null)
+ const { data: profiles, error } = await supabase
  .from('profiles').select('*').eq('is_admin', false)
  .order('created_at', { ascending: false })
 
+ if (error) { console.error('Users load error:', error); setLoadErr(error.message); setLoading(false); return }
  if (!profiles) { setLoading(false); return }
 
  const enriched: UserRow[] = await Promise.all(profiles.map(async (p) => {
@@ -83,6 +85,13 @@ export default function AdminUsers() {
  color: '#0f0f0f', marginBottom: 20 }}>
  All users ({filtered.length}{filtered.length !== users.length ? ` / ${users.length}` : ''})
  </h1>
+
+ {loadErr && (
+ <div style={{ marginBottom: 16, padding: '12px 14px', background: '#fef2f2',
+ border: '1px solid #fecaca', borderRadius: 10, fontSize: 13, color: '#dc2626' }}>
+ Couldn't load users: {loadErr}
+ </div>
+ )}
 
  <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
  <input style={{ ...inp, width: 280 }} placeholder="Search name, email, skill, role…"

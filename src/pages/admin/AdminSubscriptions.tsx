@@ -15,13 +15,15 @@ export default function AdminSubscriptions() {
   const [loading, setLoading] = useState(true)
   const [tab,     setTab]     = useState<Tab>('active')
   const [busyId,  setBusyId]  = useState<string | null>(null)
+  const [loadErr, setLoadErr] = useState<string | null>(null)
 
   useEffect(() => { load() }, [])
 
   async function load() {
-    setLoading(true)
-    const { data: subRows } = await supabase.from('subscriptions')
+    setLoading(true); setLoadErr(null)
+    const { data: subRows, error } = await supabase.from('subscriptions')
       .select('*').order('ends_at', { ascending: true })
+    if (error) { console.error('Subscriptions load error:', error); setLoadErr(error.message); setLoading(false); return }
     if (!subRows) { setSubs([]); setLoading(false); return }
 
     const ids = Array.from(new Set(subRows.map(s => s.user_id)))
@@ -97,6 +99,13 @@ export default function AdminSubscriptions() {
       <div style={{ maxWidth: 980, margin: '0 auto', padding: '36px 24px' }}>
         <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 28, fontWeight: 400,
           color: '#0f0f0f', marginBottom: 20 }}>Subscriptions</h1>
+
+        {loadErr && (
+          <div style={{ marginBottom: 16, padding: '12px 14px', background: '#fef2f2',
+            border: '1px solid #fecaca', borderRadius: 10, fontSize: 13, color: '#dc2626' }}>
+            Couldn't load subscriptions: {loadErr}
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: 6, marginBottom: 24, background: '#f0f0f0', padding: 4,
           borderRadius: 10, width: 'fit-content' }}>
