@@ -7,7 +7,7 @@ const PLAN_DAYS: Record<string, number> = {
 }
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://opportunities-cell.vercel.app',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -36,10 +36,17 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '')
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(token!)
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders })
+    }
+
     // Get subscription record
     const { data: sub } = await supabase.from('subscriptions')
       .select('*').eq('razorpay_order_id', razorpay_order_id).single()
     if (!sub) return new Response(JSON.stringify({ error: 'Order not found' }), { status: 404, headers: corsHeaders })
+    if (sub.user_id !== user.id) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: corsHeaders })
 
     const now = new Date()
     const ends = new Date(now)

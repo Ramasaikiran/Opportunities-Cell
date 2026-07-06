@@ -8,7 +8,7 @@ const PLANS: Record<string, { amount: number; days: number }> = {
 }
 
 const cors = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://opportunities-cell.vercel.app',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
