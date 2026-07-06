@@ -24,10 +24,20 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
+    // Auth: caller must be the subscription owner
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '')
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(token!)
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders })
+    }
+
     const { data: sub, error: subErr } = await supabase.from('subscriptions')
       .select('*').eq('id', subscription_id).single()
     if (subErr || !sub) {
       return new Response(JSON.stringify({ error: 'Subscription not found' }), { status: 404, headers: corsHeaders })
+    }
+    if (sub.user_id !== user.id) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: corsHeaders })
     }
     if (sub.status !== 'active') {
       return new Response(JSON.stringify({ error: 'Only active subscriptions are eligible' }), { status: 400, headers: corsHeaders })
