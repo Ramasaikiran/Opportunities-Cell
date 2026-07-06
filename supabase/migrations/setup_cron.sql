@@ -9,7 +9,7 @@ select cron.schedule(
   $$
   select net.http_post(
     url := 'https://ctfdkpizemhoccwtsvib.supabase.co/functions/v1/expire-subscriptions',
-    headers := '{"x-cron-secret": "REMOVED_SECRET"}'::jsonb
+    headers := '{"x-cron-secret": "PASTE_YOUR_CRON_SECRET_HERE"}'::jsonb
   );
   $$
 );
@@ -20,7 +20,7 @@ select cron.schedule(
   $$
   select net.http_post(
     url := 'https://ctfdkpizemhoccwtsvib.supabase.co/functions/v1/send-renewal-reminders',
-    headers := '{"x-cron-secret": "REMOVED_SECRET"}'::jsonb
+    headers := '{"x-cron-secret": "PASTE_YOUR_CRON_SECRET_HERE"}'::jsonb
   );
   $$
 );
