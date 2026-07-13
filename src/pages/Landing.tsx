@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import SavingsCounter from '../components/SavingsCounter'
 
 /* ── tiny helpers ─────────────────────────────────────────────── */
 const TICK = () => (
@@ -20,7 +19,7 @@ export default function Landing() {
  const navigate = useNavigate()
  const [showSticky, setShowSticky] = useState(false)
  const [openFaq, setOpenFaq] = useState<number | null>(null)
- const [selectedPlan, setSelectedPlan] = useState<{ label: string; price: string; saveAmount: number } | null>(null)
+ const [selectedPlan, setSelectedPlan] = useState<{ label: string; price: string } | null>(null)
  const [howItWorksInView, setHowItWorksInView] = useState(false)
 
  /* auth redirect */
@@ -377,11 +376,11 @@ export default function Landing() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, maxWidth: 900, margin: '0 auto' }}>
  {[
-            { label: 'Basic', tagline: 'You apply. We surface the jobs.', price: '₹399', sub: 'Job feed + WhatsApp alerts', highlight: false, popular: false, saving: null, saveAmount: 0, color: '#0f0f0f' },
-            { label: 'Pro', tagline: 'We apply for you.', price: '₹1,999', sub: 'Admin applies + tracker', highlight: true, popular: true, saving: null, saveAmount: 3500, color: '#1d4ed8' },
-            { label: 'Max Pro', tagline: 'We apply + get you interview-ready.', price: '₹3,599', sub: 'Resume rewrite + strategy call', highlight: false, popular: false, saving: null, saveAmount: 6200, color: '#7c3aed' },
+            { label: 'Basic', tagline: 'You apply. We surface the jobs.', price: '₹399', sub: 'Job feed + WhatsApp alerts', highlight: false, popular: false, saving: null, color: '#0f0f0f' },
+            { label: 'Pro', tagline: 'We apply for you.', price: '₹1,999', sub: 'Admin applies + tracker', highlight: true, popular: true, saving: null, color: '#1d4ed8' },
+            { label: 'Max Pro', tagline: 'We apply + get you interview-ready.', price: '₹3,599', sub: 'Resume rewrite + strategy call', highlight: false, popular: false, saving: null, color: '#7c3aed' },
  ].map(p => (
- <div key={p.label} onClick={() => setSelectedPlan({ label: p.label, price: p.price, saveAmount: p.saveAmount })} style={{
+ <div key={p.label} onClick={() => setSelectedPlan({ label: p.label, price: p.price })} style={{
  background: p.highlight ? p.color : '#fff',
  border: selectedPlan?.label === p.label
  ? '2px solid #22c55e'
@@ -424,19 +423,8 @@ export default function Landing() {
  </p>
  <p style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 32,
  color: p.highlight ? '#fff' : '#0f0f0f', marginBottom: 4 }}>{p.price}</p>
- <p style={{ fontSize: 12, color: p.highlight ? 'rgba(255,255,255,0.5)' : '#b5b5b5', marginBottom: 14 }}>{p.sub}</p>
- {p.saveAmount > 0 && (
- <div style={{ marginBottom: 16 }}>
- <SavingsCounter
- amount={p.saveAmount}
- label="You save"
- color={p.highlight ? '#bbf7d0' : '#16a34a'}
- bg={p.highlight ? 'rgba(255,255,255,0.12)' : '#f0fdf4'}
- border={p.highlight ? 'rgba(255,255,255,0.2)' : '#bbf7d0'}
- />
- </div>
- )}
- <button onClick={(e) => { e.stopPropagation(); setSelectedPlan({ label: p.label, price: p.price, saveAmount: p.saveAmount }); goSignUp() }} style={{
+ <p style={{ fontSize: 12, color: p.highlight ? 'rgba(255,255,255,0.5)' : '#b5b5b5', marginBottom: 20 }}>{p.sub}</p>
+ <button onClick={(e) => { e.stopPropagation(); setSelectedPlan({ label: p.label, price: p.price }); goSignUp() }} style={{
  width: '100%', padding: '10px 0', borderRadius: 8,
  border: p.highlight ? '1px solid rgba(255,255,255,0.25)' : '1px solid #e8e8e8',
  background: p.highlight ? 'rgba(255,255,255,0.15)' : '#f5f5f5',
@@ -580,11 +568,7 @@ export default function Landing() {
  display: 'block', boxShadow: '0 0 0 3px rgba(34,197,94,0.25)' }} />
  <span style={{ fontSize: 14, color: '#fff', fontWeight: 500 }}>
  {selectedPlan ? (
- <><strong>{selectedPlan.label} selected.</strong> {selectedPlan.price}/mo
- {selectedPlan.saveAmount > 0 && (
- <span style={{ color: '#4ade80', fontWeight: 700 }}> · You save ₹{selectedPlan.saveAmount.toLocaleString('en-IN')}</span>
- )}
- </>
+ <><strong>{selectedPlan.label} selected.</strong> {selectedPlan.price}/mo</>
  ) : (
  <><strong>Founding member pricing.</strong> Limited spots.</>
  )}
