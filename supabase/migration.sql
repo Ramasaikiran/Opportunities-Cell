@@ -239,7 +239,7 @@ begin
     third_hit := hits[3];
     if now_ts - third_hit < interval '2 hours' then
       return jsonb_build_object('allowed', false,
-        'retry_after_seconds', extract(epoch from (third_hit + interval '2 hours' - now_ts))::int,
+        'retry_after_seconds', ceil(extract(epoch from (third_hit + interval '2 hours' - now_ts)))::int,
         'reason', 'cooldown');
     end if;
     delete from public.rate_limits where identifier = p_ip and action = 'signup';
@@ -252,7 +252,7 @@ begin
     begin
       if now_ts - last_hit < required_gap then
         return jsonb_build_object('allowed', false,
-          'retry_after_seconds', extract(epoch from (last_hit + required_gap - now_ts))::int,
+          'retry_after_seconds', ceil(extract(epoch from (last_hit + required_gap - now_ts)))::int,
           'reason', 'delay');
       end if;
     end;

@@ -93,6 +93,9 @@ export default function SignUp() {
         const human = secs >= 3600 ? `${Math.ceil(secs / 3600)}h` : secs >= 60 ? `${Math.ceil(secs / 60)}m` : `${secs}s`
         setFormError(`Too many attempts. Try again in ${human}.`)
         setLoading(false)
+        // Clear the stale message once the wait is actually over — otherwise
+        // it lingers forever (e.g. shows "0s" and never goes away).
+        window.setTimeout(() => setFormError(null), Math.max(secs, 1) * 1000)
         return
       }
     } catch { /* fail-open if edge function unreachable */ }
@@ -198,7 +201,7 @@ export default function SignUp() {
               <input id="password-input"
                 className={`oc-input${errors.password ? ' error' : ''}`}
                 type={showPwd ? 'text' : 'password'} value={password}
-                onChange={(e) => { setPassword(e.target.value); setErrors(p => ({...p, password: ''})) }}
+                onChange={(e) => { setPassword(e.target.value); setErrors(p => ({...p, password: ''})); setFormError(null) }}
                 placeholder="Create a strong password" autoComplete="new-password"
                 style={{ paddingRight: 48 }} />
               <ShowHideToggle show={showPwd} onToggle={() => setShowPwd(p => !p)} />
@@ -213,7 +216,7 @@ export default function SignUp() {
               <input id="confirm-password-input"
                 className={`oc-input${errors.confirmPassword ? ' error' : ''}`}
                 type={showConfirmPwd ? 'text' : 'password'} value={confirmPassword}
-                onChange={(e) => { setConfirmPassword(e.target.value); setErrors(p => ({...p, confirmPassword: ''})) }}
+                onChange={(e) => { setConfirmPassword(e.target.value); setErrors(p => ({...p, confirmPassword: ''})); setFormError(null) }}
                 placeholder="Re-enter your password" autoComplete="new-password"
                 style={{ paddingRight: 48 }} />
               <ShowHideToggle show={showConfirmPwd} onToggle={() => setShowConfirmPwd(p => !p)} />
