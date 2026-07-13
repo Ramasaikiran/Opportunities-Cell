@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -19,6 +19,8 @@ export default function Landing() {
  const navigate = useNavigate()
  const [showSticky, setShowSticky] = useState(false)
  const [openFaq, setOpenFaq] = useState<number | null>(null)
+ const [selectedPlan, setSelectedPlan] = useState<{ label: string; price: string } | null>(null)
+ const [howItWorksInView, setHowItWorksInView] = useState(false)
 
  /* auth redirect */
  useEffect(() => {
@@ -34,6 +36,18 @@ export default function Landing() {
  const onScroll = () => setShowSticky(window.scrollY > 600)
  window.addEventListener('scroll', onScroll, { passive: true })
  return () => window.removeEventListener('scroll', onScroll)
+ }, [])
+
+ const howItWorksRef = useRef<HTMLDivElement>(null)
+ useEffect(() => {
+ const el = howItWorksRef.current
+ if (!el) return
+ const observer = new IntersectionObserver(
+ ([entry]) => { if (entry.isIntersecting) setHowItWorksInView(true) },
+ { threshold: 0.35 }
+ )
+ observer.observe(el)
+ return () => observer.disconnect()
  }, [])
 
  const goSignUp = () => navigate('/sign-up')
@@ -180,12 +194,11 @@ export default function Landing() {
  </p>
  {[
  'Spend 3 hours daily copy-pasting the same application',
- 'Generic cover letters recruiters skip in 2 seconds',
  'Apply to 5 jobs/day. Get 0 replies in 2 weeks.',
- 'No idea which companies even saw your profile',
  'Give up and settle for a role you didn\'t want',
- ].map(t => (
- <div key={t} style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'flex-start' }}>
+ ].map((t, i) => (
+ <div key={t} style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'flex-start',
+ opacity: 0, animation: `fadeInUp 0.5s ease ${0.1 + i * 0.12}s forwards` }}>
  <CROSS /><p style={{ fontSize: 14, color: '#6b6b6b', lineHeight: 1.6 }}>{t}</p>
  </div>
  ))}
@@ -219,12 +232,11 @@ export default function Landing() {
  </p>
  {[
  'Fill your profile once. We apply to 10–15 jobs every single day',
- 'Tailored applications matched exactly to your skills and role',
  '300–450 applications/month while you focus on interview prep',
  'Dashboard shows every job applied, status, matched skills',
- 'You\'re among the first to get this advantage, before everyone else catches on',
- ].map(t => (
- <div key={t} style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'flex-start' }}>
+ ].map((t, i) => (
+ <div key={t} style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'flex-start',
+ opacity: 0, animation: `fadeInUp 0.5s ease ${0.1 + i * 0.12}s forwards` }}>
  <TICK /><p style={{ fontSize: 14, color: '#0f0f0f', lineHeight: 1.6 }}>{t}</p>
  </div>
  ))}
@@ -257,6 +269,13 @@ export default function Landing() {
  You set up once. We do the grind. You focus on being ready when they call.
  </p>
 
+ <div ref={howItWorksRef} style={{ position: 'relative' }}>
+ <div style={{ position: 'absolute', top: 0, left: '16.5%', right: '16.5%', height: 2,
+ background: '#e5e5e5', zIndex: 1 }} />
+ <div style={{ position: 'absolute', top: 0, left: '16.5%', height: 2,
+ background: '#22c55e', zIndex: 2,
+ width: howItWorksInView ? '67%' : '0%',
+ transition: 'width 1.1s cubic-bezier(0.65,0,0.35,1)' }} />
  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 2,
  background: '#f0f0f0', borderRadius: 16, overflow: 'hidden' }}>
  {[
@@ -273,7 +292,12 @@ export default function Landing() {
  desc: 'Our team finds matches and applies with tailored cover letters. You get notified of every single one.',
  },
  ].map((s, i) => (
- <div key={s.step} style={{ background: i === 1 ? '#0f0f0f' : '#fff', padding: '36px 30px' }}>
+ <div key={s.step} style={{
+ background: i === 1 ? '#0f0f0f' : '#fff', padding: '36px 30px',
+ opacity: howItWorksInView ? 1 : 0,
+ transform: howItWorksInView ? 'translateY(0)' : 'translateY(14px)',
+ transition: `opacity 0.5s ease ${i * 0.15}s, transform 0.5s ease ${i * 0.15}s`,
+ }}>
  <div style={{ display: 'flex', justifyContent: 'space-between',
  alignItems: 'flex-start', marginBottom: 16 }}>
  <span style={{ fontSize: 11, fontWeight: 700,
@@ -289,6 +313,7 @@ export default function Landing() {
  lineHeight: 1.65 }}>{s.desc}</p>
  </div>
  ))}
+ </div>
  </div>
 
  <div style={{ textAlign: 'center', marginTop: 32 }}>
@@ -355,13 +380,27 @@ export default function Landing() {
             { label: 'Pro', tagline: 'We apply for you.', price: '₹1,999', sub: 'Admin applies + tracker', highlight: true, popular: true, saving: null, color: '#1d4ed8' },
             { label: 'Max Pro', tagline: 'We apply + get you interview-ready.', price: '₹3,599', sub: 'Resume rewrite + strategy call', highlight: false, popular: false, saving: null, color: '#7c3aed' },
  ].map(p => (
- <div key={p.label} style={{
+ <div key={p.label} onClick={() => setSelectedPlan({ label: p.label, price: p.price })} style={{
  background: p.highlight ? p.color : '#fff',
- border: `2px solid ${p.highlight ? p.color : '#e8e8e8'}`,
+ border: selectedPlan?.label === p.label
+ ? '2px solid #22c55e'
+ : `2px solid ${p.highlight ? p.color : '#e8e8e8'}`,
  borderRadius: 16, padding: '28px 20px', position: 'relative', textAlign: 'center',
- boxShadow: p.highlight ? `0 16px 48px ${p.color}33` : '0 1px 4px rgba(0,0,0,0.04)',
+ boxShadow: selectedPlan?.label === p.label
+ ? '0 0 0 4px rgba(34,197,94,0.15)'
+ : p.highlight ? `0 16px 48px ${p.color}33` : '0 1px 4px rgba(0,0,0,0.04)',
  transform: p.highlight ? 'scale(1.04)' : 'none',
+ cursor: 'pointer', transition: 'border 0.2s, box-shadow 0.2s',
  }}>
+ {selectedPlan?.label === p.label && (
+ <span style={{ position: 'absolute', top: -10, right: 12,
+ width: 22, height: 22, borderRadius: '50%', background: '#22c55e',
+ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+ <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3">
+ <polyline points="20 6 9 17 4 12" />
+ </svg>
+ </span>
+ )}
  {p.popular && (
  <span style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
  fontSize: 11, fontWeight: 700, padding: '4px 12px',
@@ -385,7 +424,7 @@ export default function Landing() {
  <p style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 32,
  color: p.highlight ? '#fff' : '#0f0f0f', marginBottom: 4 }}>{p.price}</p>
  <p style={{ fontSize: 12, color: p.highlight ? 'rgba(255,255,255,0.5)' : '#b5b5b5', marginBottom: 20 }}>{p.sub}</p>
- <button onClick={goSignUp} style={{
+ <button onClick={(e) => { e.stopPropagation(); setSelectedPlan({ label: p.label, price: p.price }); goSignUp() }} style={{
  width: '100%', padding: '10px 0', borderRadius: 8,
  border: p.highlight ? '1px solid rgba(255,255,255,0.25)' : '1px solid #e8e8e8',
  background: p.highlight ? 'rgba(255,255,255,0.15)' : '#f5f5f5',
@@ -433,12 +472,18 @@ export default function Landing() {
  transform: openFaq === i ? 'rotate(45deg)' : 'none',
  transition: 'transform 0.2s', display: 'block' }}>+</span>
  </button>
- {openFaq === i && (
+ <div style={{
+ display: 'grid',
+ gridTemplateRows: openFaq === i ? '1fr' : '0fr',
+ transition: 'grid-template-rows 0.3s ease',
+ }}>
+ <div style={{ overflow: 'hidden' }}>
  <p style={{ fontSize: 15, color: '#6b6b6b', lineHeight: 1.7,
  paddingBottom: 22, paddingRight: 32 }}>
  {faq.a}
  </p>
- )}
+ </div>
+ </div>
  </div>
  ))}
 
@@ -522,7 +567,11 @@ export default function Landing() {
  <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e',
  display: 'block', boxShadow: '0 0 0 3px rgba(34,197,94,0.25)' }} />
  <span style={{ fontSize: 14, color: '#fff', fontWeight: 500 }}>
- <strong>Founding member pricing.</strong> Limited spots.
+ {selectedPlan ? (
+ <><strong>{selectedPlan.label} selected.</strong> {selectedPlan.price}/mo</>
+ ) : (
+ <><strong>Founding member pricing.</strong> Limited spots.</>
+ )}
  </span>
  </div>
  <button onClick={goSignUp} style={{
@@ -530,11 +579,15 @@ export default function Landing() {
  padding: '10px 28px', borderRadius: 8, fontSize: 14, fontWeight: 700,
  cursor: 'pointer', fontFamily: "'Inter',sans-serif", whiteSpace: 'nowrap',
  }}>
- Start for ₹399 →
+ {selectedPlan ? 'Continue →' : 'Start for ₹399 →'}
  </button>
  </div>
 
  <style>{`
+ @keyframes fadeInUp {
+ from { opacity: 0; transform: translateY(10px); }
+ to { opacity: 1; transform: translateY(0); }
+ }
  @media (max-width: 768px) {
  div[style*="repeat(3,1fr)"] { grid-template-columns: 1fr !important; }
  div[style*="1fr 1fr"] { grid-template-columns: 1fr !important; }
