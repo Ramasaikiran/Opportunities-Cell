@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import HeroParticles from '../components/HeroParticles'
-import SavingsCounter from '../components/SavingsCounter'
-import PressButton from '../components/PressButton'
 
 /* ── tiny helpers ─────────────────────────────────────────────── */
 const TICK = () => (
@@ -110,9 +107,7 @@ export default function Landing() {
  </nav>
 
  {/* ── HERO ──────────────────────────────────────────────── */}
- <section style={{ position: 'relative', overflow: 'hidden' }}>
- <HeroParticles />
- <div style={{ position: 'relative', zIndex: 1, maxWidth: 780, margin: '0 auto', padding: '100px 24px 80px', textAlign: 'center' }}>
+ <section style={{ maxWidth: 780, margin: '0 auto', padding: '100px 24px 80px', textAlign: 'center' }}>
 
  {/* Early access pill */}
  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -144,7 +139,7 @@ export default function Landing() {
 
  {/* Primary CTA */}
  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
- <PressButton onClick={goSignUp} style={{
+ <button onClick={goSignUp} style={{
  background: '#0f0f0f', color: '#fff', border: 'none',
  padding: '20px 56px', borderRadius: 14, fontSize: 19, fontWeight: 700,
  cursor: 'pointer', fontFamily: "'Inter',sans-serif",
@@ -152,15 +147,7 @@ export default function Landing() {
  boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
  }}>
  Join as a founding member, ₹399/mo
- </PressButton>
- <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: '#9b9b9b' }}>
- <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9b9b9b" strokeWidth="2">
- <rect x="5" y="11" width="14" height="9" rx="2" />
- <path d="M8 11V7a4 4 0 018 0v4" />
- </svg>
- Secure payment · Cancel anytime, no questions asked
- </span>
- </div>
+ </button>
  </div>
  </section>
 
@@ -364,9 +351,9 @@ export default function Landing() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, maxWidth: 900, margin: '0 auto' }}>
  {[
-            { label: 'Basic', tagline: 'You apply. We surface the jobs.', price: '₹399', sub: 'Job feed + WhatsApp alerts', highlight: false, popular: false, saving: null, saveAmount: 0, color: '#0f0f0f' },
-            { label: 'Pro', tagline: 'We apply for you.', price: '₹1,999', sub: 'Admin applies + tracker', highlight: true, popular: true, saving: null, saveAmount: 3500, color: '#1d4ed8' },
-            { label: 'Max Pro', tagline: 'We apply + get you interview-ready.', price: '₹3,599', sub: 'Resume rewrite + strategy call', highlight: false, popular: false, saving: null, saveAmount: 6200, color: '#7c3aed' },
+            { label: 'Basic', tagline: 'You apply. We surface the jobs.', price: '₹399', sub: 'Job feed + WhatsApp alerts', highlight: false, popular: false, saving: null, color: '#0f0f0f' },
+            { label: 'Pro', tagline: 'We apply for you.', price: '₹1,999', sub: 'Admin applies + tracker', highlight: true, popular: true, saving: null, color: '#1d4ed8' },
+            { label: 'Max Pro', tagline: 'We apply + get you interview-ready.', price: '₹3,599', sub: 'Resume rewrite + strategy call', highlight: false, popular: false, saving: null, color: '#7c3aed' },
  ].map(p => (
  <div key={p.label} style={{
  background: p.highlight ? p.color : '#fff',
@@ -397,19 +384,8 @@ export default function Landing() {
  </p>
  <p style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 32,
  color: p.highlight ? '#fff' : '#0f0f0f', marginBottom: 4 }}>{p.price}</p>
- <p style={{ fontSize: 12, color: p.highlight ? 'rgba(255,255,255,0.5)' : '#b5b5b5', marginBottom: 10 }}>{p.sub}</p>
- {p.saveAmount > 0 && (
- <div style={{ marginBottom: 14 }}>
- <SavingsCounter
- amount={p.saveAmount}
- label="You save"
- color={p.highlight ? '#bbf7d0' : '#16a34a'}
- bg={p.highlight ? 'rgba(255,255,255,0.12)' : '#f0fdf4'}
- border={p.highlight ? 'rgba(255,255,255,0.2)' : '#bbf7d0'}
- />
- </div>
- )}
- <PressButton onClick={goSignUp} style={{
+ <p style={{ fontSize: 12, color: p.highlight ? 'rgba(255,255,255,0.5)' : '#b5b5b5', marginBottom: 20 }}>{p.sub}</p>
+ <button onClick={goSignUp} style={{
  width: '100%', padding: '10px 0', borderRadius: 8,
  border: p.highlight ? '1px solid rgba(255,255,255,0.25)' : '1px solid #e8e8e8',
  background: p.highlight ? 'rgba(255,255,255,0.15)' : '#f5f5f5',
@@ -417,17 +393,12 @@ export default function Landing() {
  fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'Inter',sans-serif",
  }}>
  Get started →
- </PressButton>
+ </button>
  </div>
  ))}
  </div>
 
- <p style={{ textAlign: 'center', fontSize: 13, color: '#b5b5b5', marginTop: 28,
- display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
- <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#b5b5b5" strokeWidth="2">
- <rect x="5" y="11" width="14" height="9" rx="2" />
- <path d="M8 11V7a4 4 0 018 0v4" />
- </svg>
+ <p style={{ textAlign: 'center', fontSize: 13, color: '#b5b5b5', marginTop: 28 }}>
  Secured by Razorpay · UPI · Cards · Net banking · No auto-renewal
  </p>
  </div>
@@ -499,20 +470,15 @@ export default function Landing() {
  <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.55)', marginBottom: 48, maxWidth: 480, margin: '0 auto 48px' }}>
  ₹399. 4 minutes. Founding member pricing. What are you waiting for?
  </p>
- <PressButton onClick={goSignUp} style={{
+ <button onClick={goSignUp} style={{
  background: '#fff', color: '#0f0f0f', border: 'none',
  padding: '20px 56px', borderRadius: 14, fontSize: 18, fontWeight: 800,
  cursor: 'pointer', fontFamily: "'Inter',sans-serif", letterSpacing: '-0.02em',
  boxShadow: '0 8px 40px rgba(255,255,255,0.15)',
  }}>
  Join as a founding member →
- </PressButton>
- <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 18,
- display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
- <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2">
- <rect x="5" y="11" width="14" height="9" rx="2" />
- <path d="M8 11V7a4 4 0 018 0v4" />
- </svg>
+ </button>
+ <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 18 }}>
  Setup in 4 min · ₹399/month · No auto-renewal · Cancel anytime
  </p>
  </section>
@@ -559,13 +525,13 @@ export default function Landing() {
  <strong>Founding member pricing.</strong> Limited spots.
  </span>
  </div>
- <PressButton onClick={goSignUp} style={{
+ <button onClick={goSignUp} style={{
  background: '#fff', color: '#0f0f0f', border: 'none',
  padding: '10px 28px', borderRadius: 8, fontSize: 14, fontWeight: 700,
  cursor: 'pointer', fontFamily: "'Inter',sans-serif", whiteSpace: 'nowrap',
  }}>
  Start for ₹399 →
- </PressButton>
+ </button>
  </div>
 
  <style>{`
