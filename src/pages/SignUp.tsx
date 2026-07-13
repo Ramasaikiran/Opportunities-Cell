@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout'
 import GoogleIcon from '../components/GoogleIcon'
@@ -49,6 +49,23 @@ export default function SignUp() {
   const [loading, setLoading]     = useState(false)
   const [gLoading, setGLoading]   = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+ const [blockedUntil, setBlockedUntil] = useState<number | null>(null)
+ const [nowTick, setNowTick] = useState(Date.now())
+
+ useEffect(() => {
+ if (!blockedUntil) return
+ const id = setInterval(() => {
+ const t = Date.now()
+ setNowTick(t)
+ if (t >= blockedUntil) setBlockedUntil(null)
+ }, 1000)
+ return () => clearInterval(id)
+ }, [blockedUntil])
+
+ const secsLeft = blockedUntil ? Math.max(0, Math.ceil((blockedUntil - nowTick) / 1000)) : 0
+ function humanSecs(s: number) {
+ return s >= 3600 ? `${Math.ceil(s / 3600)}h` : s >= 60 ? `${Math.ceil(s / 60)}m` : `${s}s`
+ }
 
   function validateEmail() {
     if (!EMAIL_RE.test(email)) { setErrors({ email: 'Enter a valid email address.' }); return false }
@@ -78,7 +95,7 @@ export default function SignUp() {
     e.preventDefault()
     setFormError(null)
     if (!validateDetails()) return
-    if (blocked) { setFormError(blockMessage); return }
+    if (blocked || secsLeft > 0) return
     setLoading(true)
 
     // Server-side IP check — blocks bots/DDoS even if localStorage cleared
@@ -89,13 +106,9 @@ export default function SignUp() {
       })
       const data = await res.json()
       if (!data.allowed) {
-        const secs = data.retry_after_seconds ?? 0
-        const human = secs >= 3600 ? `${Math.ceil(secs / 3600)}h` : secs >= 60 ? `${Math.ceil(secs / 60)}m` : `${secs}s`
-        setFormError(`Too many attempts. Try again in ${human}.`)
+        const secs = Math.max(data.retry_after_seconds ?? 0, 1)
+        setBlockedUntil(Date.now() + secs * 1000)
         setLoading(false)
-        // Clear the stale message once the wait is actually over — otherwise
-        // it lingers forever (e.g. shows "0s" and never goes away).
-        window.setTimeout(() => setFormError(null), Math.max(secs, 1) * 1000)
         return
       }
     } catch { /* fail-open if edge function unreachable */ }
@@ -224,8 +237,11 @@ export default function SignUp() {
             {errors.confirmPassword && <p className="oc-field-error">{errors.confirmPassword}</p>}
           </div>
 
-          <button type="submit" disabled={loading || blocked} className="oc-btn-primary" style={{ marginTop: 4 }}>
-            {loading ? 'Creating your account…' : blocked ? (blockMessage ?? 'Blocked') : 'Create account →'}
+          <button type="submit" disabled={loading || blocked || secsLeft > 0} className="oc-btn-primary" style={{ marginTop: 4 }}>
+            {loading ? 'Creating your account…'
+              : secsLeft > 0 ? `Try again in ${humanSecs(secsLeft)}`
+              : blocked ? (blockMessage ?? 'Blocked')
+              : 'Create account →'}
           </button>
         </form>
       )}
