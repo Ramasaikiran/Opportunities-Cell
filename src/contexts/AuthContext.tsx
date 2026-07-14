@@ -99,49 +99,81 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   async function signUp(fullName: string, email: string, password: string) {
-    const { error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { full_name: fullName }, emailRedirectTo: `${SITE_URL}/auth/callback` },
-    })
-    return { error: error?.message ?? null }
+    try {
+      const { error } = await supabase.auth.signUp({
+        email, password,
+        options: { data: { full_name: fullName }, emailRedirectTo: `${SITE_URL}/auth/callback` },
+      })
+      return { error: error ? (error.message || 'Sign up failed. Please try again.') : null }
+    } catch {
+      return { error: 'Network error. Check your connection and try again.' }
+    }
   }
 
   async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error: error?.message ?? null }
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      return { error: error ? (error.message || 'Sign in failed. Please try again.') : null }
+    } catch {
+      return { error: 'Network error. Check your connection and try again.' }
+    }
   }
 
   async function signInWithGoogle() {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${SITE_URL}/auth/callback` },
-    })
-    return { error: error?.message ?? null }
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${SITE_URL}/auth/callback` },
+      })
+      return { error: error ? (error.message || 'Google sign in failed. Please try again.') : null }
+    } catch {
+      return { error: 'Network error. Check your connection and try again.' }
+    }
   }
 
   async function resendVerification(email: string) {
-    const { error } = await supabase.auth.resend({ type: 'signup', email })
-    return { error: error?.message ?? null }
+    try {
+      const { error } = await supabase.auth.resend({ type: 'signup', email })
+      return { error: error ? (error.message || 'Could not resend email. Please try again.') : null }
+    } catch {
+      return { error: 'Network error. Check your connection and try again.' }
+    }
   }
 
   async function verifySignupOtp(email: string, token: string) {
-    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'signup' })
-    return { error: error?.message ?? null }
+    try {
+      const { error } = await supabase.auth.verifyOtp({ email, token, type: 'signup' })
+      return { error: error ? (error.message || 'Invalid or expired code. Please try again.') : null }
+    } catch {
+      return { error: 'Network error. Check your connection and try again.' }
+    }
   }
 
   async function requestPasswordReset(email: string) {
-    const { error } = await supabase.auth.resetPasswordForEmail(email)
-    return { error: error?.message ?? null }
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email)
+      return { error: error ? (error.message || 'Could not send reset email. Please try again.') : null }
+    } catch {
+      return { error: 'Network error. Check your connection and try again.' }
+    }
   }
 
   async function verifyRecoveryOtp(email: string, token: string) {
-    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'recovery' })
-    return { error: error?.message ?? null }
+    try {
+      const { error } = await supabase.auth.verifyOtp({ email, token, type: 'recovery' })
+      return { error: error ? (error.message || 'Invalid or expired code. Please try again.') : null }
+    } catch {
+      return { error: 'Network error. Check your connection and try again.' }
+    }
   }
 
   async function updatePassword(password: string) {
-    const { error } = await supabase.auth.updateUser({ password })
-    return { error: error?.message ?? null }
+    try {
+      const { error } = await supabase.auth.updateUser({ password })
+      return { error: error ? (error.message || 'Could not update password. Please try again.') : null }
+    } catch {
+      return { error: 'Network error. Check your connection and try again.' }
+    }
   }
 
   async function signOut() { await supabase.auth.signOut() }
