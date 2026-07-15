@@ -115,10 +115,10 @@ export default function SignUp() {
       }
     } catch { /* fail-open if edge function unreachable */ }
 
-    recordAttempt()
     const { error } = await signUp(fullName.trim(), email.trim().toLowerCase(), password)
     setLoading(false)
     if (error) { setFormError(error); return }
+    recordAttempt()
     fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/record-signup-attempt`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY },
