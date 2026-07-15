@@ -106,13 +106,16 @@ export default function SignUp() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY },
       })
-      const data = await res.json()
-      if (!data.allowed) {
-        const secs = Math.max(data.retry_after_seconds ?? 0, 1)
-        setBlockedUntil(Date.now() + secs * 1000)
-        setLoading(false)
-        return
+      if (res.ok) {
+        const data = await res.json()
+        if (data.allowed === false) {
+          const secs = Math.max(data.retry_after_seconds ?? 0, 1)
+          setBlockedUntil(Date.now() + secs * 1000)
+          setLoading(false)
+          return
+        }
       }
+      // Non-2xx (e.g. misconfigured function) -> fail open, don't block real users
     } catch { /* fail-open if edge function unreachable */ }
 
     const { error } = await signUp(fullName.trim(), email.trim().toLowerCase(), password)
