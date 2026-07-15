@@ -166,10 +166,16 @@ export default function Onboarding() {
  }, [profile, navigate])
 
   const [step, setStep] = useState(editMode ? 4 : (draft.step ?? 1))
- const [role, setRole] = useState<UserType | null>(draft.role ?? null)
+ const [role, setRole] = useState<UserType | null>(draft.role ?? (editMode ? (profile?.user_type as UserType ?? null) : null))
  const [errors, setErrors] = useState<Record<string, string>>({})
  const [loading, setLoading] = useState(false)
  const [error, setError] = useState<string | null>(null)
+
+ // Resume-edit mode loads straight to step 4, bypassing role selection —
+ // backfill role from the existing profile once it's fetched.
+ useEffect(() => {
+   if (editMode && !role && profile?.user_type) setRole(profile.user_type as UserType)
+ }, [editMode, role, profile])
 
  // ── Step 2: Personal info ─────────────────────────────────────
  const [firstName, setFirstName] = useState(draft.firstName ?? '')
