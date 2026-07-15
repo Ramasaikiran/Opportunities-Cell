@@ -35,11 +35,13 @@ function ShowHideToggle({ show, onToggle }: { show: boolean; onToggle: () => voi
 
 export default function SignUp() {
   const { signUp, signInWithGoogle } = useAuth()
-  const { blocked, blockMessage, recordAttempt } = useRateLimit('oc_su_rl')
   const navigate = useNavigate()
 
   const [step, setStep]           = useState<'email' | 'details'>('email')
   const [email, setEmail]         = useState('')
+  const { blocked, blockMessage, recordAttempt } = useRateLimit(
+    email.trim() ? `oc_su_rl:${email.trim().toLowerCase()}` : 'oc_su_rl:pending'
+  )
   const [fullName, setFullName]   = useState('')
   const [password, setPassword]   = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -117,6 +119,10 @@ export default function SignUp() {
     const { error } = await signUp(fullName.trim(), email.trim().toLowerCase(), password)
     setLoading(false)
     if (error) { setFormError(error); return }
+    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/record-signup-attempt`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY },
+    }).catch(() => { /* best-effort — never block the user on this */ })
     navigate('/check-inbox', { state: { email: email.trim().toLowerCase() } })
   }
 

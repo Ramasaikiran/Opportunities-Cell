@@ -12,7 +12,9 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(() => sessionStorage.getItem('oc_fp_sent') === '1')
   const [error, setError] = useState<string | null>(null)
-  const { blocked, blockMessage, recordAttempt } = useRateLimit('oc_fp_rl')
+  const { blocked, blockMessage, recordAttempt } = useRateLimit(
+    email.trim() ? `oc_fp_rl:${email.trim().toLowerCase()}` : 'oc_fp_rl:pending'
+  )
 
   async function handleSend(e: FormEvent) {
     e.preventDefault()

@@ -34,6 +34,11 @@ export function useRateLimit(storageKey: string) {
   const [state, setState] = useState<RateLimitState>(() => load(storageKey))
   const [now, setNow] = useState(Date.now())
 
+  // Reload state whenever the key changes (e.g. user switches email)
+  useEffect(() => {
+    setState(load(storageKey))
+  }, [storageKey])
+
   // Tick every second to update countdowns
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000)
