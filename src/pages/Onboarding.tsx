@@ -310,7 +310,13 @@ export default function Onboarding() {
 
  async function handleFinish(e: FormEvent) {
  e.preventDefault()
- if (!user || !role) return
+ if (!user || !role) {
+ setError(!user
+ ? 'Your session expired — please refresh the page and log in again.'
+ : 'Something went wrong loading your role. Please refresh and try again.')
+ window.scrollTo({ top: 0, behavior: 'smooth' })
+ return
+ }
  setError(null); setLoading(true)
 
  const skillsArr = skills.split(',').map(s => s.trim()).filter(Boolean)
@@ -359,7 +365,7 @@ export default function Onboarding() {
  setError(`Couldn't save your profile: ${(e as Error).message}. Please try again — your details weren't lost.`)
  }
 
- if (profileSaveFailed) { setLoading(false); return }
+ if (profileSaveFailed) { setLoading(false); window.scrollTo({ top: 0, behavior: 'smooth' }); return }
 
  // ── Save detail table ─────────────────────────────────────────
  let detailSaveFailed = false
@@ -406,7 +412,7 @@ export default function Onboarding() {
  setError(`Couldn't save your details: ${(e as Error).message}. Please try again.`)
  }
 
- if (detailSaveFailed) { setLoading(false); return }
+ if (detailSaveFailed) { setLoading(false); window.scrollTo({ top: 0, behavior: 'smooth' }); return }
 
  // ── Only navigate once everything actually saved ────────────────
  setLoading(false)
