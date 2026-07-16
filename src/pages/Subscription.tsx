@@ -34,6 +34,12 @@ const PLANS: {
   features: string[]
 }[] = [
   {
+    id: 'free', label: 'Free', price: 0, duration: 'Always free',
+    tagline: 'Get discovered. Apply yourself.', whoApplies: 'You apply yourself',
+    saving: null, color: '#6b7280',
+    features: ['Daily job feed matched to your skills', 'Save & track jobs yourself', 'Up to 30 applications / month'],
+  },
+  {
     id: 'basic', label: 'Basic', price: 399, duration: '30 days',
     tagline: 'You apply. We surface the jobs.', whoApplies: 'You apply yourself',
     saving: null, color: '#0f0f0f',
@@ -70,6 +76,7 @@ export default function Subscription() {
 
  async function handlePay() {
  if (!user) return
+ if (selected === 'free') { navigate('/dashboard'); return }
  setError(null); setLoading(true)
  try {
  const ok = await loadRazorpay()
@@ -400,6 +407,7 @@ export default function Subscription() {
  Opening payment…
  </>
  ) : (
+ selectedPlan.id === 'free' ? 'Continue with Free' :
  `Pay ₹${selectedPlan.price.toLocaleString('en-IN')} for ${selectedPlan.label}`
  )}
  </button>

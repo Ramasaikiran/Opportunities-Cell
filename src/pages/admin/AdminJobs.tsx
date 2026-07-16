@@ -18,7 +18,7 @@ const STATUS_META: Record<JobStatus, { label: string; color: string; bg: string 
 }
 
 const PLAN_LABELS: Record<SubscriptionPlan, string> = {
-  basic: 'Basic', pro: 'Pro', maxpro: 'Max Pro',
+  free: 'Free', basic: 'Basic', pro: 'Pro', maxpro: 'Max Pro',
 }
 
 export default function AdminJobs() {

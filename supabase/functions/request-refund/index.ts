@@ -56,6 +56,21 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'No remaining days left to refund' }), { status: 400, headers: corsHeaders })
     }
 
+    // ── Got an offer within the first 15 days? We keep applying for a
+    // better one instead of refunding. ────────────────────────────
+    const fifteenDaysIn = new Date(startsAt.getTime() + 15 * 86400000)
+    const { data: earlyOffer } = await supabase.from('job_applications')
+      .select('id').eq('user_id', user.id)
+      .in('status', ['offer', 'joined', 'hired'])
+      .lte('applied_at', fifteenDaysIn.toISOString())
+      .limit(1).maybeSingle()
+
+    if (earlyOffer) {
+      return new Response(JSON.stringify({
+        error: 'You received a job offer within your first 15 days. We\'ll keep applying for 15 more days to find you a better offer — refunds aren\'t available in this case.',
+      }), { status: 400, headers: corsHeaders })
+    }
+
     const totalPaise = sub.amount_paise
     // Unused portion, refunded gross
     const grossPaise = Math.round((totalPaise * daysRemaining) / PLAN_DAYS)

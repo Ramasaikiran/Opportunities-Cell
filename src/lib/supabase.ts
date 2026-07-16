@@ -19,7 +19,7 @@ export const supabase = createClient(url, key, {
 // ── Types ──────────────────────────────────────────────────────────
 export type UserType      = 'student' | 'professional'
 export type AccountStatus = 'pending_onboarding' | 'active' | 'suspended'
-export type SubscriptionPlan = 'basic' | 'pro' | 'maxpro'
+export type SubscriptionPlan = 'free' | 'basic' | 'pro' | 'maxpro'
 export type SubStatus = 'pending' | 'active' | 'expired' | 'cancelled' | 'failed'
 export type AppStatus = 'applied' | 'assessment' | 'interview' | 'hr_round' | 'rejected' | 'offer' | 'joined'
   | 'shortlisted' | 'hired' // legacy values, still readable
@@ -194,6 +194,11 @@ export const PLANS: Record<SubscriptionPlan, {
   label: string; amount: number; tagline: string; whoApplies: 'self' | 'admin'
   features: string[]
 }> = {
+  free: {
+    label: 'Free', amount: 0, tagline: 'Get discovered. Apply yourself.',
+    whoApplies: 'self',
+    features: ['Daily job feed matched to your skills', 'Save & track jobs yourself', 'Up to 30 applications / month'],
+  },
   basic: {
     label: 'Basic', amount: 399, tagline: 'You apply. We surface the jobs.',
     whoApplies: 'self',

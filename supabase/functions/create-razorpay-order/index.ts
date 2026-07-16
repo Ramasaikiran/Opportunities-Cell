@@ -61,11 +61,12 @@ serve(async (req) => {
     const order = await razorRes.json()
     if (!razorRes.ok) throw new Error(order.error?.description || 'Razorpay error')
 
-    await supabase.from('subscriptions').insert({
+    const { error: insertErr } = await supabase.from('subscriptions').insert({
       user_id: user.id, plan,
       amount_paise: amount, status: 'pending',
       razorpay_order_id: order.id,
     })
+    if (insertErr) throw new Error(`Failed to record order: ${insertErr.message}`)
 
     return new Response(JSON.stringify({ orderId: order.id, amount, keyId }), {
       headers: { ...cors, 'Content-Type': 'application/json' },

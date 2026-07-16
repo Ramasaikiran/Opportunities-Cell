@@ -52,8 +52,34 @@ export default function Dashboard() {
  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
  const [jobTab, setJobTab] = useState<'available' | 'saved'>('available')
  const [jobsLoading, setJobsLoading] = useState(true)
+ const [usage, setUsage] = useState<{ plan: string; used: number; limit: number | null } | null>(null)
+ const [applying, setApplying] = useState<string | null>(null)
+ const [applyError, setApplyError] = useState<string | null>(null)
 
  useEffect(() => { if (profile) load() }, [profile])
+ useEffect(() => {
+   if (!profile) return
+   supabase.rpc('get_my_application_usage').then(({ data }) => { if (data) setUsage(data) })
+ }, [profile, apps.length])
+
+ async function handleApply(job: Job) {
+   if (usage?.limit != null && usage.used >= usage.limit) {
+     setApplyError(`Free plan limit reached (${usage.limit}/month). Upgrade to apply to more jobs.`)
+     return
+   }
+   setApplying(job.id); setApplyError(null)
+   try {
+     const { data, error } = await supabase.rpc('record_self_application', { p_job_id: job.id })
+     if (error) throw error
+     if (!data?.ok) { setApplyError(data?.error ?? 'Could not record application'); return }
+     setUsage(u => u ? { ...u, used: u.used + 1 } : u)
+     if (job.apply_url) window.open(job.apply_url, '_blank', 'noreferrer')
+   } catch (err) {
+     setApplyError((err as Error).message)
+   } finally {
+     setApplying(null)
+   }
+ }
  useEffect(() => { if (profile) loadResume() }, [profile])
  useEffect(() => { if (profile && subscription?.plan === 'basic') loadJobs() }, [profile, subscription])
 
@@ -311,8 +337,25 @@ export default function Dashboard() {
  </div>
  </div>
 
+ {applyError && (
+ <div style={{ marginBottom: 16, padding: '12px 16px', background: '#fef2f2',
+ border: '1px solid #fecaca', borderRadius: 10, fontSize: 13, color: '#dc2626',
+ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+ <span>{applyError}</span>
+ <button onClick={() => setApplyError(null)} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontWeight: 700 }}>×</button>
+ </div>
+ )}
+ {usage?.limit != null && (
+ <div style={{ marginBottom: 16, padding: '10px 16px', background: usage.used >= usage.limit ? '#fef2f2' : '#f8f8f8',
+ border: `1px solid ${usage.used >= usage.limit ? '#fecaca' : '#eee'}`, borderRadius: 10, fontSize: 12.5,
+ color: usage.used >= usage.limit ? '#dc2626' : '#6b6b6b' }}>
+ {usage.used >= usage.limit
+ ? `You've used all ${usage.limit} free applications this month. Upgrade to Basic/Pro for unlimited applications.`
+ : `${usage.used}/${usage.limit} applications used this month (Free plan)`}
+ </div>
+ )}
  {/* Available Jobs — Basic plan self-serve job feed */}
- {subscription?.plan === 'basic' && (
+ {(subscription?.plan === 'basic' || subscription?.plan === 'free') && (
  <div style={{ marginBottom: 24 }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 14 }}>
  <p style={{ fontSize: 13, fontWeight: 600, color: '#0f0f0f' }}>Jobs</p>
@@ -367,10 +410,11 @@ export default function Dashboard() {
  fontFamily: "'Inter',sans-serif",
  }}>{savedIds.has(job.id) ? 'Saved' : 'Save'}</button>
  {job.apply_url && (
- <a href={job.apply_url} target="_blank" rel="noreferrer" style={{
- padding: '7px 14px', background: '#0f0f0f', color: '#fff', borderRadius: 7,
- fontSize: 12, fontWeight: 600, textDecoration: 'none', fontFamily: "'Inter',sans-serif",
- }}>Apply →</a>
+ <button onClick={() => handleApply(job)} disabled={applying === job.id} style={{
+ padding: '7px 14px', background: '#0f0f0f', color: '#fff', borderRadius: 7, border: 'none', cursor: 'pointer',
+ fontSize: 12, fontWeight: 600, fontFamily: "'Inter',sans-serif",
+ opacity: applying === job.id ? 0.6 : 1,
+ }}>{applying === job.id ? 'Applying…' : 'Apply →'}</button>
  )}
  </div>
  </div>
