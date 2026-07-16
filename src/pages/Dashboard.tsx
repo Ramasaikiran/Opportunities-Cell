@@ -278,7 +278,7 @@ export default function Dashboard() {
  background: '#0f0f0f', borderRadius: 12,
  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
  <p style={{ fontSize: 14, color: '#fff', fontWeight: 500 }}>
- Your account isn't active yet. Subscribe to start getting applications.
+ Subscribe to apply for more applications.
  </p>
  <button onClick={() => navigate('/subscription')} style={{
  background: '#fff', color: '#0f0f0f', border: 'none',

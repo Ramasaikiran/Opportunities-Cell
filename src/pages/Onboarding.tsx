@@ -241,16 +241,25 @@ export default function Onboarding() {
 
  async function handleResumeSelect(file: File | null) {
  if (!file) return
- const looksLikePdf = file.name.toLowerCase().endsWith('.pdf') &&
- (file.type === 'application/pdf' || file.type === '')
- if (!looksLikePdf) { setResumeUploadErr('PDF only. Please upload a .pdf file.'); return }
+ // Mobile file providers (Google Drive, Files app, some Android pickers)
+ // frequently report a blank or generic MIME type ('', 'application/octet-stream')
+ // for a real PDF instead of 'application/pdf'. Extension is the reliable signal;
+ // only reject when the browser reports a MIME type that clearly isn't a PDF.
+ const nameIsPdf = file.name.toLowerCase().endsWith('.pdf')
+ const mimeOk = file.type === '' || file.type === 'application/pdf' || file.type === 'application/octet-stream'
+ if (!nameIsPdf || !mimeOk) { setResumeUploadErr('PDF only. Please upload a .pdf file.'); return }
  if (file.size > 5 * 1024 * 1024) { setResumeUploadErr('Max 5MB.'); return }
  setResumeUploadErr(null); setResumeUploading(true)
  try {
- // Auth can lag a beat after an OS file-picker remount. Pull the live
- // session directly instead of trusting stale context user.
+ // Auth can lag a beat after an OS file-picker remount, especially on
+ // mobile where backgrounding the tab can delay session rehydration.
+ // Poll briefly instead of failing on the first empty read.
+ let uid = user?.id ?? null
+ for (let attempt = 0; attempt < 5 && !uid; attempt++) {
  const { data: { session } } = await supabase.auth.getSession()
- const uid = session?.user?.id ?? user?.id
+ uid = session?.user?.id ?? null
+ if (!uid) await new Promise(r => setTimeout(r, 400))
+ }
  if (!uid) throw new Error('Session expired. Please sign in again.')
  const path = `${uid}/${Date.now()}-${file.name}`
  const { error: upErr } = await supabase.storage.from('resumes').upload(path, file, { upsert: true })

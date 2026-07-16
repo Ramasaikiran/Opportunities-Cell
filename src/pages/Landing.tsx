@@ -428,14 +428,14 @@ export default function Landing() {
           All plans run 30 days. Pick how much of the work you want off your plate.
  </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, maxWidth: 1080, margin: '0 auto' }}>
+        <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, maxWidth: 1080, margin: '0 auto' }}>
  {[
             { label: 'Free', tagline: 'Get discovered. Apply yourself.', price: '₹0', sub: 'Up to 30 applications / month', highlight: false, popular: false, saving: null, color: '#6b7280' },
             { label: 'Basic', tagline: 'You apply. We surface the jobs.', price: '₹399', sub: 'Job feed + WhatsApp alerts', highlight: false, popular: false, saving: null, color: '#0f0f0f' },
             { label: 'Pro', tagline: 'We apply for you.', price: '₹1,999', sub: 'Admin applies + tracker', highlight: true, popular: true, saving: null, color: '#1d4ed8' },
             { label: 'Max Pro', tagline: 'We apply + get you interview-ready.', price: '₹3,599', sub: 'Resume rewrite + strategy call', highlight: false, popular: false, saving: null, color: '#7c3aed' },
  ].map(p => (
- <div key={p.label} onClick={() => setSelectedPlan({ label: p.label, price: p.price })} style={{
+ <div key={p.label} className="pricing-card" onClick={() => setSelectedPlan({ label: p.label, price: p.price })} style={{
  background: p.highlight ? p.color : '#fff',
  border: selectedPlan?.label === p.label
  ? '2px solid #22c55e'
@@ -643,10 +643,31 @@ export default function Landing() {
  from { opacity: 0; transform: translateY(10px); }
  to { opacity: 1; transform: translateY(0); }
  }
+ @media (max-width: 1024px) and (min-width: 769px) {
+ .pricing-grid { grid-template-columns: repeat(2,1fr) !important; }
+ }
  @media (max-width: 768px) {
  div[style*="repeat(3,1fr)"] { grid-template-columns: 1fr !important; }
  div[style*="1fr 1fr"] { grid-template-columns: 1fr !important; }
  div[style*="gridTemplateColumns: '1fr 1fr'"] { grid-template-columns: 1fr !important; }
+
+ .pricing-grid {
+ display: flex !important;
+ overflow-x: auto !important;
+ scroll-snap-type: x mandatory !important;
+ -webkit-overflow-scrolling: touch !important;
+ gap: 14px !important;
+ padding: 4px 24px 20px !important;
+ margin: 0 -24px !important;
+ max-width: 100vw !important;
+ scrollbar-width: none !important;
+ }
+ .pricing-grid::-webkit-scrollbar { display: none !important; }
+ .pricing-card {
+ flex: 0 0 82vw !important;
+ scroll-snap-align: center !important;
+ transform: none !important;
+ }
  }
  `}</style>
  </div>
