@@ -428,8 +428,9 @@ export default function Landing() {
           All plans run 30 days. Pick how much of the work you want off your plate.
  </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, maxWidth: 900, margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, maxWidth: 1080, margin: '0 auto' }}>
  {[
+            { label: 'Free', tagline: 'Get discovered. Apply yourself.', price: '₹0', sub: 'Up to 30 applications / month', highlight: false, popular: false, saving: null, color: '#6b7280' },
             { label: 'Basic', tagline: 'You apply. We surface the jobs.', price: '₹399', sub: 'Job feed + WhatsApp alerts', highlight: false, popular: false, saving: null, color: '#0f0f0f' },
             { label: 'Pro', tagline: 'We apply for you.', price: '₹1,999', sub: 'Admin applies + tracker', highlight: true, popular: true, saving: null, color: '#1d4ed8' },
             { label: 'Max Pro', tagline: 'We apply + get you interview-ready.', price: '₹3,599', sub: 'Resume rewrite + strategy call', highlight: false, popular: false, saving: null, color: '#7c3aed' },

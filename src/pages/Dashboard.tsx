@@ -254,10 +254,12 @@ export default function Dashboard() {
  <p style={{ fontSize: 12, color: '#9b9b9b' }}>
  Next due: <strong style={{ color: isUrgent ? '#dc2626' : '#0f0f0f' }}>{renewDate}</strong>
  </p>
+ {subscription?.plan !== 'free' && (
  <p onClick={(e) => { e.stopPropagation(); setShowRefund(true) }}
  style={{ fontSize: 11, color: '#9b9b9b', textDecoration: 'underline', marginTop: 4 }}>
  Request refund
  </p>
+ )}
  </div>
  )}
  </div>
@@ -446,9 +448,13 @@ export default function Dashboard() {
  <StatCard value={periodVal} label={PERIOD_MAP[period]} sub="applications sent" />
  <StatCard value={stats?.shortlisted ?? 0} label="Shortlisted" accent="#7c3aed" />
  <StatCard value={stats?.hired ?? 0} label="Offers received" accent="#16a34a" />
+ {subscription?.plan !== 'free' && (
+ <>
  <StatCard value={matchStats?.jobs_in_domain ?? 0} label="Jobs in your domain" accent="#0891b2" />
  <StatCard value={matchStats?.jobs_matched_skills ?? 0} label="Jobs matched to skills" accent="#2563eb" />
  <StatCard value={matchStats?.jobs_applied ?? 0} label="Jobs we applied to" accent="#16a34a" />
+ </>
+ )}
  </div>
  )}
  </div>
