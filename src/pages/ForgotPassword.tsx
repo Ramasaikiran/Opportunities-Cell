@@ -53,7 +53,7 @@ export default function ForgotPassword() {
           : 'Enter your email. Get back in under a minute.'
       }
       footer={
-        <Link to="/sign-in" className="font-medium text-ink underline underline-offset-4">
+        <Link to="/sign-in" style={{ color: '#6b6b6b', textDecoration: 'none', fontWeight: 500, borderBottom: '1px solid #e5e5e5' }}>
           ← Back to sign in
         </Link>
       }

@@ -45,16 +45,16 @@ export default function ResetPassword() {
       title="Set a new password"
       subtitle="Make it something only you'd know."
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} >
         {error && (
-          <div className="rounded-xl border border-clay-700/20 bg-clay-50 px-4 py-3 text-[13px] text-clay-700">
+          <div className="oc-error">
             {error}
           </div>
         )}
         <div>
-          <label className="label">New password</label>
+          <label className="oc-label">New password</label>
           <input
-            className="input-field"
+            className="oc-input"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -65,9 +65,9 @@ export default function ResetPassword() {
           <PasswordStrength password={password} />
         </div>
         <div>
-          <label className="label">Confirm new password</label>
+          <label className="oc-label">Confirm new password</label>
           <input
-            className="input-field"
+            className="oc-input"
             type="password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
@@ -75,7 +75,7 @@ export default function ResetPassword() {
             autoComplete="new-password"
           />
         </div>
-        <button type="submit" disabled={loading} className="btn-primary">
+        <button type="submit" disabled={loading} className="oc-btn-primary" style={{ marginTop: 4 }}>
           {loading ? 'Updating…' : 'Update password'}
         </button>
       </form>

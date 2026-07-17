@@ -202,7 +202,7 @@ export const PLANS: Record<SubscriptionPlan, {
   basic: {
     label: 'Basic', amount: 399, tagline: 'You apply. We surface the jobs.',
     whoApplies: 'self',
-    features: ['Daily job feed matched to your skills', 'Save & track jobs yourself', 'WhatsApp job alerts'],
+    features: ['Daily job feed matched to your skills', 'Save & track jobs yourself'],
   },
   pro: {
     label: 'Pro', amount: 1999, tagline: 'We apply for you.',
@@ -212,6 +212,6 @@ export const PLANS: Record<SubscriptionPlan, {
   maxpro: {
     label: 'Max Pro', amount: 3599, tagline: 'We apply + get you interview-ready.',
     whoApplies: 'admin',
-    features: ['Everything in Pro', 'Resume rewrite (1×)', 'Interview scheduling support', 'Career strategy call'],
+    features: ['Everything in Pro', 'Interview scheduling support', 'Career strategy call'],
   },
 }
