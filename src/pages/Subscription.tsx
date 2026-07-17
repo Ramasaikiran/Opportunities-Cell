@@ -43,19 +43,19 @@ const PLANS: {
     id: 'basic', label: 'Basic', price: 399, duration: '30 days',
     tagline: 'You apply. We surface the jobs.', whoApplies: 'You apply yourself',
     saving: null, color: '#0f0f0f',
-    features: ['Daily job feed matched to your skills', 'Save & track jobs yourself', 'WhatsApp job alerts'],
+    features: ['Daily job feed matched to your skills', 'Save & track jobs yourself'],
   },
   {
     id: 'pro', label: 'Pro', price: 1999, duration: '30 days',
     tagline: 'We apply for you.', whoApplies: 'Admin applies for you',
     saving: null, color: '#1d4ed8',
-    features: ['Everything in Basic', 'Admin applies on your behalf', 'Application tracker with live status', 'Priority job matching', 'WhatsApp job alerts'],
+    features: ['Everything in Basic', 'Admin applies on your behalf', 'Application tracker with live status', 'Priority job matching'],
   },
   {
     id: 'maxpro', label: 'Max Pro', price: 3599, duration: '30 days',
     tagline: 'We apply + get you interview-ready.', whoApplies: 'Admin applies + preps you',
     saving: null, color: '#7c3aed',
-    features: ['Everything in Pro', 'Interview scheduling support', 'Career strategy call', 'WhatsApp job alerts'],
+    features: ['Everything in Pro', 'Interview scheduling support', 'Career strategy call'],
   },
 ]
 
