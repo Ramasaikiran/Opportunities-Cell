@@ -324,13 +324,13 @@ export default function Landing() {
  </p>
 
  <div ref={howItWorksRef} style={{ position: 'relative' }}>
- <div style={{ position: 'absolute', top: 0, left: '16.5%', right: '16.5%', height: 2,
+ <div className="steps-progress-track" style={{ position: 'absolute', top: 0, left: '16.5%', right: '16.5%', height: 2,
  background: '#e5e5e5', zIndex: 1 }} />
- <div style={{ position: 'absolute', top: 0, left: '16.5%', height: 2,
+ <div className="steps-progress-fill" style={{ position: 'absolute', top: 0, left: '16.5%', height: 2,
  background: '#22c55e', zIndex: 2,
  width: howItWorksInView ? '67%' : '0%',
  transition: 'width 1.1s cubic-bezier(0.65,0,0.35,1)' }} />
- <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 2,
+ <div className="steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 2,
  background: '#f0f0f0', borderRadius: 16, overflow: 'hidden' }}>
  {[
  {
@@ -346,7 +346,7 @@ export default function Landing() {
  desc: 'Our team finds matches and applies with tailored cover letters. You get notified of every single one.',
  },
  ].map((s, i) => (
- <div key={s.step} style={{
+ <div key={s.step} className="steps-card" style={{
  background: i === 1 ? '#0f0f0f' : '#fff', padding: '36px 30px',
  opacity: howItWorksInView ? 1 : 0,
  transform: howItWorksInView ? 'translateY(0)' : 'translateY(14px)',
@@ -647,6 +647,21 @@ export default function Landing() {
  .pricing-grid { grid-template-columns: repeat(2,1fr) !important; }
  }
  @media (max-width: 768px) {
+ .steps-progress-track, .steps-progress-fill { display: none !important; }
+ .steps-grid {
+ display: flex !important;
+ overflow-x: auto !important;
+ scroll-snap-type: x mandatory !important;
+ -webkit-overflow-scrolling: touch !important;
+ gap: 0 !important;
+ border-radius: 16px !important;
+ scrollbar-width: none !important;
+ }
+ .steps-grid::-webkit-scrollbar { display: none !important; }
+ .steps-card {
+ flex: 0 0 86vw !important;
+ scroll-snap-align: center !important;
+ }
  div[style*="repeat(3,1fr)"] { grid-template-columns: 1fr !important; }
  div[style*="1fr 1fr"] { grid-template-columns: 1fr !important; }
  div[style*="gridTemplateColumns: '1fr 1fr'"] { grid-template-columns: 1fr !important; }
