@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, PLANS, type AppStats, type JobApplication, type Job } from '../lib/supabase'
@@ -48,6 +48,8 @@ export default function Dashboard() {
  const [resumeUrl, setResumeUrl] = useState<string | null>(null)
  const [resumeUploading, setResumeUploading] = useState(false)
  const [resumeError, setResumeError] = useState<string | null>(null)
+ const profileRef = useRef(profile)
+ useEffect(() => { profileRef.current = profile }, [profile])
  const [availableJobs, setAvailableJobs] = useState<Job[]>([])
  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
  const [jobTab, setJobTab] = useState<'available' | 'saved'>('available')
@@ -114,17 +116,25 @@ export default function Dashboard() {
  }
 
  async function handleResumeUpload(file: File) {
- if (!profile) return
- const looksLikePdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
- if (!looksLikePdf) { setResumeError('PDF only.'); return }
+ // profile can still be loading right after a mobile file-picker remount —
+ // poll briefly instead of silently doing nothing.
+ let p = profileRef.current
+ for (let attempt = 0; attempt < 5 && !p; attempt++) {
+ await new Promise(r => setTimeout(r, 400))
+ p = profileRef.current
+ }
+ if (!p) { setResumeError('Still loading your profile — please try again in a moment.'); return }
+ const nameIsPdf = file.name.toLowerCase().endsWith('.pdf')
+ const mimeOk = file.type === '' || file.type === 'application/pdf' || file.type === 'application/octet-stream'
+ if (!nameIsPdf || !mimeOk) { setResumeError('PDF only.'); return }
  if (file.size > 5 * 1024 * 1024) { setResumeError('Max 5MB.'); return }
  setResumeUploading(true); setResumeError(null)
  try {
- const path = `${profile.id}/${Date.now()}-${file.name}`
+ const path = `${p.id}/${Date.now()}-${file.name}`
  const { error: upErr } = await supabase.storage.from('resumes').upload(path, file, { upsert: true })
  if (upErr) throw upErr
- const table = profile.user_type === 'professional' ? 'professional_details' : 'student_details'
- const { error: dbErr } = await supabase.from(table).update({ resume_url: path }).eq('id', profile.id)
+ const table = p.user_type === 'professional' ? 'professional_details' : 'student_details'
+ const { error: dbErr } = await supabase.from(table).update({ resume_url: path }).eq('id', p.id)
  if (dbErr) throw dbErr
  setResumeUrl(path)
  } catch (err) {
@@ -452,7 +462,9 @@ export default function Dashboard() {
  <>
  <StatCard value={matchStats?.jobs_in_domain ?? 0} label="Jobs in your domain" accent="#0891b2" />
  <StatCard value={matchStats?.jobs_matched_skills ?? 0} label="Jobs matched to skills" accent="#2563eb" />
+ {subscription && (
  <StatCard value={matchStats?.jobs_applied ?? 0} label="Jobs we applied to" accent="#16a34a" />
+ )}
  </>
  )}
  </div>

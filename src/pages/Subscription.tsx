@@ -49,13 +49,13 @@ const PLANS: {
     id: 'pro', label: 'Pro', price: 1999, duration: '30 days',
     tagline: 'We apply for you.', whoApplies: 'Admin applies for you',
     saving: null, color: '#1d4ed8',
-    features: ['Everything in Basic', 'Admin applies on your behalf', 'Application tracker with live status', 'Priority job matching'],
+    features: ['Everything in Basic', 'Admin applies on your behalf', 'Application tracker with live status', 'Priority job matching', 'WhatsApp job alerts'],
   },
   {
     id: 'maxpro', label: 'Max Pro', price: 3599, duration: '30 days',
     tagline: 'We apply + get you interview-ready.', whoApplies: 'Admin applies + preps you',
     saving: null, color: '#7c3aed',
-    features: ['Everything in Pro', 'Resume rewrite (1×)', 'Interview scheduling support', 'Career strategy call'],
+    features: ['Everything in Pro', 'Interview scheduling support', 'Career strategy call', 'WhatsApp job alerts'],
   },
 ]
 
@@ -296,11 +296,11 @@ export default function Subscription() {
  </p>
  </div>
 
- <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14, marginBottom: 28 }}>
+ <div className="sub-pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 28 }}>
  {PLANS.map(plan => {
  const isSelected = selected === plan.id
  return (
- <button key={plan.id} type="button" onClick={() => setSelected(plan.id)} style={{
+ <button key={plan.id} type="button" className="sub-pricing-card" onClick={() => setSelected(plan.id)} style={{
  background: isSelected ? plan.color : '#fff',
  border: `2px solid ${isSelected ? plan.color : '#e8e8e8'}`,
  borderRadius: 16, padding: '22px 20px', textAlign: 'left',
@@ -429,7 +429,30 @@ export default function Subscription() {
  Secured by Razorpay · UPI · Cards · Net banking · No auto-renewal
  </p>
  </div>
- <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+ <style>{`
+ @keyframes spin { to { transform: rotate(360deg); } }
+ @media (max-width: 1024px) and (min-width: 769px) {
+ .sub-pricing-grid { grid-template-columns: repeat(2,1fr) !important; }
+ }
+ @media (max-width: 768px) {
+ .sub-pricing-grid {
+ display: flex !important;
+ overflow-x: auto !important;
+ scroll-snap-type: x mandatory !important;
+ -webkit-overflow-scrolling: touch !important;
+ gap: 14px !important;
+ padding: 4px 24px 16px !important;
+ margin: 0 -24px 28px !important;
+ max-width: 100vw !important;
+ scrollbar-width: none !important;
+ }
+ .sub-pricing-grid::-webkit-scrollbar { display: none !important; }
+ .sub-pricing-card {
+ flex: 0 0 82vw !important;
+ scroll-snap-align: center !important;
+ }
+ }
+ `}</style>
  </div>
  )
 }
