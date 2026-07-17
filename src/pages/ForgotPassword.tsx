@@ -59,16 +59,16 @@ export default function ForgotPassword() {
       }
     >
       {!sent ? (
-        <form onSubmit={handleSend} className="space-y-5">
+        <form onSubmit={handleSend} >
           {(error || blockMessage) && (
-            <div className="rounded-xl border border-clay-700/20 bg-clay-50 px-4 py-3 text-[13px] text-clay-700">
+            <div className="oc-error">
               {error || blockMessage}
             </div>
           )}
           <div>
-            <label className="label">Email address</label>
+            <label className="oc-label">Email address</label>
             <input
-              className="input-field"
+              className="oc-input"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -78,21 +78,21 @@ export default function ForgotPassword() {
               autoFocus
             />
           </div>
-          <button type="submit" disabled={loading || blocked} className="btn-primary">
+          <button type="submit" disabled={loading || blocked} className="oc-btn-primary" style={{ marginTop: 20 }}>
             {loading ? 'Sending…' : blocked ? (blockMessage ?? 'Blocked') : 'Send code'}
           </button>
         </form>
       ) : (
-        <form onSubmit={handleVerify} className="space-y-5">
+        <form onSubmit={handleVerify} >
           {error && (
-            <div className="rounded-xl border border-clay-700/20 bg-clay-50 px-4 py-3 text-[13px] text-clay-700">
+            <div className="oc-error">
               {error}
             </div>
           )}
           <div>
-            <label className="label">6-digit code</label>
+            <label className="oc-label">6-digit code</label>
             <input
-              className="input-field"
+              className="oc-input"
               inputMode="numeric"
               maxLength={6}
               value={code}
@@ -102,7 +102,7 @@ export default function ForgotPassword() {
               style={{ textAlign: 'center', fontSize: 22, letterSpacing: '0.4em', fontWeight: 600 }}
             />
           </div>
-          <button type="submit" disabled={loading || code.length !== 6} className="btn-primary">
+          <button type="submit" disabled={loading || code.length !== 6} className="oc-btn-primary" style={{ marginTop: 20 }}>
             {loading ? 'Verifying…' : 'Continue'}
           </button>
         </form>
