@@ -94,7 +94,29 @@ export default function AdminUserDetail() {
  p_request_id: deletionReq.id, p_approve: approve,
  })
  if (error) throw error
- if (approve) { window.location.href = '/admin/users' } else { setDeletionReq(null) }
+ if (approve) {
+ // The RPC above only removes the `profiles` row (and cascaded app
+ // data). The actual auth.users record — and the email address —
+ // still exists until this second step, which needs the service
+ // role and can't run in the browser.
+ const { data: { session } } = await supabase.auth.getSession()
+ const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-delete-user`, {
+ method: 'POST',
+ headers: {
+ 'Content-Type': 'application/json',
+ 'Authorization': `Bearer ${session?.access_token}`,
+ 'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+ },
+ body: JSON.stringify({ user_id: id, deletion_request_id: deletionReq.id }),
+ })
+ if (!res.ok) {
+ const data = await res.json().catch(() => ({}))
+ throw new Error(data.error || 'Profile data was deleted, but the login/email could not be freed up. It may still block re-registration — contact support.')
+ }
+ window.location.href = '/admin/users'
+ } else {
+ setDeletionReq(null)
+ }
  } catch (err) {
  setDeletionResolveErr((err as Error).message)
  } finally {

@@ -80,7 +80,7 @@ function ProgressBar({ step, total }: { step: number; total: number }) {
 }
 
 const ROLES = ['SDE / Software Engineer','Frontend Engineer','Backend Engineer','Full Stack Engineer',
- 'ML / AI Engineer','Data Scientist','Data Analyst']
+ 'ML / AI Engineer','Data Scientist','Data Analyst','Other']
 
 const COUNTRIES = ['India','United States','United Kingdom','Canada','Australia','Singapore','UAE','Germany','Other']
 const DEGREES = ['B.Tech / B.E.','B.Sc','BCA','M.Tech / M.E.','M.Sc','MCA','MBA','Diploma','Other']
@@ -125,6 +125,7 @@ function isValidGitHub(url: string) {
 // the serializable fields means a reload mid-flow restores exactly where
 // the user left off instead of bouncing them back to step 1.
 const DRAFT_KEY = 'oc_onboarding_draft_v1'
+const RESUME_INFLIGHT_KEY = 'oc_onboarding_resume_inflight_v1'
 
 interface OnboardingDraft {
  step: number; role: UserType | null
@@ -222,7 +223,17 @@ export default function Onboarding() {
  const [resumePath, setResumePath] = useState<string | null>(draft.resumePath ?? null)
  const [resumeName, setResumeName] = useState<string | null>(draft.resumeName ?? null)
  const [resumeUploading, setResumeUploading] = useState(false)
- const [resumeUploadErr, setResumeUploadErr] = useState<string | null>(null)
+ const [resumeUploadErr, setResumeUploadErr] = useState<string | null>(
+ (() => {
+ try {
+ if (sessionStorage.getItem(RESUME_INFLIGHT_KEY)) {
+ sessionStorage.removeItem(RESUME_INFLIGHT_KEY)
+ return 'Your last upload got interrupted (likely a slow connection). Please try again.'
+ }
+ } catch { /* noop */ }
+ return null
+ })()
+ )
  const photoRef = useRef<HTMLInputElement>(null)
 
  // ── Persist draft on every relevant change ──────────────────────
@@ -250,12 +261,13 @@ export default function Onboarding() {
  if (!nameIsPdf || !mimeOk) { setResumeUploadErr('PDF only. Please upload a .pdf file.'); return }
  if (file.size > 5 * 1024 * 1024) { setResumeUploadErr('Max 5MB.'); return }
  setResumeUploadErr(null); setResumeUploading(true)
+ try { sessionStorage.setItem(RESUME_INFLIGHT_KEY, '1') } catch { /* noop */ }
  try {
  // Auth can lag a beat after an OS file-picker remount, especially on
  // mobile where backgrounding the tab can delay session rehydration.
  // Poll briefly instead of failing on the first empty read.
  let uid = user?.id ?? null
- for (let attempt = 0; attempt < 5 && !uid; attempt++) {
+ for (let attempt = 0; attempt < 15 && !uid; attempt++) {
  const { data: { session } } = await supabase.auth.getSession()
  uid = session?.user?.id ?? null
  if (!uid) await new Promise(r => setTimeout(r, 400))
@@ -271,6 +283,7 @@ export default function Onboarding() {
  setResumeUploadErr(`Upload failed: ${(err as Error).message}. You can retry or skip and add it later.`)
  } finally {
  setResumeUploading(false)
+ try { sessionStorage.removeItem(RESUME_INFLIGHT_KEY) } catch { /* noop */ }
  }
  }
 
