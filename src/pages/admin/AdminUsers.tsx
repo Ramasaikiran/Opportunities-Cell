@@ -8,6 +8,7 @@ interface UserRow extends Profile {
  sub_active?: boolean
  apps_count?: number
  skills?: string[]
+ deletion_pending?: boolean
 }
 
 type SubFilter = 'all' | 'active' | 'expired' | 'none'
@@ -31,6 +32,10 @@ export default function AdminUsers() {
  if (error) { console.error('Users load error:', error); setLoadErr(error.message); setLoading(false); return }
  if (!profiles) { setLoading(false); return }
 
+ const { data: pendingReqs } = await supabase
+ .from('profile_deletion_requests').select('user_id').eq('status', 'pending')
+ const pendingIds = new Set((pendingReqs ?? []).map(r => r.user_id))
+
  const enriched: UserRow[] = await Promise.all(profiles.map(async (p) => {
  const [subRes, appRes, sdRes, pdRes] = await Promise.all([
  supabase.from('subscriptions').select('plan,status,ends_at')
@@ -47,6 +52,7 @@ export default function AdminUsers() {
  sub_active: active,
  apps_count: appRes.count ?? 0,
  skills: sdRes.data?.technical_skills ?? pdRes.data?.technical_skills ?? [],
+ deletion_pending: pendingIds.has(p.id),
  }
  }))
  setUsers(enriched)
@@ -149,6 +155,10 @@ export default function AdminUsers() {
  {u.sub_active ? ` ${u.sub_plan}` : u.sub_plan ? 'Expired' : 'No sub'}
  </span>
  <span style={{ fontSize: 12, color: '#9b9b9b' }}>{u.apps_count} apps</span>
+ {u.deletion_pending && (
+ <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 99,
+ background: '#fef2f2', color: '#dc2626' }}>Deletion pending</span>
+ )}
  <span style={{ fontSize: 12, color: '#b5b5b5' }}>→</span>
  </div>
  </Link>

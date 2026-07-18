@@ -154,11 +154,13 @@ export default function Landing() {
  <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.02em' }}>Opportunities Cell</span>
  </div>
  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
- <span style={{ fontSize: 13, color: '#22c55e', fontWeight: 600,
+ <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} style={{
+ fontSize: 13, color: '#22c55e', fontWeight: 600,
  background: '#f0fdf4', padding: '4px 12px', borderRadius: 99,
- border: '1px solid #bbf7d0' }}>
- ₹399/mo
- </span>
+ border: '1px solid #bbf7d0', cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+ }}>
+ Pricing · ₹399/mo
+ </button>
  <button onClick={() => navigate('/sign-in')} style={{
  background: 'none', border: 'none', fontSize: 14, color: '#6b6b6b',
  cursor: 'pointer', fontFamily: "'Inter',sans-serif", padding: '8px 12px',
@@ -214,6 +216,15 @@ export default function Landing() {
  }}>
  Join as a founding member, ₹399/mo
  </button>
+ <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+ {['Official career portals only', 'Cancel anytime', 'Secured by Razorpay'].map((t, i) => (
+ <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, color: '#9b9b9b' }}>
+ {i > 0 && <span style={{ color: '#e5e5e5' }}>·</span>}
+ <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+ {t}
+ </span>
+ ))}
+ </div>
  </div>
  </section>
 
@@ -413,7 +424,7 @@ export default function Landing() {
  </section>
 
  {/* ── PRICING ───────────────────────────────────────────── */}
- <section style={{ background: '#fafafa', borderTop: '1px solid #f0f0f0', maxWidth: '100%', margin: 0, padding: '96px 24px' }}>
+ <section id="pricing" style={{ background: '#fafafa', borderTop: '1px solid #f0f0f0', maxWidth: '100%', margin: 0, padding: '96px 24px' }}>
  <div style={{ maxWidth: 960, margin: '0 auto' }}>
  <p style={{ fontSize: 11, fontWeight: 700, color: '#b5b5b5',
  letterSpacing: '0.12em', textTransform: 'uppercase', textAlign: 'center', marginBottom: 12 }}>
@@ -576,7 +587,7 @@ export default function Landing() {
  cursor: 'pointer', fontFamily: "'Inter',sans-serif", letterSpacing: '-0.02em',
  boxShadow: '0 8px 40px rgba(255,255,255,0.15)',
  }}>
- Join as a founding member →
+ Start now — 4 min setup →
  </button>
  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 18 }}>
  Setup in 4 min · ₹399/month · No auto-renewal · Cancel anytime

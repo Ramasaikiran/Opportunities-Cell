@@ -40,22 +40,28 @@ export default function AdminUserDetail() {
  const [form, setForm] = useState(BLANK_APPLY)
  const [submitting, setSubmitting] = useState(false)
  const [modalErr, setModalErr] = useState<string | null>(null)
+ const [deletionReq, setDeletionReq] = useState<{ id: string; reason: string | null; requested_at: string } | null>(null)
+ const [resolvingDeletion, setResolvingDeletion] = useState(false)
+ const [deletionResolveErr, setDeletionResolveErr] = useState<string | null>(null)
 
  useEffect(() => { if (id) load(id) }, [id])
 
  async function load(uid: string) {
  setLoading(true)
- const [pRes, appRes, subRes, statsRes] = await Promise.all([
+ const [pRes, appRes, subRes, statsRes, delReqRes] = await Promise.all([
  supabase.from('profiles').select('*').eq('id', uid).single(),
  supabase.from('job_applications').select('*').eq('user_id', uid).order('applied_at', { ascending: false }),
  supabase.from('subscriptions').select('*').eq('user_id', uid).order('ends_at', { ascending: false }).limit(1).maybeSingle(),
  supabase.rpc('get_user_app_stats', { p_user_id: uid }),
+ supabase.from('profile_deletion_requests').select('id,reason,requested_at')
+ .eq('user_id', uid).eq('status', 'pending').maybeSingle(),
  ])
  const p = pRes.data as Profile | null
  setProfile(p)
  setApps((appRes.data as JobApplication[]) ?? [])
  setSub((subRes.data as Subscription) ?? null)
  if (!statsRes.error && statsRes.data) setStats(statsRes.data as UserAppStats)
+ setDeletionReq((delReqRes.data as typeof deletionReq) ?? null)
 
  if (p?.user_type === 'student') {
  const { data } = await supabase.from('student_details').select('*').eq('id', uid).single()
@@ -78,6 +84,22 @@ export default function AdminUserDetail() {
  setMatched(matchedJobs)
  }
  setLoading(false)
+ }
+
+ async function resolveDeletion(approve: boolean) {
+ if (!deletionReq || !id) return
+ setResolvingDeletion(true); setDeletionResolveErr(null)
+ try {
+ const { error } = await supabase.rpc('admin_resolve_deletion_request', {
+ p_request_id: deletionReq.id, p_approve: approve,
+ })
+ if (error) throw error
+ if (approve) { window.location.href = '/admin/users' } else { setDeletionReq(null) }
+ } catch (err) {
+ setDeletionResolveErr((err as Error).message)
+ } finally {
+ setResolvingDeletion(false)
+ }
  }
 
  async function refreshAppsAndStats() {
@@ -249,6 +271,36 @@ export default function AdminUserDetail() {
  </span>
  </div>
  </div>
+
+ {/* Pending deletion request */}
+ {deletionReq && (
+ <div style={{ marginBottom: 24, padding: '16px 20px', background: '#fef2f2',
+ border: '1px solid #fecaca', borderRadius: 12, display: 'flex',
+ alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+ <div>
+ <p style={{ fontSize: 13, fontWeight: 700, color: '#991b1b', marginBottom: 2 }}>
+ Deletion request pending
+ </p>
+ <p style={{ fontSize: 12, color: '#b45309' }}>
+ Requested {new Date(deletionReq.requested_at).toLocaleString()}
+ {deletionReq.reason ? ` — "${deletionReq.reason}"` : ''}
+ </p>
+ {deletionResolveErr && <p style={{ fontSize: 12, color: '#dc2626', marginTop: 4 }}>{deletionResolveErr}</p>}
+ </div>
+ <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+ <button onClick={() => resolveDeletion(false)} disabled={resolvingDeletion} style={{
+ background: '#fff', color: '#0f0f0f', border: '1px solid #e5e5e5', padding: '9px 16px',
+ borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: resolvingDeletion ? 'not-allowed' : 'pointer',
+ fontFamily: "'Inter',sans-serif",
+ }}>Reject</button>
+ <button onClick={() => resolveDeletion(true)} disabled={resolvingDeletion} style={{
+ background: '#dc2626', color: '#fff', border: 'none', padding: '9px 16px',
+ borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: resolvingDeletion ? 'not-allowed' : 'pointer',
+ opacity: resolvingDeletion ? 0.7 : 1, fontFamily: "'Inter',sans-serif",
+ }}>{resolvingDeletion ? 'Deleting…' : 'Approve & delete'}</button>
+ </div>
+ </div>
+ )}
 
  {/* Stats strip */}
  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 24 }}>

@@ -151,7 +151,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function requestPasswordReset(email: string) {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email)
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${SITE_URL}/auth/callback`,
+      })
       return { error: error ? (error.message || 'Could not send reset email. Please try again.') : null }
     } catch {
       return { error: 'Network error. Check your connection and try again.' }
