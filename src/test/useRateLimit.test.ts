@@ -99,4 +99,25 @@ describe('useRateLimit', () => {
     rerender({ key: 'a_different_key' })
     expect(result.current.blocked).toBe(false)
   })
+
+  it('does not immediately re-lock for another 2 hours on the first attempt after a cooldown expires', () => {
+    const { result } = renderHook(() => useRateLimit(KEY))
+
+    act(() => result.current.recordAttempt()) // 1
+    act(() => vi.advanceTimersByTime(31_000))
+    act(() => result.current.recordAttempt()) // 2
+    act(() => vi.advanceTimersByTime(61_000))
+    act(() => result.current.recordAttempt()) // 3 — triggers cooldown
+    expect(result.current.blocked).toBe(true)
+
+    // Cooldown fully expires
+    act(() => vi.advanceTimersByTime(2 * 60 * 60 * 1000 + 1000))
+    expect(result.current.blocked).toBe(false)
+
+    // The next attempt should be treated as a fresh attempt 1, not
+    // instantly re-trigger another 2-hour block.
+    act(() => result.current.recordAttempt())
+    expect(result.current.attempts).toBe(1)
+    expect(result.current.blockMessage).not.toMatch(/too many attempts/i)
+  })
 })

@@ -77,10 +77,16 @@ export function useRateLimit(storageKey: string) {
     : null
 
   const recordAttempt = useCallback(() => {
+    // If a previous cooldown has fully expired, this is a fresh start —
+    // otherwise `attempts` stays stuck at 3+ forever and every future
+    // attempt re-triggers another full 2-hour block the instant someone
+    // tries again, with no way out.
+    const cooldownExpired = state.cooledAt !== null && (Date.now() - state.cooledAt) >= COOLDOWN_MS
+    const baseAttempts = cooldownExpired ? 0 : state.attempts
     const next: RateLimitState = {
-      attempts: state.attempts + 1,
+      attempts: baseAttempts + 1,
       lastAttemptAt: Date.now(),
-      cooledAt: state.attempts + 1 >= 3 ? Date.now() : null,
+      cooledAt: baseAttempts + 1 >= 3 ? Date.now() : null,
     }
     setState(next)
     save(storageKey, next)
