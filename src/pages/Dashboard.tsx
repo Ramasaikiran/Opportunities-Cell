@@ -142,7 +142,14 @@ export default function Dashboard() {
  setResumeUploading(true); setResumeError(null)
  try {
  const path = `${p.id}/${Date.now()}-${file.name}`
- const { error: upErr } = await supabase.storage.from('resumes').upload(path, file, { upsert: true })
+ const UPLOAD_TIMEOUT_MS = 25_000
+ const timeout = new Promise<never>((_, reject) =>
+ setTimeout(() => reject(new Error('Upload timed out — your connection may be too slow right now.')), UPLOAD_TIMEOUT_MS)
+ )
+ const { error: upErr } = await Promise.race([
+ supabase.storage.from('resumes').upload(path, file, { upsert: true }),
+ timeout,
+ ])
  if (upErr) throw upErr
  const table = p.user_type === 'professional' ? 'professional_details' : 'student_details'
  const { error: dbErr } = await supabase.from(table).update({ resume_url: path }).eq('id', p.id)

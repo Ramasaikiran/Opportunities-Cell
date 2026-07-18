@@ -229,7 +229,7 @@ export default function Onboarding() {
  try {
  if (sessionStorage.getItem(RESUME_INFLIGHT_KEY)) {
  sessionStorage.removeItem(RESUME_INFLIGHT_KEY)
- return 'Your last upload got interrupted (likely a slow connection). Please try again.'
+ return 'Your last upload didn\'t finish — likely a slow or dropped connection. Try again on a stronger connection, or switch to Wi-Fi if possible.'
  }
  } catch { /* noop */ }
  return null
@@ -276,7 +276,18 @@ export default function Onboarding() {
  }
  if (!uid) throw new Error('Session expired. Please sign in again.')
  const path = `${uid}/${Date.now()}-${file.name}`
- const { error: upErr } = await supabase.storage.from('resumes').upload(path, file, { upsert: true })
+ // On a very slow connection the upload can hang indefinitely with no
+ // feedback — the user eventually gives up and backgrounds/closes the
+ // tab, which is what leaves the "interrupted" flag stuck for next time.
+ // Timing out lets it fail cleanly instead, clearing the flag normally.
+ const UPLOAD_TIMEOUT_MS = 25_000
+ const timeout = new Promise<never>((_, reject) =>
+ setTimeout(() => reject(new Error('Upload timed out — your connection may be too slow right now.')), UPLOAD_TIMEOUT_MS)
+ )
+ const { error: upErr } = await Promise.race([
+ supabase.storage.from('resumes').upload(path, file, { upsert: true }),
+ timeout,
+ ])
  if (upErr) throw upErr
  setResumePath(path)
  setResumeName(file.name)
