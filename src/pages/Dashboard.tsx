@@ -378,7 +378,10 @@ export default function Dashboard() {
  fontSize: 13, fontWeight: 600, cursor: resumeUploading ? 'not-allowed' : 'pointer',
  fontFamily: "'Inter',sans-serif" }}>
  {resumeUploading ? 'Uploading…' : resumeUrl ? 'Replace' : 'Upload'}
- <input type="file" accept="application/pdf,.pdf" style={{ display: 'none' }} disabled={resumeUploading}
+ <input type="file" accept="application/pdf,.pdf" style={{
+ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1,
+ overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0,
+ }} disabled={resumeUploading}
  onChange={e => { const f = e.target.files?.[0]; if (f) handleResumeUpload(f); e.target.value = '' }} />
  </label>
  </div>
