@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase, PLANS, type AppStats, type JobApplication, type Job } from '../lib/supabase'
 import RefundModal from '../components/RefundModal'
 import { pickFile } from '../lib/filePicker'
+import { uploadResumeWithProgress } from '../lib/uploadResume'
 
 type Period = '7' | '30' | '90' | '365'
 
@@ -48,6 +49,8 @@ export default function Dashboard() {
  const [loading, setLoading] = useState(true)
  const [resumeUrl, setResumeUrl] = useState<string | null>(null)
  const [resumeUploading, setResumeUploading] = useState(false)
+ const [resumeUploadPct, setResumeUploadPct] = useState(0)
+ const [resumeUploadAttempt, setResumeUploadAttempt] = useState(1)
  const [resumeError, setResumeError] = useState<string | null>(null)
  const profileRef = useRef(profile)
  useEffect(() => { profileRef.current = profile }, [profile])
@@ -142,15 +145,11 @@ export default function Dashboard() {
  setResumeUploading(true); setResumeError(null)
  try {
  const path = `${p.id}/${Date.now()}-${file.name}`
- const UPLOAD_TIMEOUT_MS = 25_000
- const timeout = new Promise<never>((_, reject) =>
- setTimeout(() => reject(new Error('Upload timed out — your connection may be too slow right now.')), UPLOAD_TIMEOUT_MS)
- )
- const { error: upErr } = await Promise.race([
- supabase.storage.from('resumes').upload(path, file, { upsert: true }),
- timeout,
- ])
- if (upErr) throw upErr
+ setResumeUploadPct(0); setResumeUploadAttempt(1)
+ await uploadResumeWithProgress(file, path, (pr) => {
+ setResumeUploadPct(pr.percent)
+ setResumeUploadAttempt(pr.attempt)
+ })
  const table = p.user_type === 'professional' ? 'professional_details' : 'student_details'
  const { error: dbErr } = await supabase.from(table).update({ resume_url: path }).eq('id', p.id)
  if (dbErr) throw dbErr
@@ -390,7 +389,9 @@ export default function Dashboard() {
  color: resumeUploading ? '#9b9b9b' : '#fff', padding: '9px 16px', borderRadius: 8,
  border: 'none', fontSize: 13, fontWeight: 600, cursor: resumeUploading ? 'not-allowed' : 'pointer',
  fontFamily: "'Inter',sans-serif" }}>
- {resumeUploading ? 'Uploading…' : resumeUrl ? 'Replace' : 'Upload'}
+ {resumeUploading
+ ? (resumeUploadAttempt > 1 ? `Retrying ${resumeUploadPct}%…` : `Uploading ${resumeUploadPct}%…`)
+ : resumeUrl ? 'Replace' : 'Upload'}
  </button>
  </div>
  </div>

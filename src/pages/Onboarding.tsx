@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, type UserType } from '../lib/supabase'
 import { pickFile } from '../lib/filePicker'
+import { uploadResumeWithProgress } from '../lib/uploadResume'
 
 /* ── Shared style helpers ──────────────────────────────────── */
 const inp = (err?: string): React.CSSProperties => ({
@@ -224,6 +225,8 @@ export default function Onboarding() {
  const [resumePath, setResumePath] = useState<string | null>(draft.resumePath ?? null)
  const [resumeName, setResumeName] = useState<string | null>(draft.resumeName ?? null)
  const [resumeUploading, setResumeUploading] = useState(false)
+ const [resumeUploadPct, setResumeUploadPct] = useState(0)
+ const [resumeUploadAttempt, setResumeUploadAttempt] = useState(1)
  const [resumeUploadErr, setResumeUploadErr] = useState<string | null>(
  (() => {
  try {
@@ -276,19 +279,11 @@ export default function Onboarding() {
  }
  if (!uid) throw new Error('Session expired. Please sign in again.')
  const path = `${uid}/${Date.now()}-${file.name}`
- // On a very slow connection the upload can hang indefinitely with no
- // feedback — the user eventually gives up and backgrounds/closes the
- // tab, which is what leaves the "interrupted" flag stuck for next time.
- // Timing out lets it fail cleanly instead, clearing the flag normally.
- const UPLOAD_TIMEOUT_MS = 25_000
- const timeout = new Promise<never>((_, reject) =>
- setTimeout(() => reject(new Error('Upload timed out — your connection may be too slow right now.')), UPLOAD_TIMEOUT_MS)
- )
- const { error: upErr } = await Promise.race([
- supabase.storage.from('resumes').upload(path, file, { upsert: true }),
- timeout,
- ])
- if (upErr) throw upErr
+ setResumeUploadPct(0); setResumeUploadAttempt(1)
+ await uploadResumeWithProgress(file, path, (p) => {
+ setResumeUploadPct(p.percent)
+ setResumeUploadAttempt(p.attempt)
+ })
  setResumePath(path)
  setResumeName(file.name)
  } catch (err) {
@@ -875,7 +870,14 @@ export default function Onboarding() {
  <div style={{ width: 28, height: 28, borderRadius: '50%',
  border: '3px solid #e5e5e5', borderTopColor: '#0f0f0f',
  animation: 'spin 0.8s linear infinite' }} />
- <p style={{ fontSize: 14, color: '#6b6b6b' }}>Uploading…</p>
+ <p style={{ fontSize: 14, color: '#6b6b6b' }}>
+ {resumeUploadAttempt > 1
+ ? `Connection dropped — retrying (attempt ${resumeUploadAttempt})… ${resumeUploadPct}%`
+ : `Uploading… ${resumeUploadPct}%`}
+ </p>
+ <div style={{ width: '80%', maxWidth: 240, height: 4, background: '#e5e5e5', borderRadius: 2, overflow: 'hidden' }}>
+ <div style={{ width: `${resumeUploadPct}%`, height: '100%', background: '#0f0f0f', transition: 'width 0.2s' }} />
+ </div>
  </>
  ) : resumePath ? (
  <>
