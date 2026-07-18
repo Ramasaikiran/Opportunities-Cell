@@ -251,6 +251,7 @@ export default function Onboarding() {
  prevSalary, noticeStr, resumePath, resumeName, expectedSalary, reasonChange, prevProjects])
 
  async function handleResumeSelect(file: File | null) {
+ console.log('[resume] handleResumeSelect called, file:', file?.name, file?.size, file?.type)
  if (!file) return
  // Mobile file providers (Google Drive, Files app, some Android pickers)
  // frequently report a blank or generic MIME type ('', 'application/octet-stream')
@@ -847,6 +848,7 @@ export default function Onboarding() {
  </p>
 
  <label style={{
+ position: 'relative', overflow: 'hidden',
  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
  gap: 12, padding: '36px 24px',
  background: resumePath ? '#f0fdf4' : '#f7f7f7',
@@ -885,8 +887,8 @@ export default function Onboarding() {
  </>
  )}
  <input type="file" accept="application/pdf,.pdf" style={{
- position: 'absolute', width: 1, height: 1, padding: 0, margin: -1,
- overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0,
+ position: 'absolute', inset: 0, width: '100%', height: '100%',
+ opacity: 0, cursor: resumeUploading ? 'wait' : 'pointer',
  }} disabled={resumeUploading}
  onChange={e => { const f = e.target.files?.[0] ?? null; handleResumeSelect(f); e.target.value = '' }} />
  </label>
