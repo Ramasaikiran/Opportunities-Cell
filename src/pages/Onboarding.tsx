@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from 'r
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, type UserType } from '../lib/supabase'
+import { pickFile } from '../lib/filePicker'
 
 /* ── Shared style helpers ──────────────────────────────────── */
 const inp = (err?: string): React.CSSProperties => ({
@@ -847,8 +848,11 @@ export default function Onboarding() {
  We tailor every application to the job. A strong resume = more interviews.
  </p>
 
- <label style={{
- position: 'relative', overflow: 'hidden',
+ <button type="button" disabled={resumeUploading} onClick={async () => {
+ const f = await pickFile('application/pdf,.pdf')
+ if (f) handleResumeSelect(f)
+ }} style={{
+ width: '100%', textAlign: 'inherit', font: 'inherit', appearance: 'none',
  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
  gap: 12, padding: '36px 24px',
  background: resumePath ? '#f0fdf4' : '#f7f7f7',
@@ -886,12 +890,7 @@ export default function Onboarding() {
  </div>
  </>
  )}
- <input type="file" accept="application/pdf,.pdf" style={{
- position: 'absolute', inset: 0, width: '100%', height: '100%',
- opacity: 0, cursor: resumeUploading ? 'wait' : 'pointer',
- }} disabled={resumeUploading}
- onChange={e => { const f = e.target.files?.[0] ?? null; handleResumeSelect(f); e.target.value = '' }} />
- </label>
+ </button>
  {resumeUploadErr && (
  <p style={{ fontSize: 13, color: '#dc2626', marginTop: -10 }}> {resumeUploadErr}</p>
  )}

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, PLANS, type AppStats, type JobApplication, type Job } from '../lib/supabase'
 import RefundModal from '../components/RefundModal'
+import { pickFile } from '../lib/filePicker'
 
 type Period = '7' | '30' | '90' | '365'
 
@@ -121,6 +122,7 @@ export default function Dashboard() {
  }
 
  async function handleResumeUpload(file: File) {
+ console.log('[resume] handleResumeUpload called, file:', file?.name, file?.size, file?.type)
  // profile can still be loading right after a mobile file-picker remount —
  // poll briefly instead of silently doing nothing.
  let p = profileRef.current
@@ -373,18 +375,16 @@ export default function Dashboard() {
  padding: '9px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
  fontFamily: "'Inter',sans-serif" }}>View</button>
  )}
- <label style={{ position: 'relative', overflow: 'hidden',
+ <button onClick={async () => {
+ const f = await pickFile('application/pdf,.pdf')
+ if (f) handleResumeUpload(f)
+ }} disabled={resumeUploading} style={{
  background: resumeUploading ? '#e5e5e5' : '#0f0f0f',
  color: resumeUploading ? '#9b9b9b' : '#fff', padding: '9px 16px', borderRadius: 8,
- fontSize: 13, fontWeight: 600, cursor: resumeUploading ? 'not-allowed' : 'pointer',
+ border: 'none', fontSize: 13, fontWeight: 600, cursor: resumeUploading ? 'not-allowed' : 'pointer',
  fontFamily: "'Inter',sans-serif" }}>
  {resumeUploading ? 'Uploading…' : resumeUrl ? 'Replace' : 'Upload'}
- <input type="file" accept="application/pdf,.pdf" style={{
- position: 'absolute', inset: 0, width: '100%', height: '100%',
- opacity: 0, cursor: resumeUploading ? 'wait' : 'pointer',
- }} disabled={resumeUploading}
- onChange={e => { const f = e.target.files?.[0]; if (f) handleResumeUpload(f); e.target.value = '' }} />
- </label>
+ </button>
  </div>
  </div>
 
