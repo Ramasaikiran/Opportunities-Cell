@@ -159,7 +159,7 @@ export default function Landing() {
  background: '#f0fdf4', padding: '4px 12px', borderRadius: 99,
  border: '1px solid #bbf7d0', cursor: 'pointer', fontFamily: "'Inter',sans-serif",
  }}>
- Pricing · ₹399/mo
+ Free to start
  </button>
  <button onClick={() => navigate('/sign-in')} style={{
  background: 'none', border: 'none', fontSize: 14, color: '#6b6b6b',
@@ -201,8 +201,8 @@ export default function Landing() {
 
  <p style={{ fontSize: 20, color: '#6b6b6b', lineHeight: 1.65,
  maxWidth: 560, margin: '0 auto 44px', fontWeight: 400 }}>
- We apply to 10–15 matching jobs a day on official career portals.
- You focus on interviews.
+ Get matched to 10–15 relevant jobs a day. Apply yourself for free,
+ or let our team apply for you.
  </p>
 
  {/* Primary CTA */}
@@ -214,9 +214,16 @@ export default function Landing() {
  letterSpacing: '-0.02em',
  boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
  }}>
- Join as a founding member, ₹399/mo
+ Get started — free
  </button>
- <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+ <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} style={{
+ background: 'none', border: 'none', fontSize: 13.5, color: '#9b9b9b',
+ cursor: 'pointer', fontFamily: "'Inter',sans-serif", textDecoration: 'underline',
+ textUnderlineOffset: 3,
+ }}>
+ or see founding member plans where we apply for you →
+ </button>
+ <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap', marginTop: 4 }}>
  {['Official career portals only', 'Cancel anytime', 'Secured by Razorpay'].map((t, i) => (
  <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, color: '#9b9b9b' }}>
  {i > 0 && <span style={{ color: '#e5e5e5' }}>·</span>}
@@ -296,9 +303,9 @@ export default function Landing() {
  WITH OPPORTUNITIES CELL
  </p>
  {[
- 'Fill your profile once. We apply to 10–15 jobs every single day',
- '300–450 applications/month while you focus on interview prep',
- 'Dashboard shows every job applied, status, matched skills',
+ 'Fill your profile once. Get matched to 10–15 jobs every single day',
+ '300–450 relevant openings/month — apply yourself, or let our team do it',
+ 'Dashboard shows every job matched, status, and what you applied to',
  ].map((t, i) => (
  <div key={t} style={{ display: 'flex', gap: 10, marginBottom: 14, alignItems: 'flex-start',
  opacity: 0, animation: `fadeInUp 0.5s ease ${0.1 + i * 0.12}s forwards` }}>
@@ -579,7 +586,7 @@ export default function Landing() {
  gets the role you wanted.
  </h2>
  <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.55)', marginBottom: 48, maxWidth: 480, margin: '0 auto 48px' }}>
- ₹399. 4 minutes. Founding member pricing. What are you waiting for?
+ Free to start. Founding member pricing on paid plans, locked in before it moves to standard rates.
  </p>
  <button onClick={goSignUp} style={{
  background: '#fff', color: '#0f0f0f', border: 'none',
@@ -590,7 +597,7 @@ export default function Landing() {
  Start now — 4 min setup →
  </button>
  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 18 }}>
- Setup in 4 min · ₹399/month · No auto-renewal · Cancel anytime
+ Setup in 4 min · Free to start · No auto-renewal · Cancel anytime
  </p>
  </section>
 
@@ -636,7 +643,7 @@ export default function Landing() {
  {selectedPlan ? (
  <><strong>{selectedPlan.label} selected.</strong> {selectedPlan.price}/mo</>
  ) : (
- <><strong>Founding member pricing.</strong> Limited spots.</>
+ <><strong>Free to start.</strong> Paid plans apply for you.</>
  )}
  </span>
  </div>
@@ -645,7 +652,7 @@ export default function Landing() {
  padding: '10px 28px', borderRadius: 8, fontSize: 14, fontWeight: 700,
  cursor: 'pointer', fontFamily: "'Inter',sans-serif", whiteSpace: 'nowrap',
  }}>
- {selectedPlan ? 'Continue →' : 'Start for ₹399 →'}
+ {selectedPlan ? 'Continue →' : 'Get started →'}
  </button>
  </div>
 
