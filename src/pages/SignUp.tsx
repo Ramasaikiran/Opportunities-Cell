@@ -4,6 +4,7 @@ import AuthLayout from '../components/AuthLayout'
 import GoogleIcon from '../components/GoogleIcon'
 import PasswordStrength, { passwordRequirementsMet } from '../components/PasswordStrength'
 import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 import { useRateLimit } from '../hooks/useRateLimit'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -126,7 +127,21 @@ export default function SignUp() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY },
     }).catch(() => { /* best-effort — never block the user on this */ })
-    navigate('/onboarding')
+
+    // signUp() succeeding doesn't mean the user is actually signed in —
+    // with "Confirm email" required, Supabase creates the account but
+    // withholds the session until the code is verified. This previously
+    // navigated to /onboarding unconditionally, which either silently
+    // dropped unverified users into a protected route with no session,
+    // or (for a not-yet-expired existing signup) skipped verification
+    // entirely. Only go straight to onboarding if a session actually
+    // exists; otherwise send them to enter the code.
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      navigate('/onboarding')
+    } else {
+      navigate('/check-inbox', { state: { email: email.trim().toLowerCase() } })
+    }
   }
 
   async function handleGoogle() {
