@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { routePostAuth } from '../lib/routing'
 
 export default function AuthCallback() {
  const navigate = useNavigate()
@@ -11,14 +12,16 @@ export default function AuthCallback() {
  let cancelled = false
 
  async function run() {
- // A password-recovery link authenticates the user too (so they can set
- // a new password), but it must NOT fall into the normal sign-in routing
- // below — that would send an existing, already-subscribed user straight
- // to onboarding/payment instead of letting them reset their password.
- const isRecoveryLink =
- window.location.hash.includes('type=recovery') ||
- window.location.search.includes('type=recovery')
- if (isRecoveryLink) {
+ // A password-recovery link establishes a session just like any other
+ // magic link, but must NOT fall through to the normal post-login
+ // routing below -- that logic checks subscription status and sends
+ // anyone unpaid straight to /subscription, hijacking the password
+ // reset entirely. Supabase marks recovery links with type=recovery
+ // in the redirect URL (hash for implicit flow, query for PKCE).
+ const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+ const isRecovery = hashParams.get('type') === 'recovery'
+ || new URLSearchParams(window.location.search).get('type') === 'recovery'
+ if (isRecovery) {
  navigate('/reset-password', { replace: true })
  return
  }
@@ -56,35 +59,9 @@ export default function AuthCallback() {
  profile = refetched
  }
 
- // ── ADMIN → skip everything, go straight to admin panel ────
- if (profile?.is_admin) {
- navigate('/admin', { replace: true })
- return
- }
-
- // ── USER routing ────────────────────────────────────────────
- // 1. Not onboarded → fill profile first
- if (!profile?.user_type) {
- navigate('/onboarding', { replace: true })
- return
- }
-
- // 2. Onboarded but no active subscription → pay
- const { data: sub } = await supabase
- .from('subscriptions')
- .select('id')
- .eq('user_id', userId)
- .eq('status', 'active')
- .gt('ends_at', new Date().toISOString())
- .maybeSingle()
-
- if (!sub) {
- navigate('/subscription', { replace: true })
- return
- }
-
- // 3. Fully set up → dashboard
- navigate('/dashboard', { replace: true })
+ // ── Routing (admin / onboarding / subscription / dashboard) ──
+ // Shared with SignIn so every entry point makes the same decision.
+ await routePostAuth(userId, navigate)
  }
 
  run()

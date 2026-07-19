@@ -1,10 +1,16 @@
 /**
- * useRateLimit — client-side email send throttle.
+ * useRateLimit — abuse-prevention lockout, layered on top of (not duplicating)
+ * Supabase's own server-side email throttle.
  *
- * Attempt 1 → immediate
- * Attempt 2 → allowed after 30 s
- * Attempt 3 → allowed after 60 s from attempt 2
- * After 3 attempts → 2-hour cooldown before any more
+ * Supabase already enforces its own short-interval cooldown between emails
+ * and returns an accurate, live "you can only request this after N seconds"
+ * error when hit — that message is authoritative and shown as-is by the
+ * caller. This hook does NOT try to guess or replicate that timing (an
+ * earlier version did, with a client-only 0s/30s/60s schedule, which just
+ * showed a second, unsynchronized countdown next to Supabase's real one).
+ *
+ * What this hook adds instead: after 3 attempts, a 2-hour lockout — a
+ * longer-horizon abuse guard Supabase's per-request throttle doesn't cover.
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -15,7 +21,6 @@ interface RateLimitState {
   cooledAt: number | null // epoch ms when 3rd attempt was made (starts 2hr block)
 }
 
-const DELAYS_MS = [0, 30_000, 60_000]   // min gap before attempt 1, 2, 3
 const COOLDOWN_MS = 2 * 60 * 60 * 1000  // 2 hours after 3rd attempt
 
 function load(key: string): RateLimitState {
@@ -39,7 +44,7 @@ export function useRateLimit(storageKey: string) {
     setState(load(storageKey))
   }, [storageKey])
 
-  // Tick every second to update countdowns
+  // Tick every second to update the cooldown countdown
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(id)
@@ -51,14 +56,7 @@ export function useRateLimit(storageKey: string) {
     ? Math.max(0, Math.ceil((COOLDOWN_MS - (now - state.cooledAt)) / 1000))
     : 0
 
-  // During per-attempt delay?
-  const attemptIndex = Math.min(state.attempts, DELAYS_MS.length - 1)
-  const requiredDelay = DELAYS_MS[attemptIndex] ?? 0
-  const elapsed = now - state.lastAttemptAt
-  const inDelay = state.attempts > 0 && elapsed < requiredDelay
-  const delaySecondsLeft = inDelay ? Math.ceil((requiredDelay - elapsed) / 1000) : 0
-
-  const blocked = inCooldown || inDelay
+  const blocked = inCooldown
 
   function humanCooldown(seconds: number) {
     if (seconds >= 3600) {
@@ -72,8 +70,6 @@ export function useRateLimit(storageKey: string) {
 
   const blockMessage = inCooldown
     ? `Too many attempts. Try again in ${humanCooldown(cooldownSecondsLeft)}.`
-    : inDelay
-    ? `Please wait ${delaySecondsLeft}s before resending.`
     : null
 
   const recordAttempt = useCallback(() => {

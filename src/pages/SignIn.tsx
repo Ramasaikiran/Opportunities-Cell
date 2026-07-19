@@ -4,6 +4,7 @@ import AuthLayout from '../components/AuthLayout'
 import GoogleIcon from '../components/GoogleIcon'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { routePostAuth } from '../lib/routing'
 
 export default function SignIn() {
  const { signIn, signInWithGoogle } = useAuth()
@@ -15,24 +16,13 @@ export default function SignIn() {
  const [gLoading, setGLoading] = useState(false)
  const [error, setError] = useState<string | null>(null)
 
- // Smart routing after login — checks admin, onboarding
+ // Smart routing after login — admin / onboarding / subscription / dashboard.
+ // Shared with AuthCallback so email+password sign-in can't skip the paywall
+ // that magic-link sign-in enforces.
  async function routeAfterLogin() {
  const { data: { session } } = await supabase.auth.getSession()
  if (!session) return
-
- const { data: profile } = await supabase
- .from('profiles')
- .select('is_admin, user_type')
- .eq('id', session.user.id)
- .maybeSingle()
-
- // Admin → admin panel immediately
- if (profile?.is_admin) { navigate('/admin', { replace: true }); return }
-
- // Not onboarded → fill profile
- if (!profile?.user_type) { navigate('/onboarding', { replace: true }); return }
-
- navigate('/dashboard', { replace: true })
+ await routePostAuth(session.user.id, navigate)
  }
 
  async function handleSubmit(e: FormEvent) {

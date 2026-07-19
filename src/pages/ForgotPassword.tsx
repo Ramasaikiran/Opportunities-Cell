@@ -2,7 +2,6 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout'
 import { useAuth } from '../contexts/AuthContext'
-import { useRateLimit } from '../hooks/useRateLimit'
 
 export default function ForgotPassword() {
   const navigate = useNavigate()
@@ -12,16 +11,11 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(() => sessionStorage.getItem('oc_fp_sent') === '1')
   const [error, setError] = useState<string | null>(null)
-  const { blocked, blockMessage, recordAttempt, reset } = useRateLimit(
-    email.trim() ? `oc_fp_rl:${email.trim().toLowerCase()}` : 'oc_fp_rl:pending'
-  )
 
   async function handleSend(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    if (blocked) { setError(blockMessage); return }
     setLoading(true)
-    recordAttempt()
     const { error } = await requestPasswordReset(email.trim().toLowerCase())
     setLoading(false)
     if (error) { setError(error); return }
@@ -38,7 +32,6 @@ export default function ForgotPassword() {
     const { error } = await verifyRecoveryOtp(email.trim().toLowerCase(), code)
     setLoading(false)
     if (error) { setError(error); return }
-    reset()
     sessionStorage.removeItem('oc_fp_email')
     sessionStorage.removeItem('oc_fp_sent')
     navigate('/reset-password', { replace: true })
@@ -61,9 +54,9 @@ export default function ForgotPassword() {
     >
       {!sent ? (
         <form onSubmit={handleSend} >
-          {(error || blockMessage) && (
+          {error && (
             <div className="oc-error">
-              {error || blockMessage}
+              {error}
             </div>
           )}
           <div>
@@ -79,8 +72,8 @@ export default function ForgotPassword() {
               autoFocus
             />
           </div>
-          <button type="submit" disabled={loading || blocked} className="oc-btn-primary" style={{ marginTop: 20 }}>
-            {loading ? 'Sending…' : blocked ? (blockMessage ?? 'Blocked') : 'Send code'}
+          <button type="submit" disabled={loading} className="oc-btn-primary" style={{ marginTop: 20 }}>
+            {loading ? 'Sending…' : 'Send code'}
           </button>
         </form>
       ) : (
