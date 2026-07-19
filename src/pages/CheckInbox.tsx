@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase } from '../lib/supabase'
 
 const COOLDOWN = 45
 
@@ -18,8 +17,6 @@ export default function CheckInbox() {
  const [errMsg, setErrMsg] = useState('')
  const [code, setCode] = useState('')
  const [verifying, setVerifying] = useState(false)
- const [checkingLink, setCheckingLink] = useState(false)
- const [showCodeEntry, setShowCodeEntry] = useState(false)
 
  useEffect(() => {
  if (cooldown <= 0) return
@@ -47,21 +44,6 @@ export default function CheckInbox() {
  navigate('/onboarding', { replace: true })
  }
 
- // Signup confirmation emails are a link, not a code — same as the
- // "Confirm email address" link in the message. If the user already
- // clicked it (in this tab or another), a session will exist.
- async function handleIveClickedTheLink() {
- setCheckingLink(true); setStatus('idle')
- const { data } = await supabase.auth.getSession()
- setCheckingLink(false)
- if (data.session) {
- navigate('/auth/callback', { replace: true })
- } else {
- setStatus('error')
- setErrMsg("We don't see a confirmed session yet. Open the email and tap the link, then come back and try again.")
- }
- }
-
  return (
  <div style={{
  minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -86,7 +68,7 @@ export default function CheckInbox() {
  fontFamily: "'Instrument Serif', Georgia, serif",
  fontSize: 32, fontWeight: 400, color: '#0f0f0f',
  letterSpacing: '-0.02em', marginBottom: 10,
- }}>Check your inbox</h1>
+ }}>Verify your email</h1>
 
  {editing ? (
  <div style={{ marginTop: 24 }}>
@@ -95,34 +77,37 @@ export default function CheckInbox() {
  onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoFocus />
  <button onClick={() => { if (email) { setEditing(false); handleResend() } }}
  style={{ marginTop: 14, width: '100%', height: 50, background: '#0f0f0f', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: "'Inter', sans-serif" }}>
- Send confirmation email
+ Send code
  </button>
  </div>
  ) : (
  <>
  <p style={{ fontSize: 15, color: '#6b6b6b', lineHeight: 1.65, marginBottom: 24 }}>
- We sent a confirmation link to{' '}
- <strong style={{ color: '#0f0f0f' }}>{email}</strong>. Open the email and tap{' '}
- <strong style={{ color: '#0f0f0f' }}>Confirm email address</strong> — it'll bring you straight back here signed in.
+ Code sent to <strong style={{ color: '#0f0f0f' }}>{email}</strong>. Enter it below.
  </p>
 
  {status === 'sent' && (
  <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '12px 14px', fontSize: 13.5, color: '#16a34a', marginBottom: 16 }}>
- Email resent. Check your inbox (and spam folder).
+ Code resent. Check your inbox (and spam folder).
  </div>
  )}
  {status === 'error' && (
  <div className="oc-error" style={{ marginBottom: 16 }}> {errMsg}</div>
  )}
 
- <button onClick={handleIveClickedTheLink} disabled={checkingLink}
+ <input className="oc-input" inputMode="numeric" maxLength={6}
+ value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+ placeholder="000000" autoFocus
+ style={{ textAlign: 'center', fontSize: 24, letterSpacing: '0.4em', fontWeight: 600 }} />
+
+ <button onClick={handleVerify} disabled={code.length !== 6 || verifying}
  style={{
- width: '100%', height: 50, background: '#0f0f0f', color: '#fff',
+ marginTop: 16, width: '100%', height: 50, background: '#0f0f0f', color: '#fff',
  border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600,
- cursor: checkingLink ? 'not-allowed' : 'pointer', fontFamily: "'Inter', sans-serif",
- opacity: checkingLink ? 0.6 : 1,
+ cursor: code.length === 6 ? 'pointer' : 'not-allowed', fontFamily: "'Inter', sans-serif",
+ opacity: code.length === 6 ? 1 : 0.45,
  }}>
- {checkingLink ? 'Checking…' : "I've tapped the link — continue"}
+ {verifying ? 'Verifying…' : 'Verify code'}
  </button>
 
  <button onClick={handleResend} disabled={cooldown > 0 || status === 'sending'}
@@ -132,36 +117,13 @@ export default function CheckInbox() {
  cursor: cooldown > 0 ? 'not-allowed' : 'pointer', fontFamily: "'Inter', sans-serif",
  color: '#6b6b6b', opacity: cooldown > 0 ? 0.6 : 1,
  }}>
- {status === 'sending' ? 'Sending…' : cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend email'}
+ {status === 'sending' ? 'Sending…' : cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend code'}
  </button>
 
  <button onClick={() => setEditing(true)}
  style={{ marginTop: 12, width: '100%', height: 44, background: 'none', border: '1.5px solid #e5e5e5', borderRadius: 12, fontSize: 14, color: '#6b6b6b', cursor: 'pointer', fontFamily: "'Inter', sans-serif" }}>
  Wrong email? Change it
  </button>
-
- {!showCodeEntry ? (
- <button onClick={() => setShowCodeEntry(true)}
- style={{ marginTop: 16, width: '100%', textAlign: 'center', background: 'none', border: 'none', fontSize: 12.5, color: '#b5b5b5', cursor: 'pointer', fontFamily: "'Inter', sans-serif", textDecoration: 'underline' }}>
- Have a 6-digit code instead?
- </button>
- ) : (
- <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid #f0f0f0' }}>
- <input className="oc-input" inputMode="numeric" maxLength={6}
- value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
- placeholder="000000"
- style={{ textAlign: 'center', fontSize: 24, letterSpacing: '0.4em', fontWeight: 600 }} />
- <button onClick={handleVerify} disabled={code.length !== 6 || verifying}
- style={{
- marginTop: 12, width: '100%', height: 46, background: '#0f0f0f', color: '#fff',
- border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 600,
- cursor: code.length === 6 ? 'pointer' : 'not-allowed', fontFamily: "'Inter', sans-serif",
- opacity: code.length === 6 ? 1 : 0.45,
- }}>
- {verifying ? 'Verifying…' : 'Verify code'}
- </button>
- </div>
- )}
  </>
  )}
 
