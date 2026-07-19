@@ -11,6 +11,18 @@ export default function AuthCallback() {
  let cancelled = false
 
  async function run() {
+ // A password-recovery link authenticates the user too (so they can set
+ // a new password), but it must NOT fall into the normal sign-in routing
+ // below — that would send an existing, already-subscribed user straight
+ // to onboarding/payment instead of letting them reset their password.
+ const isRecoveryLink =
+ window.location.hash.includes('type=recovery') ||
+ window.location.search.includes('type=recovery')
+ if (isRecoveryLink) {
+ navigate('/reset-password', { replace: true })
+ return
+ }
+
  const { data, error } = await supabase.auth.getSession()
  if (cancelled) return
 

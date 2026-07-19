@@ -8,7 +8,7 @@ const BLANK: Omit<Job,'id'|'posted_at'|'updated_at'> = {
   required_experience_min: 0, required_experience_max: null,
   job_type: 'full-time', work_mode: null, role_category: '', location: '', country: 'India',
   salary_min: null, salary_max: null, apply_url: '', last_date: null,
-  plan_visibility: ['basic', 'pro', 'maxpro'], status: 'draft', is_active: true,
+  plan_visibility: ['free', 'basic', 'pro', 'maxpro'], status: 'draft', is_active: true,
 }
 
 const STATUS_META: Record<JobStatus, { label: string; color: string; bg: string }> = {
@@ -70,7 +70,7 @@ export default function AdminJobs() {
       work_mode: job.work_mode, role_category: job.role_category ?? '', location: job.location ?? '',
       country: job.country ?? 'India', salary_min: job.salary_min, salary_max: job.salary_max,
       apply_url: job.apply_url ?? '', last_date: job.last_date,
-      plan_visibility: job.plan_visibility?.length ? job.plan_visibility : ['basic', 'pro', 'maxpro'],
+      plan_visibility: job.plan_visibility?.length ? job.plan_visibility : ['free', 'basic', 'pro', 'maxpro'],
       status: job.status, is_active: job.is_active,
     })
     setSkillsInput(job.required_skills.join(', '))
@@ -262,7 +262,7 @@ export default function AdminJobs() {
                     Plan visibility — which plans see this job
                   </label>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    {(['basic', 'pro', 'maxpro'] as SubscriptionPlan[]).map(plan => {
+                    {(['free', 'basic', 'pro', 'maxpro'] as SubscriptionPlan[]).map(plan => {
                       const on = form.plan_visibility.includes(plan)
                       return (
                         <button key={plan} type="button" onClick={() => togglePlanVisibility(plan)} style={{
