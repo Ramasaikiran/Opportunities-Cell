@@ -20,38 +20,13 @@ describe('useRateLimit', () => {
     expect(result.current.attempts).toBe(0)
   })
 
-  it('blocks after the 1st attempt until 30s pass before allowing a 2nd', () => {
-    const { result } = renderHook(() => useRateLimit(KEY))
-
-    act(() => result.current.recordAttempt()) // attempt 1 recorded — 2nd needs a 30s gap
-
-    expect(result.current.blocked).toBe(true)
-    expect(result.current.blockMessage).toMatch(/wait/i)
-  })
-
-  it('unblocks once the 30s gap after the 1st attempt elapses', () => {
-    const { result } = renderHook(() => useRateLimit(KEY))
-
-    act(() => result.current.recordAttempt())
-    expect(result.current.blocked).toBe(true)
-
-    act(() => vi.advanceTimersByTime(31_000))
-    expect(result.current.blocked).toBe(false)
-  })
-
-  it('requires a 60s gap before a 3rd attempt', () => {
+  it('does not block the 1st or 2nd attempt — Supabase\'s own throttle covers short-interval spacing', () => {
     const { result } = renderHook(() => useRateLimit(KEY))
 
     act(() => result.current.recordAttempt()) // 1
-    act(() => vi.advanceTimersByTime(31_000))
-    act(() => result.current.recordAttempt()) // 2 — 3rd now needs a 60s gap
+    expect(result.current.blocked).toBe(false)
 
-    expect(result.current.blocked).toBe(true)
-
-    act(() => vi.advanceTimersByTime(59_000))
-    expect(result.current.blocked).toBe(true)
-
-    act(() => vi.advanceTimersByTime(2_000))
+    act(() => result.current.recordAttempt()) // 2
     expect(result.current.blocked).toBe(false)
   })
 
@@ -59,9 +34,7 @@ describe('useRateLimit', () => {
     const { result } = renderHook(() => useRateLimit(KEY))
 
     act(() => result.current.recordAttempt()) // 1
-    act(() => vi.advanceTimersByTime(31_000))
     act(() => result.current.recordAttempt()) // 2
-    act(() => vi.advanceTimersByTime(61_000))
     act(() => result.current.recordAttempt()) // 3 — triggers cooldown
 
     expect(result.current.blocked).toBe(true)
@@ -80,6 +53,7 @@ describe('useRateLimit', () => {
     const { result } = renderHook(() => useRateLimit(KEY))
     act(() => result.current.recordAttempt())
     act(() => result.current.recordAttempt())
+    act(() => result.current.recordAttempt())
     expect(result.current.blocked).toBe(true)
 
     act(() => result.current.reset())
@@ -94,6 +68,7 @@ describe('useRateLimit', () => {
     })
     act(() => result.current.recordAttempt())
     act(() => result.current.recordAttempt())
+    act(() => result.current.recordAttempt())
     expect(result.current.blocked).toBe(true)
 
     rerender({ key: 'a_different_key' })
@@ -104,9 +79,7 @@ describe('useRateLimit', () => {
     const { result } = renderHook(() => useRateLimit(KEY))
 
     act(() => result.current.recordAttempt()) // 1
-    act(() => vi.advanceTimersByTime(31_000))
     act(() => result.current.recordAttempt()) // 2
-    act(() => vi.advanceTimersByTime(61_000))
     act(() => result.current.recordAttempt()) // 3 — triggers cooldown
     expect(result.current.blocked).toBe(true)
 
@@ -118,6 +91,6 @@ describe('useRateLimit', () => {
     // instantly re-trigger another 2-hour block.
     act(() => result.current.recordAttempt())
     expect(result.current.attempts).toBe(1)
-    expect(result.current.blockMessage).not.toMatch(/too many attempts/i)
+    expect(result.current.blockMessage).toBeNull()
   })
 })
