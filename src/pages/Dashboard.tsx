@@ -92,7 +92,7 @@ export default function Dashboard() {
  }
  useEffect(() => { if (profile) loadResume() }, [profile])
  useEffect(() => { if (profile) loadDeletionStatus() }, [profile])
- useEffect(() => { if (profile && subscription?.plan === 'basic') loadJobs() }, [profile, subscription])
+ useEffect(() => { if (profile && (subscription?.plan === 'basic' || subscription?.plan === 'free')) loadJobs() }, [profile, subscription])
 
  async function loadJobs() {
  if (!profile) return
