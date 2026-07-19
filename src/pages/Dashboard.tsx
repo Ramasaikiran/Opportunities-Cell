@@ -92,7 +92,7 @@ export default function Dashboard() {
  }
  useEffect(() => { if (profile) loadResume() }, [profile])
  useEffect(() => { if (profile) loadDeletionStatus() }, [profile])
- useEffect(() => { if (profile && (subscription?.plan === 'basic' || subscription?.plan === 'free')) loadJobs() }, [profile, subscription])
+ useEffect(() => { if (profile && (subscription?.plan === 'basic' || subscription?.plan === 'free' || !subscription)) loadJobs() }, [profile, subscription])
 
  async function loadJobs() {
  if (!profile) return
@@ -471,7 +471,7 @@ export default function Dashboard() {
  </div>
  )}
  {/* Available Jobs — Basic plan self-serve job feed */}
- {(subscription?.plan === 'basic' || subscription?.plan === 'free') && (
+ {(subscription?.plan === 'basic' || subscription?.plan === 'free' || !subscription) && (
  <div style={{ marginBottom: 24 }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 14 }}>
  <p style={{ fontSize: 13, fontWeight: 600, color: '#0f0f0f' }}>Jobs</p>
