@@ -150,7 +150,7 @@ export default function Landing() {
  flexShrink: 0 }}>
  <img src="/logo-mark.png" alt="ApplyMate" style={{ width: 26, height: 26, objectFit: 'contain' }} />
  </div>
- <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>ApplyMate</span>
+ <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>ApplyMate</span>
  </div>
  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
  <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="nav-free-pill" style={{
@@ -660,9 +660,9 @@ export default function Landing() {
  @media (max-width: 1024px) and (min-width: 769px) {
  .pricing-grid { grid-template-columns: repeat(2,1fr) !important; }
  }
- @media (max-width: 480px) {
+ @media (max-width: 600px) {
  .nav-free-pill { display: none !important; }
- .nav-signin { padding: 8px 2px !important; font-size: 13px !important; }
+ .nav-signin { display: none !important; }
  .nav-inner { padding: 0 16px !important; gap: 6px !important; }
  }
  @media (max-width: 768px) {
