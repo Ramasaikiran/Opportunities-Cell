@@ -27,6 +27,17 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin
 
+// Some Supabase Auth endpoints (e.g. reset-password) intentionally return an
+// empty body on success. Older client versions/edge cases can surface that
+// as a raw "Unexpected end of JSON input" parser error instead of a clean
+// AuthError. Never show that raw text to a user — treat it as success-shaped
+// and fall back to a safe generic message otherwise.
+function safeErrorMessage(message: string | undefined, fallback: string) {
+  if (!message) return fallback
+  if (/unexpected end of json input|failed to execute 'json'/i.test(message)) return fallback
+  return message
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session,       setSession]       = useState<Session | null>(null)
   const [profile,       setProfile]       = useState<Profile | null>(null)
@@ -104,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email, password,
         options: { data: { full_name: fullName }, emailRedirectTo: `${SITE_URL}/auth/callback` },
       })
-      return { error: error ? (error.message || 'Sign up failed. Please try again.') : null }
+      return { error: error ? safeErrorMessage(error.message, 'Sign up failed. Please try again.') : null }
     } catch {
       return { error: 'Network error. Check your connection and try again.' }
     }
@@ -113,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function signIn(email: string, password: string) {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
-      return { error: error ? (error.message || 'Sign in failed. Please try again.') : null }
+      return { error: error ? safeErrorMessage(error.message, 'Sign in failed. Please try again.') : null }
     } catch {
       return { error: 'Network error. Check your connection and try again.' }
     }
@@ -125,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         provider: 'google',
         options: { redirectTo: `${SITE_URL}/auth/callback` },
       })
-      return { error: error ? (error.message || 'Google sign in failed. Please try again.') : null }
+      return { error: error ? safeErrorMessage(error.message, 'Google sign in failed. Please try again.') : null }
     } catch {
       return { error: 'Network error. Check your connection and try again.' }
     }
@@ -154,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${SITE_URL}/auth/callback`,
       })
-      return { error: error ? (error.message || 'Could not send reset email. Please try again.') : null }
+      return { error: error ? safeErrorMessage(error.message, 'Could not send reset email. Please try again.') : null }
     } catch {
       return { error: 'Network error. Check your connection and try again.' }
     }
