@@ -28,7 +28,7 @@ export default function AuthLayout({ eyebrow, title, subtitle, children, footer 
  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#0f0f0f"/>
  </svg>
  </div>
- <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', letterSpacing: '-0.02em' }}>Opportunities Cell</span>
+ <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', letterSpacing: '-0.02em' }}>ApplyMate</span>
  </div>
 
  {/* Hero */}
@@ -108,7 +108,7 @@ export default function AuthLayout({ eyebrow, title, subtitle, children, footer 
  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff"/>
  </svg>
  </div>
- <span style={{ fontSize: 14, fontWeight: 600 }}>Opportunities Cell</span>
+ <span style={{ fontSize: 14, fontWeight: 600 }}>ApplyMate</span>
  </div>
  </div>
 

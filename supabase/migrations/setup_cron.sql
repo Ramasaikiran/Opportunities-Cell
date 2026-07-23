@@ -1,4 +1,4 @@
--- Run in Supabase SQL editor (Opportunities-Cell project, not Safeshe).
+-- Run in Supabase SQL editor (ApplyMate project, not Safeshe).
 
 create extension if not exists pg_cron;
 create extension if not exists pg_net;

@@ -3,11 +3,11 @@ import LegalPage, { H2, H3, P, Ul } from '../components/LegalPage'
 export default function RefundPolicy() {
   return (
     <LegalPage title="Refund and Cancellation Policy" effectiveDate="July 4, 2026">
-      <P>Opportunities Cell, operated by Rama Sai Kiran Medam ("we," "us," "our").</P>
+      <P>ApplyMate, operated by Rama Sai Kiran Medam ("we," "us," "our").</P>
       <P>By purchasing any paid plan, you agree to this Policy along with our Terms and Privacy Policy.</P>
 
       <H2>1. Overview</H2>
-      <P>Opportunities Cell is a subscription job application platform for job seekers in India.</P>
+      <P>ApplyMate is a subscription job application platform for job seekers in India.</P>
       <Ul>
         <li><strong>Basic (₹399/month):</strong> You apply. We surface a daily matched job feed.</li>
         <li><strong>Pro (₹1,999/month):</strong> Our team applies for you, official career portals only.</li>

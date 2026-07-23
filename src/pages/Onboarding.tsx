@@ -473,11 +473,11 @@ export default function Onboarding() {
  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff"/>
  </svg>
  </div>
- <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em' }}>Opportunities Cell</span>
+ <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em' }}>ApplyMate</span>
  </div>
  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 18 }}>
  <span style={{ fontSize: 13, color: '#b5b5b5' }}>
- Need help? <a href="mailto:hello@opportunitiescell.com"
+ Need help? <a href="mailto:support@applymate.in"
  style={{ color: '#6b6b6b', textDecoration: 'none', fontWeight: 500 }}>Contact us</a>
  </span>
  <button onClick={() => signOut()} style={{ background: 'none', border: 'none',

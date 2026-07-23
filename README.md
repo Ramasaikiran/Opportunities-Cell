@@ -1,4 +1,4 @@
-# Opportunities Cell — Auth
+# ApplyMate — Auth
 
 Premium auth experience: sign up, magic-link email verification, Google OAuth,
 sign in, password reset, and role-based onboarding (student vs. early-career

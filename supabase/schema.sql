@@ -1,5 +1,5 @@
 -- ================================================================
--- Opportunities Cell — Full Production Schema v2
+-- ApplyMate — Full Production Schema v2
 -- Run in Supabase SQL editor (drop existing tables first if migrating)
 -- ================================================================
 

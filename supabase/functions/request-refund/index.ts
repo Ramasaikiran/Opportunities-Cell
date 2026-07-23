@@ -5,7 +5,7 @@ const RAZORPAY_FEE_PCT = 0.02
 const PLAN_DAYS = 30
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://opportunities-cell.vercel.app',
+  'Access-Control-Allow-Origin': 'https://www.applymate.in',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 

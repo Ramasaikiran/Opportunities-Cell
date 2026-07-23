@@ -3,8 +3,8 @@ import LegalPage, { H2, P, Ul } from '../components/LegalPage'
 export default function Terms() {
   return (
     <LegalPage title="Terms and Conditions" effectiveDate="July 4, 2026">
-      <P>Opportunities Cell, operated by Rama Sai Kiran Medam ("we," "our," "us").</P>
-      <P>By using Opportunities Cell, you agree to these Terms, our Privacy Policy, and Refund Policy.</P>
+      <P>ApplyMate, operated by Rama Sai Kiran Medam ("we," "our," "us").</P>
+      <P>By using ApplyMate, you agree to these Terms, our Privacy Policy, and Refund Policy.</P>
 
       <H2>1. Overview of Service</H2>
       <P>We help job seekers in India apply to relevant jobs faster.</P>

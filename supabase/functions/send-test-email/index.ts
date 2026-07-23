@@ -49,7 +49,7 @@ serve(async (req) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'Opportunities Cell <hello@opportunitiescell.com>',
+      from: 'ApplyMate <support@applymate.in>',
       to,
       subject,
       html,

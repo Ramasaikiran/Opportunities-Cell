@@ -106,7 +106,7 @@ export default function Subscription() {
  await new Promise<void>((resolve, reject) => {
  const rzp = new window.Razorpay({
  key: order.keyId, amount: order.amount, currency: 'INR',
- name: 'Opportunities Cell',
+ name: 'ApplyMate',
  description: `${plan.label} subscription`,
  order_id: order.orderId,
  prefill: {
@@ -222,7 +222,7 @@ export default function Subscription() {
  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff"/>
  </svg>
  </div>
- <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em' }}>Opportunities Cell</span>
+ <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em' }}>ApplyMate</span>
  </div>
  {/* Step indicator */}
  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 14 }}>

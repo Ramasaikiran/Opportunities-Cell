@@ -1,5 +1,5 @@
 -- ================================================================
--- Opportunities Cell — Admin v2 Migration
+-- ApplyMate — Admin v2 Migration
 -- Run this whole file once in Supabase SQL editor.
 -- Safe to re-run (uses IF NOT EXISTS / OR REPLACE everywhere).
 -- ================================================================

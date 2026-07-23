@@ -68,7 +68,7 @@ export default function AdminLogin() {
  <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: 360,
  background: '#181818', border: '1.5px solid #262626', borderRadius: 18, padding: '36px 30px' }}>
  <p style={{ fontSize: 13, fontWeight: 600, color: '#9b9b9b', letterSpacing: '0.08em', marginBottom: 6 }}>
- OPPORTUNITIES CELL
+ APPLYMATE
  </p>
  <h1 style={{ fontFamily: "'Instrument Serif',Georgia,serif", fontSize: 28, fontWeight: 400,
  color: '#fff', marginBottom: 24 }}>Admin sign in</h1>

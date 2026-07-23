@@ -7,7 +7,7 @@ const PLAN_DAYS: Record<string, number> = {
 }
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://opportunities-cell.vercel.app',
+  'Access-Control-Allow-Origin': 'https://www.applymate.in',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 

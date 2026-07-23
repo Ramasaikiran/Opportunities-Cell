@@ -58,13 +58,13 @@ serve(async (req) => {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from: 'Opportunities Cell <hello@opportunitiescell.com>',
+          from: 'ApplyMate <support@applymate.in>',
           to: profile.email,
           subject: 'Your plan expires in 2 days',
           html: `<p>Hi ${profile.full_name || 'there'},</p>
             <p>Your ${sub.plan} plan expires on ${new Date(sub.ends_at).toLocaleDateString('en-IN')}.</p>
             <p>Renew now to keep your jobs and applications active.</p>
-            <p><a href="https://opportunities-cell.vercel.app/subscription">Renew now →</a></p>`,
+            <p><a href="https://www.applymate.in/subscription">Renew now →</a></p>`,
         }),
       })
     }

@@ -3,7 +3,7 @@ import LegalPage, { H2, P, Ul } from '../components/LegalPage'
 export default function Privacy() {
   return (
     <LegalPage title="Privacy Policy" effectiveDate="July 4, 2026">
-      <P>Opportunities Cell, operated by Rama Sai Kiran Medam ("we," "our," "us").</P>
+      <P>ApplyMate, operated by Rama Sai Kiran Medam ("we," "our," "us").</P>
       <P>This Policy explains how we collect, use, and protect your data.</P>
 
       <H2>1. Information We Collect</H2>

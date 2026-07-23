@@ -151,7 +151,7 @@ export default function Landing() {
  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff"/>
  </svg>
  </div>
- <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.02em' }}>Opportunities Cell</span>
+ <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.02em' }}>ApplyMate</span>
  </div>
  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
  <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} style={{
@@ -262,7 +262,7 @@ export default function Landing() {
  <div>
  <p style={{ fontSize: 11, fontWeight: 700, color: '#ef4444',
  letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>
- WITHOUT OPPORTUNITIES CELL
+ WITHOUT APPLYMATE
  </p>
  {[
  'Spend 3 hours daily copy-pasting the same application',
@@ -300,7 +300,7 @@ export default function Landing() {
  <div>
  <p style={{ fontSize: 11, fontWeight: 700, color: '#22c55e',
  letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 20 }}>
- WITH OPPORTUNITIES CELL
+ WITH APPLYMATE
  </p>
  {[
  'Fill your profile once. Get matched to 10–15 jobs every single day',
@@ -613,7 +613,7 @@ export default function Landing() {
  </svg>
  </div>
  <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>
- Opportunities Cell
+ ApplyMate
  </span>
  </div>
  <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>

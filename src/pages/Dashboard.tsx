@@ -260,7 +260,7 @@ export default function Dashboard() {
  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff"/>
  </svg>
  </div>
- <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em' }}>Opportunities Cell</span>
+ <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em' }}>ApplyMate</span>
  </div>
  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
  {profile?.is_admin && (
