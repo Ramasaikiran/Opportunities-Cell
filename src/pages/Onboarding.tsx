@@ -467,12 +467,7 @@ export default function Onboarding() {
  background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(12px)',
  borderBottom: '1px solid #f0f0f0', zIndex: 50 }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
- <div style={{ width: 30, height: 30, borderRadius: 8, background: '#0f0f0f',
- display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
- <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
- <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff"/>
- </svg>
- </div>
+ <img src="/logo-mark.png" alt="ApplyMate" style={{ width: 30, height: 30, objectFit: 'contain' }} />
  <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em' }}>ApplyMate</span>
  </div>
  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 18 }}>

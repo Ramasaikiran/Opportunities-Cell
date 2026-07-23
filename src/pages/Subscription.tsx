@@ -216,12 +216,7 @@ export default function Subscription() {
  <div style={{ height: 60, display: 'flex', alignItems: 'center', padding: '0 28px',
  background: '#fff', borderBottom: '1px solid #f0f0f0', position: 'sticky', top: 0, zIndex: 50 }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
- <div style={{ width: 28, height: 28, borderRadius: 7, background: '#0f0f0f',
- display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
- <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
- <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff"/>
- </svg>
- </div>
+ <img src="/logo-mark.png" alt="ApplyMate" style={{ width: 28, height: 28, objectFit: 'contain' }} />
  <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em' }}>ApplyMate</span>
  </div>
  {/* Step indicator */}

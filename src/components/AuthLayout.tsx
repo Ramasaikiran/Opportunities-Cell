@@ -22,12 +22,7 @@ export default function AuthLayout({ eyebrow, title, subtitle, children, footer 
  }}>
  {/* Logo */}
  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 72 }}>
- <div style={{ width: 32, height: 32, borderRadius: 8, background: '#fff',
- display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
- <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
- <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#0f0f0f"/>
- </svg>
- </div>
+ <img src="/logo-mark.png" alt="ApplyMate" style={{ width: 32, height: 32, objectFit: 'contain' }} />
  <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', letterSpacing: '-0.02em' }}>ApplyMate</span>
  </div>
 
@@ -102,12 +97,7 @@ export default function AuthLayout({ eyebrow, title, subtitle, children, footer 
  background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(12px)',
  borderBottom: '1px solid #f0f0f0', zIndex: 50 }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
- <div style={{ width: 28, height: 28, borderRadius: 7, background: '#0f0f0f',
- display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
- <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
- <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff"/>
- </svg>
- </div>
+ <img src="/logo-mark.png" alt="ApplyMate" style={{ width: 28, height: 28, objectFit: 'contain' }} />
  <span style={{ fontSize: 14, fontWeight: 600 }}>ApplyMate</span>
  </div>
  </div>

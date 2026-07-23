@@ -145,12 +145,7 @@ export default function Landing() {
  <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px',
  height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
- <div style={{ width: 30, height: 30, borderRadius: 8, background: '#0f0f0f',
- display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
- <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
- <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#fff"/>
- </svg>
- </div>
+ <img src="/logo-mark.png" alt="ApplyMate" style={{ width: 30, height: 30, objectFit: 'contain' }} />
  <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.02em' }}>ApplyMate</span>
  </div>
  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -606,12 +601,7 @@ export default function Landing() {
  <div style={{ maxWidth: 900, margin: '0 auto',
  display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
- <div style={{ width: 26, height: 26, borderRadius: 6, background: '#fff',
- display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
- <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
- <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#0f0f0f"/>
- </svg>
- </div>
+ <img src="/logo-mark.png" alt="ApplyMate" style={{ width: 26, height: 26, objectFit: 'contain' }} />
  <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.6)' }}>
  ApplyMate
  </span>
