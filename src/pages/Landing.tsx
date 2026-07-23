@@ -142,28 +142,34 @@ export default function Landing() {
  <nav style={{ position: 'sticky', top: 0, left: 0, right: 0, zIndex: 100,
  background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(16px)',
  borderBottom: '1px solid #f0f0f0' }}>
- <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px',
- height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
- <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
- <img src="/logo-mark.png" alt="ApplyMate" style={{ width: 30, height: 30, objectFit: 'contain' }} />
- <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.02em' }}>ApplyMate</span>
+ <div className="nav-inner" style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px',
+ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+ <div style={{ width: 38, height: 38, borderRadius: 10, background: '#f7f7f5',
+ border: '1px solid #ececec', display: 'flex', alignItems: 'center', justifyContent: 'center',
+ flexShrink: 0 }}>
+ <img src="/logo-mark.png" alt="ApplyMate" style={{ width: 26, height: 26, objectFit: 'contain' }} />
  </div>
- <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
- <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} style={{
+ <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>ApplyMate</span>
+ </div>
+ <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+ <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="nav-free-pill" style={{
  fontSize: 13, color: '#22c55e', fontWeight: 600,
  background: '#f0fdf4', padding: '4px 12px', borderRadius: 99,
  border: '1px solid #bbf7d0', cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+ whiteSpace: 'nowrap',
  }}>
  Free to start
  </button>
- <button onClick={() => navigate('/sign-in')} style={{
+ <button onClick={() => navigate('/sign-in')} className="nav-signin" style={{
  background: 'none', border: 'none', fontSize: 14, color: '#6b6b6b',
- cursor: 'pointer', fontFamily: "'Inter',sans-serif", padding: '8px 12px',
+ cursor: 'pointer', fontFamily: "'Inter',sans-serif", padding: '8px 6px',
+ whiteSpace: 'nowrap',
  }}>Sign in</button>
  <button onClick={goSignUp} style={{
  background: '#0f0f0f', color: '#fff', border: 'none',
- padding: '9px 20px', borderRadius: 8, fontSize: 14, fontWeight: 600,
- cursor: 'pointer', fontFamily: "'Inter',sans-serif",
+ padding: '9px 18px', borderRadius: 8, fontSize: 14, fontWeight: 600,
+ cursor: 'pointer', fontFamily: "'Inter',sans-serif", whiteSpace: 'nowrap', flexShrink: 0,
  }}>Get started →</button>
  </div>
  </div>
@@ -653,6 +659,11 @@ export default function Landing() {
  }
  @media (max-width: 1024px) and (min-width: 769px) {
  .pricing-grid { grid-template-columns: repeat(2,1fr) !important; }
+ }
+ @media (max-width: 480px) {
+ .nav-free-pill { display: none !important; }
+ .nav-signin { padding: 8px 2px !important; font-size: 13px !important; }
+ .nav-inner { padding: 0 16px !important; gap: 6px !important; }
  }
  @media (max-width: 768px) {
  .steps-progress-track, .steps-progress-fill { display: none !important; }

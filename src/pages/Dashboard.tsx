@@ -254,7 +254,10 @@ export default function Dashboard() {
  <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 24px',
  height: 56, display: 'flex', alignItems: 'center', gap: 16 }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
- <img src="/logo-mark.png" alt="ApplyMate" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+ <div style={{ width: 36, height: 36, borderRadius: 10, background: '#f7f7f5',
+ border: '1px solid #ececec', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+ <img src="/logo-mark.png" alt="ApplyMate" style={{ width: 24, height: 24, objectFit: 'contain' }} />
+ </div>
  <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.02em' }}>ApplyMate</span>
  </div>
  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>

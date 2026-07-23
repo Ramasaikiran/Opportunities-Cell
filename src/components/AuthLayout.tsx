@@ -22,7 +22,10 @@ export default function AuthLayout({ eyebrow, title, subtitle, children, footer 
  }}>
  {/* Logo */}
  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 72 }}>
- <img src="/logo-mark.png" alt="ApplyMate" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+ <div style={{ width: 42, height: 42, borderRadius: 11, background: 'rgba(255,255,255,0.08)',
+ border: '1px solid rgba(255,255,255,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+ <img src="/logo-mark.png" alt="ApplyMate" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+ </div>
  <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', letterSpacing: '-0.02em' }}>ApplyMate</span>
  </div>
 
@@ -97,7 +100,10 @@ export default function AuthLayout({ eyebrow, title, subtitle, children, footer 
  background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(12px)',
  borderBottom: '1px solid #f0f0f0', zIndex: 50 }}>
  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
- <img src="/logo-mark.png" alt="ApplyMate" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+ <div style={{ width: 36, height: 36, borderRadius: 10, background: '#f7f7f5',
+ border: '1px solid #ececec', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+ <img src="/logo-mark.png" alt="ApplyMate" style={{ width: 24, height: 24, objectFit: 'contain' }} />
+ </div>
  <span style={{ fontSize: 14, fontWeight: 600 }}>ApplyMate</span>
  </div>
  </div>
