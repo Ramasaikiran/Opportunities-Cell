@@ -33,6 +33,7 @@ const SITE_URL = import.meta.env.VITE_SITE_URL || window.location.origin
 // AuthError. Never show that raw text to a user — treat it as success-shaped
 // and fall back to a safe generic message otherwise.
 function safeErrorMessage(message: string | undefined, fallback: string) {
+  if (message) console.error('[auth]', message)
   if (!message) return fallback
   if (/unexpected end of json input|failed to execute 'json'/i.test(message)) return fallback
   return message
@@ -116,7 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: { data: { full_name: fullName }, emailRedirectTo: `${SITE_URL}/auth/callback` },
       })
       return { error: error ? safeErrorMessage(error.message, 'Sign up failed. Please try again.') : null }
-    } catch {
+    } catch (e) {
+      console.error('[auth] signUp threw', e)
       return { error: 'Network error. Check your connection and try again.' }
     }
   }
@@ -125,7 +127,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       return { error: error ? safeErrorMessage(error.message, 'Sign in failed. Please try again.') : null }
-    } catch {
+    } catch (e) {
+      console.error('[auth] signIn threw', e)
       return { error: 'Network error. Check your connection and try again.' }
     }
   }
@@ -137,7 +140,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: { redirectTo: `${SITE_URL}/auth/callback` },
       })
       return { error: error ? safeErrorMessage(error.message, 'Google sign in failed. Please try again.') : null }
-    } catch {
+    } catch (e) {
+      console.error('[auth] signInWithGoogle threw', e)
       return { error: 'Network error. Check your connection and try again.' }
     }
   }
@@ -145,8 +149,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function resendVerification(email: string) {
     try {
       const { error } = await supabase.auth.resend({ type: 'signup', email })
-      return { error: error ? (error.message || 'Could not resend email. Please try again.') : null }
-    } catch {
+      return { error: error ? safeErrorMessage(error.message, 'Could not resend email. Please try again.') : null }
+    } catch (e) {
+      console.error('[auth] resendVerification threw', e)
       return { error: 'Network error. Check your connection and try again.' }
     }
   }
@@ -154,8 +159,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function verifySignupOtp(email: string, token: string) {
     try {
       const { error } = await supabase.auth.verifyOtp({ email, token, type: 'signup' })
-      return { error: error ? (error.message || 'Invalid or expired code. Please try again.') : null }
-    } catch {
+      return { error: error ? safeErrorMessage(error.message, 'Invalid or expired code. Please try again.') : null }
+    } catch (e) {
+      console.error('[auth] verifySignupOtp threw', e)
       return { error: 'Network error. Check your connection and try again.' }
     }
   }
@@ -166,7 +172,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         redirectTo: `${SITE_URL}/auth/callback`,
       })
       return { error: error ? safeErrorMessage(error.message, 'Could not send reset email. Please try again.') : null }
-    } catch {
+    } catch (e) {
+      console.error('[auth] requestPasswordReset threw', e)
       return { error: 'Network error. Check your connection and try again.' }
     }
   }
@@ -174,8 +181,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function verifyRecoveryOtp(email: string, token: string) {
     try {
       const { error } = await supabase.auth.verifyOtp({ email, token, type: 'recovery' })
-      return { error: error ? (error.message || 'Invalid or expired code. Please try again.') : null }
-    } catch {
+      return { error: error ? safeErrorMessage(error.message, 'Invalid or expired code. Please try again.') : null }
+    } catch (e) {
+      console.error('[auth] verifyRecoveryOtp threw', e)
       return { error: 'Network error. Check your connection and try again.' }
     }
   }
@@ -183,8 +191,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function updatePassword(password: string) {
     try {
       const { error } = await supabase.auth.updateUser({ password })
-      return { error: error ? (error.message || 'Could not update password. Please try again.') : null }
-    } catch {
+      return { error: error ? safeErrorMessage(error.message, 'Could not update password. Please try again.') : null }
+    } catch (e) {
+      console.error('[auth] updatePassword threw', e)
       return { error: 'Network error. Check your connection and try again.' }
     }
   }
