@@ -16,6 +16,61 @@ export const supabase = createClient(url, key, {
   },
 })
 
+// ── Direct Auth REST calls ────────────────────────────────────────
+// supabase-js's own fetch wrapper throws "Unexpected end of JSON
+// input" whenever GoTrue returns a response it can't cleanly parse —
+// and it throws BEFORE we ever see the actual status code or body,
+// so every failure looks identical no matter the real cause (rate
+// limit, SMTP failure, bad request, etc). This bypasses that: reads
+// the response as text first, only attempts JSON.parse on top of
+// that, and always returns something inspectable — status, raw body,
+// and a best-effort parsed error message — instead of throwing blind.
+async function authRequest(path: string, body: unknown, redirectTo?: string) {
+  const qs = redirectTo ? `?redirect_to=${encodeURIComponent(redirectTo)}` : ''
+  let res: Response
+  try {
+    res = await fetch(`${url}/auth/v1${path}${qs}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: key },
+      body: JSON.stringify(body),
+    })
+  } catch (e) {
+    console.error('[auth-rest] network error', e)
+    return { ok: false, status: 0, raw: '', message: 'Network error. Check your connection and try again.' }
+  }
+
+  const raw = await res.text()
+  console.log(`[auth-rest] ${path} -> ${res.status}`, raw.slice(0, 500))
+
+  if (res.ok) return { ok: true, status: res.status, raw, message: null as string | null }
+
+  let message = `Request failed (${res.status}).`
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw)
+      message = parsed.msg || parsed.message || parsed.error_description || parsed.error || message
+    } catch {
+      // Body wasn't JSON — fall back to raw text if it's short and
+      // plausibly human-readable, otherwise keep the generic message.
+      if (raw.length < 200) message = raw
+    }
+  } else if (res.status === 429) {
+    message = 'Too many attempts. Please wait a bit and try again.'
+  }
+  return { ok: false, status: res.status, raw, message }
+}
+
+export async function signUpDirect(email: string, password: string, fullName: string, redirectTo: string) {
+  return authRequest('/signup', {
+    email, password,
+    data: { full_name: fullName },
+  }, redirectTo)
+}
+
+export async function recoverDirect(email: string, redirectTo: string) {
+  return authRequest('/recover', { email }, redirectTo)
+}
+
 // ── Types ──────────────────────────────────────────────────────────
 export type UserType      = 'student' | 'professional'
 export type AccountStatus = 'pending_onboarding' | 'active' | 'suspended'

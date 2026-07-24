@@ -2,7 +2,7 @@ import {
   createContext, useContext, useEffect, useState, type ReactNode,
 } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
-import { supabase, type Profile, type Subscription } from '../lib/supabase'
+import { supabase, signUpDirect, recoverDirect, type Profile, type Subscription } from '../lib/supabase'
 
 interface AuthContextValue {
   session:       Session | null
@@ -112,11 +112,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signUp(fullName: string, email: string, password: string) {
     try {
-      const { error } = await supabase.auth.signUp({
-        email, password,
-        options: { data: { full_name: fullName }, emailRedirectTo: `${SITE_URL}/auth/callback` },
-      })
-      return { error: error ? safeErrorMessage(error.message, 'Sign up failed. Please try again.') : null }
+      const result = await signUpDirect(email, password, fullName, `${SITE_URL}/auth/callback`)
+      if (!result.ok) {
+        console.error('[auth] signUp failed', result.status, result.raw)
+        return { error: safeErrorMessage(result.message ?? undefined, 'Sign up failed. Please try again.') }
+      }
+      // The direct call bypasses supabase-js entirely, so if the project
+      // has email confirmation OFF and a session came back immediately,
+      // the client's own storage doesn't know about it yet. Hydrate it
+      // explicitly so the rest of the app (which reads session from the
+      // supabase-js client) sees it correctly.
+      try {
+        const parsed = JSON.parse(result.raw)
+        if (parsed.access_token && parsed.refresh_token) {
+          await supabase.auth.setSession({
+            access_token: parsed.access_token,
+            refresh_token: parsed.refresh_token,
+          })
+        }
+      } catch { /* no session in the response (email confirmation required) — fine */ }
+      return { error: null }
     } catch (e) {
       console.error('[auth] signUp threw', e)
       return { error: 'Network error. Check your connection and try again.' }
@@ -168,10 +183,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function requestPasswordReset(email: string) {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${SITE_URL}/auth/callback`,
-      })
-      return { error: error ? safeErrorMessage(error.message, 'Could not send reset email. Please try again.') : null }
+      const result = await recoverDirect(email, `${SITE_URL}/auth/callback`)
+      if (!result.ok) {
+        console.error('[auth] requestPasswordReset failed', result.status, result.raw)
+        return { error: safeErrorMessage(result.message ?? undefined, 'Could not send reset email. Please try again.') }
+      }
+      return { error: null }
     } catch (e) {
       console.error('[auth] requestPasswordReset threw', e)
       return { error: 'Network error. Check your connection and try again.' }
