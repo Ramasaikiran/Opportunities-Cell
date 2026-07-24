@@ -6,7 +6,7 @@ const PLAN_DAYS: Record<string, number> = {
   basic: 30, pro: 30, maxpro: 30,
 }
 
-const ALLOWED_ORIGINS = new Set(['https://applymate.in', 'https://www.applymate.in'])
+const ALLOWED_ORIGINS = new Set(['https://applymate.in'])
 function corsFor(req: Request) {
   const origin = req.headers.get('origin') ?? ''
   return {

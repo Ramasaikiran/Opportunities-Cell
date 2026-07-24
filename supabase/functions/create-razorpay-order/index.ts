@@ -7,7 +7,7 @@ const PLANS: Record<string, { amount: number; days: number }> = {
   maxpro: { amount: 359900, days: 30 },
 }
 
-const ALLOWED_ORIGINS = new Set(['https://applymate.in', 'https://www.applymate.in'])
+const ALLOWED_ORIGINS = new Set(['https://applymate.in'])
 function corsFor(req: Request) {
   const origin = req.headers.get('origin') ?? ''
   return {
