@@ -21,22 +21,27 @@ export default function SignIn() {
  // that magic-link sign-in enforces.
  async function routeAfterLogin() {
  const { data: { session } } = await supabase.auth.getSession()
- if (!session) return
+ if (!session) { setError('Signed in, but your session did not load. Please refresh and try again.'); return }
+ try {
  await routePostAuth(session.user.id, navigate)
+ } catch {
+ setError('Signed in, but we could not load your account. Please try again.')
+ }
  }
 
  async function handleSubmit(e: FormEvent) {
  e.preventDefault()
  setError(null); setLoading(true)
  const { error } = await signIn(email.trim().toLowerCase(), password)
- setLoading(false)
  if (error) {
+ setLoading(false)
  setError(error.toLowerCase().includes('email not confirmed')
  ? 'Please verify your email first. Check your inbox.'
  : 'Incorrect email or password. Try again.')
  return
  }
  await routeAfterLogin()
+ setLoading(false)
  }
 
  async function handleGoogle() {

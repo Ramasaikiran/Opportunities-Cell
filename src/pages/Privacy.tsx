@@ -49,7 +49,7 @@ export default function Privacy() {
       <P>We may update this Policy. Material changes will be notified to you.</P>
 
       <H2>9. Contact</H2>
-      <P>Rama Sai Kiran Medam<br />Hyderabad, India<br />+91 63037 28397</P>
+      <P>Rama Sai Kiran Medam<br />Hyderabad, India<br />support@applymate.in<br />+91 63037 28397</P>
     </LegalPage>
   )
 }
