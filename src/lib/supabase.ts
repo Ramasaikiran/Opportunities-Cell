@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
-const url = supabaseUrl || 'https://placeholder.supabase.co'
+const url = (supabaseUrl || 'https://placeholder.supabase.co').replace(/\/+$/, '')
 const key = supabaseAnonKey || 'placeholder-key'
 
 export const isMisconfigured = !supabaseUrl || !supabaseAnonKey
@@ -27,20 +27,21 @@ export const supabase = createClient(url, key, {
 // and a best-effort parsed error message — instead of throwing blind.
 async function authRequest(path: string, body: unknown, redirectTo?: string) {
   const qs = redirectTo ? `?redirect_to=${encodeURIComponent(redirectTo)}` : ''
+  const fullUrl = `${url}/auth/v1${path}${qs}`
   let res: Response
   try {
-    res = await fetch(`${url}/auth/v1${path}${qs}`, {
+    res = await fetch(fullUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: key },
       body: JSON.stringify(body),
     })
   } catch (e) {
-    console.error('[auth-rest] network error', e)
+    console.error('[auth-rest] network error calling', fullUrl, e)
     return { ok: false, status: 0, raw: '', message: 'Network error. Check your connection and try again.' }
   }
 
   const raw = await res.text()
-  console.log(`[auth-rest] ${path} -> ${res.status}`, raw.slice(0, 500))
+  console.log(`[auth-rest] POST ${fullUrl} -> ${res.status}`, raw.slice(0, 500))
 
   if (res.ok) return { ok: true, status: res.status, raw, message: null as string | null }
 
