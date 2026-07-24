@@ -13,20 +13,6 @@ export default function AuthCallback() {
 
  async function run() {
  try {
- // A password-recovery link establishes a session just like any other
- // magic link, but must NOT fall through to the normal post-login
- // routing below -- that logic checks subscription status and sends
- // anyone unpaid straight to /subscription, hijacking the password
- // reset entirely. Supabase marks recovery links with type=recovery
- // in the redirect URL (hash for implicit flow, query for PKCE).
- const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''))
- const isRecovery = hashParams.get('type') === 'recovery'
- || new URLSearchParams(window.location.search).get('type') === 'recovery'
- if (isRecovery) {
- navigate('/reset-password', { replace: true })
- return
- }
-
  const { data, error } = await supabase.auth.getSession()
  if (cancelled) return
 
