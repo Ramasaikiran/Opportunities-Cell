@@ -1,13 +1,17 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const cors = {
-  'Access-Control-Allow-Origin': 'https://www.applymate.in',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const ALLOWED_ORIGINS = new Set(['https://www.applymate.in', 'https://applymate.in'])
+function corsFor(req: Request) {
+  const origin = req.headers.get('origin') ?? ''
+  return {
+    'Access-Control-Allow-Origin': ALLOWED_ORIGINS.has(origin) ? origin : 'https://www.applymate.in',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  }
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsFor(req) })
 
   try {
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim()
@@ -24,11 +28,11 @@ serve(async (req) => {
 
     return new Response(JSON.stringify(data), {
       status: data.allowed ? 200 : 429,
-      headers: { ...cors, 'Content-Type': 'application/json' },
+      headers: { ...corsFor(req), 'Content-Type': 'application/json' },
     })
   } catch (err) {
     return new Response(JSON.stringify({ error: (err as Error).message }), {
-      status: 500, headers: cors,
+      status: 500, headers: corsFor(req),
     })
   }
 })

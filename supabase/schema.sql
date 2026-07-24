@@ -42,6 +42,17 @@ drop policy if exists "Users can update their own profile" on public.profiles;
 create policy "Users can update their own profile"
   on public.profiles for update using (auth.uid() = id);
 
+-- Normal signup never needs this — handle_new_user() below runs
+-- SECURITY DEFINER and bypasses RLS entirely. This exists for
+-- AuthCallback.tsx's client-side fallback insert, which fires when a
+-- profile row isn't visible yet right after an OAuth redirect (a real
+-- trigger-vs-client race). Without this policy that fallback insert is
+-- silently rejected by RLS.
+drop policy if exists "Users can insert their own profile" on public.profiles;
+create policy "Users can insert their own profile"
+  on public.profiles for insert
+  with check (auth.uid() = id);
+
 drop policy if exists "Admins can view all profiles" on public.profiles;
 create policy "Admins can view all profiles"
   on public.profiles for select
